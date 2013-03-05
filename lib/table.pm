@@ -1,4 +1,4 @@
-package BBPortal::table;
+package VwF::table;
 
 use Config::Auto;
 use Text::xSV::Slurp;
