@@ -1,17 +1,11 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2004-2012 Nigel Horne, All rights reserved
+# VWF is licensed under GPL2.0 for personal use only
+# njh@bandsman.co.uk
+
 # Build the data to be displayed on the index page
 
-# Dreamhost
-use lib '/home/nigelhorne/perlmods/lib/perl/5.10';
-use lib '/home/nigelhorne/perlmods/lib/perl/5.10.0';
-use lib '/home/nigelhorne/perlmods/share/perl/5.10';
-use lib '/home/nigelhorne/perlmods/share/perl/5.10.0';
-use lib '/home/nigelhorne/perlmods/lib/perl5';
-use lib '/home/nigelhorne/lib/perl5';
-
-use lib '/home/njh/lib/perl5';
+use "/usr/lib/VKF";	# This needs to point to where page.pm has been installed
 
 use strict;
 use warnings;
