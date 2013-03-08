@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 # Copyright (C) 2004-2012 Nigel Horne, All rights reserved
-# Build the data to be displayed on the shop's index page
+# Build the data to be displayed on the index page
 
 # Dreamhost
 use lib '/home/nigelhorne/perlmods/lib/perl/5.10';
@@ -34,6 +34,21 @@ if(CGI::Buffer::is_cached()) {
 	exit;
 }
 
-my $display = VWF::shop::index->new({ info => $info });
+my $display = VWF::index->new({ info => $info });
 
-print $display->as_string();
+if(defined($display)) {
+	print $display->as_string();
+} else {
+	# No permission to show this page
+	print "Status: 403 Forbidden\n";
+	print "Content-type: text/plain\n";
+	print "Pragma: no-cache\n\n";
+
+	# Make 'em wait
+	sleep 30;
+
+	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+		print "There is a problem with your connection. Please contact your ISP.\n";
+	}
+	exit;
+}
