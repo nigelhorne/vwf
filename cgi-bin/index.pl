@@ -28,7 +28,17 @@ if(CGI::Buffer::is_cached()) {
 	exit;
 }
 
-my $display = VWF::index->new({ info => $info });
+my $display;
+eval {
+	$display = VWF::index->new({ info => $info });
+};
+if($@) {
+	print "Status: 500 Internal Server Error\n";
+	print "Content: text/plain\n\n";
+
+	print $@;
+	exit;
+}
 
 if(defined($display)) {
 	print $display->as_string();
