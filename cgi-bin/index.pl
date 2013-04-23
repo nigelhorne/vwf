@@ -32,13 +32,6 @@ my $display;
 eval {
 	$display = VWF::index->new({ info => $info });
 };
-if($@) {
-	print "Status: 500 Internal Server Error\n";
-	print "Content: text/plain\n\n";
-
-	print $@;
-	exit;
-}
 
 if(defined($display)) {
 	print $display->as_string();
@@ -53,6 +46,7 @@ if(defined($display)) {
 
 	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 		print "There is a problem with your connection. Please contact your ISP.\n";
+		print $@ if $@;
 	}
 	exit;
 }
