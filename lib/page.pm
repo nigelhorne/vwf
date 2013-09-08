@@ -187,9 +187,9 @@ sub http {
 	if(defined($cookies)) {
 		foreach my $cookie (keys(%{$cookies})) {
 			if(exists($cookies->{$cookie})) {
-				print "Set-Cookie:$cookie=$cookies->{$cookie}\n";
+				print "Set-Cookie:$cookie=$cookies->{$cookie}; path=/; HttpOnly\n";
 			} else {
-				print "Set-Cookie:$cookie=0:0\n";
+				print "Set-Cookie:$cookie=0:0; path=/; HttpOnly\n";
 			}
 		}
 	}
