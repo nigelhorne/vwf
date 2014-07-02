@@ -201,7 +201,8 @@ sub http {
 		$language = 'English';
 	}
 
-	my $rc;
+	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
+	my $rc = "X-Frame-Options: SAMEORIGIN\n";
 
 	if($language eq 'Japanese') {
 		binmode(STDOUT, ':utf8');
