@@ -75,6 +75,16 @@ sub get_file_path {
 		$dir = $candidate;
 	}
 
+	# Look in .../web, .../robot or .../mobile first,
+	my $prefix;
+	if($self->{_info}->is_mobile()) {
+                $prefix = 'mobile';
+	} elsif($self->{_info}->is_search_engine() || $self->{_info}->is_robot()) {
+		$prefix = 'robot';
+        } else {
+                $prefix = 'web';
+        }
+
         my $filename;
 
 	if($self->{_table}) {
@@ -83,13 +93,19 @@ sub get_file_path {
 		$filename = ref($self);
 	}
 	$filename =~ s/::/\//g;
-	$filename = "$dir/$filename.conf";
+	my $rc = "$dir/$prefix/$filename.conf";
 
-	if((!-f $filename) || (!-r $filename)) {
-		die "Can't open $filename";
+	if((-f $rc) && (-r $rc)) {
+		return $rc;
+	}
+
+	# No web, robot or mobile varient
+	$rc = "$dir/$filename.conf";
+	if((!-f $rc) || (!-r $rc)) {
+		die "Can't open $rc";
 		return;
 	}
-	return $filename;
+	return $rc;
 }
 
 sub columns {

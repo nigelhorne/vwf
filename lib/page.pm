@@ -164,7 +164,14 @@ sub get_template_path {
 		$filename = "$prefix/$modulepath.html";
 
 		if((!-f $filename) || (!-r $filename)) {
-			die "Can't open $filename";
+			# No web, robot or mobile varient
+
+			$rc = "$dir/$filename.tmpl";
+			if((!-f $rc) || (!-r $rc)) {
+				die "Can't open $rc";
+			}
+			return $rc;
+
 		}
 	}
 	return $filename;
@@ -278,7 +285,11 @@ sub as_string {
 		if($args->{cart}) {
 			my $itemsincart;
 			foreach my $key(keys %{$args->{cart}}) {
-				$itemsincart += $args->{cart}{$key};
+				if(defined($args->{cart}{$key}) && ($args->{cart}{$key} ne '')) {
+					$itemsincart += $args->{cart}{$key};
+				} else {
+					delete $args->{cart}{$key};
+				}
 			}
 			$args->{itemsincart} = $itemsincart;
 		}
