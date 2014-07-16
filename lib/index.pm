@@ -1,4 +1,4 @@
-package VWF::page;
+package VWF::index;
 
 # Display a page. Certain variables are available to all templates, such as
 # the stuff in the configuration file
@@ -103,7 +103,7 @@ sub get_template_path {
 	#  Look in .../en/gb/web, then .../en/web then /web
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
-		my $candidata;
+		my $candidate;
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
 		} elsif($lingua->code_alpha2()) {
@@ -172,7 +172,7 @@ sub get_template_path {
 			}
 			$filename = "$dir/$modulepath.html";
 			if((!-f $filename) || (!-r $filename)) {
-				die "Can't find suitable $modulepath in $dir or a subdir";
+				die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 			}
 		}
 	}
@@ -278,6 +278,8 @@ sub html {
 sub as_string {
 	my ($self, $args) = @_;
 
+	# TODO: Get all cookies and send them to to template.
+	# 'cart' is an example
 	unless($args && $args->{cart}) {
 		$purchases = $self->{_info}->get_cookie(cookie_name => 'cart');
 		if($purchases) {

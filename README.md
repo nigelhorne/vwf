@@ -75,7 +75,8 @@ conf directory in a place such as /usr/lib/conf if the libaries went into
 The configuration file takes the form of:
 	rootdir: /full/path/to/template directory.
 
-For example, if your index.tmpl file lives in /usr/lib/lib/templates/web/en/index.tmpl, then you would add 'rootdir: /usr/lib/templates'.
+For example, if your index.tmpl file lives in /usr/lib/example.com/templates/VWF/web/index.tmpl,
+then you would add 'rootdir: /usr/lib/example.com'.
 
 The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.com.
 
