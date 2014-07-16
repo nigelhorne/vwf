@@ -267,6 +267,8 @@ sub html {
 		close $fin;
 
 		$rc = join('', @lines);
+	} else {
+		warn "Unhandled file type $filename";
 	}
 	return $rc;
 }
