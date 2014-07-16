@@ -164,14 +164,16 @@ sub get_template_path {
 		$filename = "$prefix/$modulepath.html";
 
 		if((!-f $filename) || (!-r $filename)) {
-			# No web, robot or mobile varient
+			# No web, robot or mobile variant
+			$filename = "$dir/$modulepath.tmpl";
 
-			$rc = "$dir/$filename.tmpl";
-			if((!-f $rc) || (!-r $rc)) {
-				die "Can't open $rc";
+			if(-r $filename) {
+				return $filename;
 			}
-			return $rc;
-
+			$filename = "$dir/$modulepath.html";
+			if((!-f $filename) || (!-r $filename)) {
+				die "Can't find suitable $modulepath in $dir or a subdir";
+			}
 		}
 	}
 	return $filename;
