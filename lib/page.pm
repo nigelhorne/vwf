@@ -259,7 +259,7 @@ sub html {
 	my $filename = $self->get_template_path();
 	my $rc;
 	if($filename =~ /.+\.tmpl$/) {
-		$template->process($self->get_template_path(), $vals, \$rc) ||
+		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
 	} elsif($filename =~ /.*\.html?$/) {
 		open(my $fin, '<', $filename) || die "$filename: $!";
