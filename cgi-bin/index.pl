@@ -1,11 +1,13 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 # VWF is licensed under GPL2.0 for personal use only
 # njh@bandsman.co.uk
 
 # Build the data to be displayed on the index page
 
-use "/usr/lib/VKF";	# This needs to point to where page.pm has been installed
+use lib '/usr/lib';	# This needs to point to the VWF directory lives,
+			# i.e. the contents of the lib directory in the
+			# distribution
 
 use strict;
 use warnings;
@@ -15,7 +17,7 @@ use CGI::Carp qw(fatalsToBrowser);
 use CGI::Buffer { optimise_content => 1 };
 use CHI;
 
-use VWF::index;
+use VWF::page;
 
 my $info = CGI::Info->new();
 my $cachedir = $info->tmpdir() . '/cache';
@@ -30,7 +32,7 @@ if(CGI::Buffer::is_cached()) {
 
 my $display;
 eval {
-	$display = VWF::index->new({ info => $info });
+	$display = VWF::page->new({ info => $info });
 };
 
 if(defined($display)) {
