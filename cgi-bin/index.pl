@@ -35,6 +35,8 @@ eval {
 	$display = VWF::page->new({ info => $info });
 };
 
+warn $@ if $@;
+
 if(defined($display)) {
 	print $display->as_string();
 } else {
