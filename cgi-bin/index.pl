@@ -35,7 +35,7 @@ eval {
 	$display = VWF::page->new({ info => $info });
 };
 
-warn $@ if $@;
+my $error = $@;
 
 if(defined($display)) {
 	print $display->as_string();
@@ -45,12 +45,14 @@ if(defined($display)) {
 	print "Content-type: text/plain\n";
 	print "Pragma: no-cache\n\n";
 
+	warn $error if $error;
+
 	# Make 'em wait
 	sleep 30;
 
 	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 		print "There is a problem with your connection. Please contact your ISP.\n";
-		print $@ if $@;
+		print $error if $error;
 	}
 	exit;
 }
