@@ -61,7 +61,7 @@ Next create a directory hierarchy containing the pages to be displayed, e.g.
 .../mobile/en/index.tmpl
 
 Next install any dependancies from CPAN, such as CGI::Lingua, CGI::Buffer,
-Data::Throttler and Template.
+Data::Throttler, Config::Auto and Template.
 
 You'll need to create cgi-bin files for each of your page sets (e.g. create
 foo.pl for .../web/*/*/foo.html). That's easier than you think because most
