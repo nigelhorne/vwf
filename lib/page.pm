@@ -49,7 +49,7 @@ sub new {
 			);
 
 			unless($throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
-				return;
+				die "$ENV{REMOTE_ADDR} connexion throttled";
 			}
 		};
 		if($@) {
@@ -58,7 +58,7 @@ sub new {
 		my $lingua = $args{lingua};
 		if($lingua) {
 			if($blacklist{uc($lingua->country())}) {
-				return;
+				die "$ENV{REMOTE_ADDR} is from a blacklisted country " . $lingua->country();
 			}
 		}
 	}
