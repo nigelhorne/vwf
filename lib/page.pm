@@ -62,21 +62,28 @@ sub new {
 			}
 		}
 	}
-	my $path;
-
-	if($ENV{'DOCUMENT_ROOT'}) {
-		$path = File::Spec->catdir(
-			$ENV{'DOCUMENT_ROOT'},
+	my $path = File::Spec->catdir(
+			$info->script_dir(),
 			File::Spec->updir(),
-			'lib',
+			File::Spec->updir(),
 			'conf'
 		);
-	} else {
-		$path = File::Spec->catdir(
-			$ENV{'HOME'},
-			'lib',
-			'conf'
-		);
+
+	unless(-d $path) {
+		if($ENV{'DOCUMENT_ROOT'}) {
+			$path = File::Spec->catdir(
+				$ENV{'DOCUMENT_ROOT'},
+				File::Spec->updir(),
+				'lib',
+				'conf'
+			);
+		} else {
+			$path = File::Spec->catdir(
+				$ENV{'HOME'},
+				'lib',
+				'conf'
+			);
+		}
 	}
 	my $config;
 	eval {
