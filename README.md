@@ -80,7 +80,29 @@ then you would add 'rootdir: /usr/lib/example.com'.
 
 The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.com.
 
-TODO: Add sample files
+Worked example:
+
+I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
+
+The file layout is:
+
+njh@compaq:~$ find ~njh/VWF/
+/home/njh/VWF/
+/home/njh/VWF/page.pm
+/home/njh/VWF/index.pm
+/home/njh/VWF/table.pm
+njh@compaq:~$ find /home/njh/public_html/
+/home/njh/public_html/
+/home/njh/public_html/cgi-bin
+/home/njh/public_html/cgi-bin/index.pl
+/home/njh/public_html/.htaccess
+njh@compaq:~$ find /home/njh/bandsman.mooo.com/
+/home/njh/bandsman.mooo.com/
+/home/njh/bandsman.mooo.com/templates
+/home/njh/bandsman.mooo.com/templates/VWF
+/home/njh/bandsman.mooo.com/templates/VWF/index.html
+njh@compaq:~$
+
 FIXME: Configuration files should be in .../conf, not .../lib/conf
 
 Nigel Horne (njh@bandsman.co.uk)

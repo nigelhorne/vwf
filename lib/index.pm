@@ -5,5 +5,4 @@ package VWF::index;
 use VWF::page;
 
 our @ISA = ('VWF::page');
-
 1;

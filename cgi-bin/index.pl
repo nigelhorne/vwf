@@ -17,7 +17,7 @@ use CGI::Carp qw(fatalsToBrowser);
 use CGI::Buffer { optimise_content => 1 };
 use CHI;
 
-use VWF::page;
+use VWF::index;
 
 my $info = CGI::Info->new();
 my $cachedir = $info->tmpdir() . '/cache';
@@ -32,7 +32,7 @@ if(CGI::Buffer::is_cached()) {
 
 my $display;
 eval {
-	$display = VWF::page->new({ info => $info });
+	$display = VWF::index->new({ info => $info });
 };
 
 my $error = $@;
