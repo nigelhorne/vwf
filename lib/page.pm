@@ -162,26 +162,11 @@ sub get_template_path {
 		}
 	}
 
-	$prefix = "$dir/web";
-
-	$filename = "$prefix/$modulepath.tmpl";
-
-	# Fall back to .../web
-	if((!-f $filename) || (!-r $filename)) {
-		$filename = "$prefix/$modulepath.html";
-
-		if((!-f $filename) || (!-r $filename)) {
-			# No web, robot or mobile variant
-			$filename = "$dir/$modulepath.tmpl";
-
-			if(-r $filename) {
-				return $filename;
-			}
-			$filename = "$dir/$modulepath.html";
-			if((!-f $filename) || (!-r $filename)) {
-				die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
-			}
-		}
+	# Fall back to .../web, or if that fails, assume no web, robot or
+	# mobile variant
+	$filename = _pfopen("$dir/web:$dir", $modulepath, 'tmpl:html');
+	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
+		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
 	return $filename;
 }
@@ -313,6 +298,26 @@ sub as_string {
 		return;
 	}
 	return $self->http() . $html;
+}
+
+# my $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo', 'txt:bin' );
+# $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo');
+sub _pfopen {
+	my $path = shift;
+	my $prefix = shift;
+	my $suffixes = shift;
+
+	foreach my $dir(split(/:/, $path)) {
+		if($suffixes) {
+			foreach my $suffix(split(/:/, $suffixes)) {
+				if(-r "$dir/$prefix.$suffix") {
+					return "$dir/$prefix.$suffix";
+				}
+			}
+		} elsif(-r "$dir/$prefix") {
+			return "$dir/$prefix";
+		}
+	}
 }
 
 1;
