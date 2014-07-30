@@ -8,6 +8,7 @@ use Config::Auto;
 use CGI::Info;
 use File::Spec;
 use Data::Throttler;
+use CGI::IDS;
 
 my %blacklist = (
 	'MD' => 1,
@@ -34,6 +35,13 @@ sub new {
 	my $class = ref($proto) || $proto;
 
 	my $info = $args{info} || CGI::Info->new();
+
+	my $ids = CGI::IDS->new();
+	$ids->set_scan_keys(scan_keys => 1);
+	my $impact = $ids->detect_attacks(request => $info->params());
+	if($impact > 0) {
+		die "IDS impact is $impact";
+	}
 
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
 		# Handle YAML Errors
