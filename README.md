@@ -105,4 +105,10 @@ njh@compaq:~$
 
 FIXME: Configuration files should be in .../conf, not .../lib/conf
 
+Updates:
+--------
+
+git clone https://github.com/nigelhorne/vwf.git
+
+
 Nigel Horne (njh@bandsman.co.uk)
