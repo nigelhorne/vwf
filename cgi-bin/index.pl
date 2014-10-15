@@ -68,5 +68,4 @@ if(defined($display)) {
 		print "There is a problem with your connection. Please contact your ISP.\n";
 		print $error if $error;
 	}
-	exit;
 }
