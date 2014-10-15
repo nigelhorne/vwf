@@ -19,14 +19,25 @@ use diagnostics;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Buffer { optimise_content => 1 };
 use CHI;
+use CGI::Info;
+use CGI::Lingua;
 
 use VWF::index;
 
 my $info = CGI::Info->new();
 my $cachedir = $info->tmpdir() . '/cache';
+
+my $lingua = CGI::Lingua->new({
+        supported => [ 'en-gb' ],
+	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => 'CGI::Lingua'),
+	info => $info,
+});
+
 my $script_name = $info->script_name();
 CGI::Buffer::set_options(
 	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
+	info => $info,
+	lingua => $lingua,
 	# generate_304 => 0,
 );
 if(CGI::Buffer::is_cached()) {
@@ -35,7 +46,7 @@ if(CGI::Buffer::is_cached()) {
 
 my $display;
 eval {
-	$display = VWF::index->new({ info => $info });
+	$display = VWF::index->new({ info => $info, lingua => $lingua });
 };
 
 my $error = $@;
