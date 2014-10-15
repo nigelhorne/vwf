@@ -5,6 +5,9 @@
 
 # Build the data to be displayed on the index page
 
+# use File::HomeDir;
+# use lib File::HomeDir->my_home() . '/lib/perl5';
+
 use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
