@@ -16,6 +16,7 @@ use strict;
 use warnings;
 use diagnostics;
 
+use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Buffer { optimise_content => 1 };
 use CHI;
@@ -44,9 +45,17 @@ if(CGI::Buffer::is_cached()) {
 	exit;
 }
 
+my $script_dir = $info->script_dir();
+Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
+my $logger = Log::Log4perl->get_logger($script_name);
+
 my $display;
 eval {
-	$display = VWF::index->new({ info => $info, lingua => $lingua });
+	$display = VWF::index->new({
+		info => $info,
+		lingua => $lingua,
+		logger => $logger,
+	});
 };
 
 my $error = $@;
