@@ -127,9 +127,15 @@ sub get_template_path {
 		} else {
 			$candidate = $dir;
 		}
+		if($self->{_logger}) {
+			$self->{_logger}->info("check for directory $candidate");
+		}
 		if(!-d $candidate) {
 			if(defined($lingua->code_alpha2())) {
 				$candidate = "$dir/" . $lingua->code_alpha2();
+				if($self->{_logger}) {
+					$self->{_logger}->info("check for directory $candidate");
+				}
 				if(!-d $candidate) {
 					$candidate = $dir;
 				}
@@ -156,6 +162,9 @@ sub get_template_path {
 	if(defined($prefix)) {
 		$filename = "$prefix/$modulepath.tmpl";
 
+		if($self->{_logger}) {
+			$self->{_logger}->info("check for file $filename");
+		}
 		if(-f $filename) {
 			if(-r $filename) {
 				return $filename;
@@ -163,6 +172,9 @@ sub get_template_path {
 			die "Can't open $filename";
 		}
 		$filename = "$prefix/$modulepath.html";
+		if($self->{_logger}) {
+			$self->{_logger}->info("check for file $filename");
+		}
 		if(-f $filename) {
 			if(-r $filename) {
 				return $filename;
@@ -319,11 +331,17 @@ sub _pfopen {
 	foreach my $dir(split(/:/, $path)) {
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
+				if($self->{_logger}) {
+					$self->{_logger}->info("check for file $dir/$prefix.$suffix");
+				}
 				if(-r "$dir/$prefix.$suffix") {
 					return "$dir/$prefix.$suffix";
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
+			if($self->{_logger}) {
+				$self->{_logger}->info("using file $dir/$prefix");
+			}
 			return "$dir/$prefix";
 		}
 	}
