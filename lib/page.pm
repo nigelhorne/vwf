@@ -105,6 +105,7 @@ sub new {
 		_config => $config,
 		_info => $info,
 		_lingua => $args{lingua},
+		_logger => $args{logger},
 		_key => (defined($info->params())) ? $info->params()->{key} : undef,
 	}, $class;
 }
