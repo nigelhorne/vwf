@@ -127,15 +127,11 @@ sub get_template_path {
 		} else {
 			$candidate = $dir;
 		}
-		if($self->{_logger}) {
-			$self->{_logger}->info("check for directory $candidate");
-		}
+		$self->_log({ message => "check for directory $candidate" });
 		if(!-d $candidate) {
 			if(defined($lingua->code_alpha2())) {
 				$candidate = "$dir/" . $lingua->code_alpha2();
-				if($self->{_logger}) {
-					$self->{_logger}->info("check for directory $candidate");
-				}
+				$self->_log({ message => "check for directory $candidate" });
 				if(!-d $candidate) {
 					$candidate = $dir;
 				}
@@ -162,9 +158,7 @@ sub get_template_path {
 	if(defined($prefix)) {
 		$filename = "$prefix/$modulepath.tmpl";
 
-		if($self->{_logger}) {
-			$self->{_logger}->info("check for file $filename");
-		}
+		$self->_log({ message => "check for file $filename" });
 		if(-f $filename) {
 			if(-r $filename) {
 				return $filename;
@@ -172,9 +166,7 @@ sub get_template_path {
 			die "Can't open $filename";
 		}
 		$filename = "$prefix/$modulepath.html";
-		if($self->{_logger}) {
-			$self->{_logger}->info("check for file $filename");
-		}
+		$self->_log({ message => "check for file $filename" });
 		if(-f $filename) {
 			if(-r $filename) {
 				return $filename;
@@ -185,7 +177,7 @@ sub get_template_path {
 
 	# Fall back to .../web, or if that fails, assume no web, robot or
 	# mobile variant
-	$filename = _pfopen("$dir/web:$dir", $modulepath, 'tmpl:html');
+	$filename = $self->_pfopen("$dir/web:$dir", $modulepath, 'tmpl:html');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
@@ -324,6 +316,7 @@ sub as_string {
 # my $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo', 'txt:bin' );
 # $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo');
 sub _pfopen {
+	my $self = shift;
 	my $path = shift;
 	my $prefix = shift;
 	my $suffixes = shift;
@@ -331,19 +324,24 @@ sub _pfopen {
 	foreach my $dir(split(/:/, $path)) {
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
-				if($self->{_logger}) {
-					$self->{_logger}->info("check for file $dir/$prefix.$suffix");
-				}
+				$self->_log({ message => "check for file $dir/$prefix.$suffix" });
 				if(-r "$dir/$prefix.$suffix") {
 					return "$dir/$prefix.$suffix";
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
-			if($self->{_logger}) {
-				$self->{_logger}->info("using file $dir/$prefix");
-			}
+			$self->_log({ message => "check for file $dir/$prefix" });
 			return "$dir/$prefix";
 		}
+	}
+}
+
+sub _log {
+	my $self = shift;
+
+	if($self->{_logger}) {
+		my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+		$self->{_logger}->info("$ENV{'REMOTE_ADDR'}: $params{'message'}");
 	}
 }
 
