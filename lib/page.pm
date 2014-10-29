@@ -153,22 +153,9 @@ sub get_template_path {
 	my $filename;
 
 	if(defined($prefix)) {
-		$filename = "$prefix/$modulepath.tmpl";
-
-		$self->_log({ message => "check for file $filename" });
-		if(-f $filename) {
-			if(-r $filename) {
-				return $filename;
-			}
-			die "Can't open $filename";
-		}
-		$filename = "$prefix/$modulepath.html";
-		$self->_log({ message => "check for file $filename" });
-		if(-f $filename) {
-			if(-r $filename) {
-				return $filename;
-			}
-			die "Can't open $filename";
+		$filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html');
+		if(defined($filename)) {
+			return $filename;
 		}
 	}
 
