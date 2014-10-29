@@ -134,8 +134,8 @@ sub get_template_path {
 				$candidate = undef;
 			}
 		}
-		if(!defined($candidate)) {
-			$candidate = $dir;
+		if(defined($candidate)) {
+			$dir = $candidate;
 		}
 	}
 
