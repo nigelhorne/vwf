@@ -122,24 +122,21 @@ sub get_template_path {
 		my $candidate;
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
-		} elsif($lingua->code_alpha2()) {
-			$candidate = "$dir/" . $lingua->code_alpha2();
-		} else {
-			$candidate = $dir;
-		}
-		$self->_log({ message => "check for directory $candidate" });
-		if(!-d $candidate) {
-			if(defined($lingua->code_alpha2())) {
-				$candidate = "$dir/" . $lingua->code_alpha2();
-				$self->_log({ message => "check for directory $candidate" });
-				if(!-d $candidate) {
-					$candidate = $dir;
-				}
-			} else {
-				$candidate = $dir;
+			$self->_log({ message => "check for directory $candidate" });
+			if(!-d $candidate) {
+				$candidate = undef;
 			}
 		}
-		$dir = $candidate;
+		if((!defined($candidate)) && defined($lingua->code_alpha2())) {
+			$candidate = "$dir/" . $lingua->code_alpha2();
+			$self->_log({ message => "check for directory $candidate" });
+			if(!-d $candidate) {
+				$candidate = undef;
+			}
+		}
+		if(!defined($candidate)) {
+			$candidate = $dir;
+		}
 	}
 
 	# Look in .../robot or .../mobile first, if appropriate
@@ -181,6 +178,7 @@ sub get_template_path {
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
+	$self->_log({ message => "using $filename" });
 	return $filename;
 }
 
