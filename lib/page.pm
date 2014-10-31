@@ -43,6 +43,18 @@ sub new {
 		die "IDS impact is $impact";
 	}
 
+	if(defined($ENV{'HTTP_REFERER'})) {
+		# Protect against Shellshocker
+		require Data::Validate::URI;
+		Data::Validate::URI->import();
+
+		$v = Data::Validate::URI->new();
+		unless($v->is_uri($ENV{'HTTP_REFERER'})) {
+			$status = 0;
+			return 0;
+		}
+	}
+
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
 		# Handle YAML Errors
 		my $db_file = $info->tmpdir() . '/throttle';
