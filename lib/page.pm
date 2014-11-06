@@ -3,7 +3,6 @@ package VWF::page;
 # Display a page. Certain variables are available to all templates, such as
 # the stuff in the configuration file
 
-use Template;
 use Config::Auto;
 use CGI::Info;
 use File::Spec;
@@ -232,6 +231,9 @@ sub html {
 	my ($self, $params) = @_;
 
 	my $info = $self->{_info};
+
+	require Template;
+	Template->import();
 
 	my $template = Template->new({
 		INTERPOLATE => 1,
