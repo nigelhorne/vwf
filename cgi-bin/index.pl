@@ -25,8 +25,10 @@ use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 
 use VWF::index;
 
-my $info = CGI::Info->new();
-my $cachedir = $info->tmpdir() . '/cache';
+my $cachedir = CGI::Info->tmpdir() . '/cache';
+my $info = CGI::Info->new({ cache =>
+	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => 'CGI::Info'),
+});
 
 my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
