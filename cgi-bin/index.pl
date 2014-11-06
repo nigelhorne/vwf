@@ -8,10 +8,6 @@
 # use File::HomeDir;
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
-use lib '/usr/lib';	# This needs to point to the VWF directory lives,
-			# i.e. the contents of the lib directory in the
-			# distribution
-
 use strict;
 use warnings;
 use diagnostics;
@@ -22,6 +18,10 @@ use CGI::Buffer { optimise_content => 1 };
 use CHI;
 use CGI::Info;
 use CGI::Lingua;
+
+use lib '/usr/lib';	# This needs to point to the VWF directory lives,
+			# i.e. the contents of the lib directory in the
+			# distribution
 
 use VWF::index;
 
@@ -35,19 +35,20 @@ my $lingua = CGI::Lingua->new({
 });
 
 my $script_name = $info->script_name();
+my $script_dir = $info->script_dir();
+Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
+my $logger = Log::Log4perl->get_logger($script_name);
+
 CGI::Buffer::set_options(
 	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
 	info => $info,
 	lingua => $lingua,
+	logger => $logger,
 	# generate_304 => 0,
 );
 if(CGI::Buffer::is_cached()) {
 	exit;
 }
-
-my $script_dir = $info->script_dir();
-Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
-my $logger = Log::Log4perl->get_logger($script_name);
 
 my $display;
 eval {
