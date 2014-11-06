@@ -153,11 +153,11 @@ sub get_template_path {
 	# Look in .../robot or .../mobile first, if appropriate
 	my $prefix;
 	if($self->{_info}->is_mobile()) {
-		$prefix = "$dir/mobile";
+		$prefix = "$dir/mobile:";
 	} elsif($self->{_info}->is_search_engine()) {
-		$prefix = "$dir/search:$dir/robot";
+		$prefix = "$dir/search:$dir/robot:";
 	} elsif($self->{_info}->is_robot()) {
-		$prefix = "$dir/robot";
+		$prefix = "$dir/robot:";
 	} else {
 		$prefix = '';
 	}
@@ -169,7 +169,7 @@ sub get_template_path {
 	my $modulepath = ref($self);
 	$modulepath =~ s/::/\//g;
 
-	my $filename = $self->_pfopen("$dir/web:$dir", $modulepath, 'tmpl:html');
+	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
