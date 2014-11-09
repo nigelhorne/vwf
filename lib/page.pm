@@ -141,12 +141,12 @@ sub get_template_path {
 
 	# Look in .../robot or .../mobile first, if appropriate
 	my $prefix;
-	if($self->{_info}->is_mobile()) {
-		$prefix = "$dir/mobile";
-	} elsif($self->{_info}->is_search_engine()) {
-		$prefix = "$dir/search:$dir/robot";
+	if($self->{_info}->is_search_engine()) {
+		$prefix = "$dir/search:$dir/robot:";
 	} elsif($self->{_info}->is_robot()) {
-		$prefix = "$dir/robot";
+		$prefix = "$dir/robot:";
+	} elsif($self->{_info}->is_mobile()) {
+		$prefix = "$dir/mobile:";
 	} else {
 		$prefix = '';
 	}
