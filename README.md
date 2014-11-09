@@ -93,6 +93,7 @@ njh@compaq:~$ find ~njh/VWF/
 /home/njh/VWF/table.pm
 njh@compaq:~$ find /home/njh/public_html/
 /home/njh/public_html/
+/home/njh/public_html/index.html
 /home/njh/public_html/cgi-bin
 /home/njh/public_html/cgi-bin/index.pl
 /home/njh/public_html/.htaccess

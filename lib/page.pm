@@ -3,7 +3,6 @@ package VWF::page;
 # Display a page. Certain variables are available to all templates, such as
 # the stuff in the configuration file
 
-use Template;
 use Config::Auto;
 use CGI::Info;
 use File::Spec;
@@ -41,6 +40,18 @@ sub new {
 	my $impact = $ids->detect_attacks(request => $info->params());
 	if($impact > 0) {
 		die "IDS impact is $impact";
+	}
+
+	if(defined($ENV{'HTTP_REFERER'})) {
+		# Protect against Shellshocker
+		require Data::Validate::URI;
+		Data::Validate::URI->import();
+
+		$v = Data::Validate::URI->new();
+		unless($v->is_uri($ENV{'HTTP_REFERER'})) {
+			$status = 0;
+			return 0;
+		}
 	}
 
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
@@ -158,7 +169,7 @@ sub get_template_path {
 	my $modulepath = ref($self);
 	$modulepath =~ s/::/\//g;
 
-	my $filename = $self->_pfopen("$dir/web:$dir", $modulepath, 'tmpl:html');
+	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
@@ -220,6 +231,9 @@ sub html {
 	my ($self, $params) = @_;
 
 	my $info = $self->{_info};
+
+	require Template;
+	Template->import();
 
 	my $template = Template->new({
 		INTERPOLATE => 1,
