@@ -27,12 +27,12 @@ use VWF::index;
 
 my $cachedir = CGI::Info->tmpdir() . '/cache';
 my $info = CGI::Info->new({
-	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => 'CGI::Info'),
+	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info'),
 });
 
 my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
-	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => 'CGI::Lingua'),
+	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua'),
 	info => $info,
 });
 
