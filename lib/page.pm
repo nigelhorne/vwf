@@ -337,7 +337,11 @@ sub _log {
 
 	if($self->{_logger}) {
 		my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
-		$self->{_logger}->info("$ENV{'REMOTE_ADDR'}: $params{'message'}");
+		if($ENV{'REMOTE_ADDR'}) {
+			$self->{_logger}->info("$ENV{'REMOTE_ADDR'}: $params{'message'}");
+		} else {
+			$self->{_logger}->info($params{'message'});
+		}
 	}
 }
 
