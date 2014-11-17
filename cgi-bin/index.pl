@@ -30,12 +30,6 @@ my $info = CGI::Info->new({
 	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info'),
 });
 
-my $lingua = CGI::Lingua->new({
-        supported => [ 'en-gb' ],
-	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua'),
-	info => $info,
-});
-
 my $script_name = $info->script_name();
 my $script_dir = $info->script_dir();
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
@@ -44,13 +38,18 @@ my $logger = Log::Log4perl->get_logger($script_name);
 CGI::Buffer::set_options(
 	cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
 	info => $info,
-	lingua => $lingua,
 	logger => $logger,
 	# generate_304 => 0,
 );
 if(CGI::Buffer::is_cached()) {
 	exit;
 }
+
+my $lingua = CGI::Lingua->new({
+        supported => [ 'en-gb' ],
+	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua'),
+	info => $info,
+});
 
 my $display;
 eval {
