@@ -23,8 +23,6 @@ use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
 
-use VWF::index;
-
 my $cachedir = CGI::Info->tmpdir() . '/cache';
 my $info = CGI::Info->new({
 	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info'),
@@ -51,6 +49,8 @@ my $lingua = CGI::Lingua->new({
 	info => $info,
 	logger => $logger,
 });
+
+use VWF::index;
 
 my $display;
 eval {
