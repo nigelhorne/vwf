@@ -49,6 +49,7 @@ my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
 	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua'),
 	info => $info,
+	logger => $logger,
 });
 
 my $display;
