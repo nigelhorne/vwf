@@ -236,15 +236,6 @@ sub html {
 
 	my $info = $self->{_info};
 
-	require Template;
-	Template->import();
-
-	my $template = Template->new({
-		INTERPOLATE => 1,
-		POST_CHOMP => 1,
-		ABSOLUTE => 1,
-	});
-
 	# The values in config are defaults which can be overriden by
 	# the values in params
 	my $vals;
@@ -264,6 +255,15 @@ sub html {
 	my $filename = $self->get_template_path();
 	my $rc;
 	if($filename =~ /.+\.tmpl$/) {
+		require Template;
+		Template->import();
+
+		my $template = Template->new({
+			INTERPOLATE => 1,
+			POST_CHOMP => 1,
+			ABSOLUTE => 1,
+		});
+
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
 	} elsif($filename =~ /.*\.html?$/) {
