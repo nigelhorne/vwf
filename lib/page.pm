@@ -234,24 +234,6 @@ sub http {
 sub html {
 	my ($self, $params) = @_;
 
-	my $info = $self->{_info};
-
-	# The values in config are defaults which can be overriden by
-	# the values in params
-	my $vals;
-
-	if(defined($params)) {
-		if(defined($self->{_config})) {
-			$vals = { %{$self->{_config}}, %{$params} };
-		} else {
-			$vals = $params;
-		}
-	} elsif(defined($self->{_config})) {
-		$vals = $self->{_config};
-	}
-
-	$vals->{cart} = $info->get_cookie(cookie_name => 'cart');
-
 	my $filename = $self->get_template_path();
 	my $rc;
 	if($filename =~ /.+\.tmpl$/) {
@@ -263,6 +245,22 @@ sub html {
 			POST_CHOMP => 1,
 			ABSOLUTE => 1,
 		});
+
+		# The values in config are defaults which can be overriden by
+		# the values in params
+		my $vals;
+
+		if(defined($params)) {
+			if(defined($self->{_config})) {
+				$vals = { %{$self->{_config}}, %{$params} };
+			} else {
+				$vals = $params;
+			}
+		} elsif(defined($self->{_config})) {
+			$vals = $self->{_config};
+		}
+
+		$vals->{cart} = $self->{_info}->get_cookie(cookie_name => 'cart');
 
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
