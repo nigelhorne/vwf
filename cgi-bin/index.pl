@@ -33,9 +33,7 @@ my $script_dir = $info->script_dir();
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 
-if(defined($ENV{'NO_CACHE'}) || defined($ENV{'NO_STORE'})) {
-	CGI::Buffer::set_options(info => $info, logger => $logger);
-} else {
+if(CGI::Buffer::can_cache()) {
 	CGI::Buffer::set_options(
 		cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
 		info => $info,
@@ -45,6 +43,8 @@ if(defined($ENV{'NO_CACHE'}) || defined($ENV{'NO_STORE'})) {
 	if(CGI::Buffer::is_cached()) {
 		exit;
 	}
+} else {
+	CGI::Buffer::set_options(info => $info, logger => $logger);
 }
 
 my $lingua = CGI::Lingua->new({
