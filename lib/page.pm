@@ -128,6 +128,10 @@ sub new {
 sub get_template_path {
 	my $self = shift;
 
+	if($self->{_filename}) {
+		return $self->{_filename};
+	}
+
 	my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
 	$dir .= '/templates';
 
@@ -178,6 +182,7 @@ sub get_template_path {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
 	$self->_log({ message => "using $filename" });
+	$self->_filename = $filename;
 	return $filename;
 }
 
