@@ -182,7 +182,7 @@ sub get_template_path {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
 	$self->_log({ message => "using $filename" });
-	$self->_filename = $filename;
+	$self->{_filename} = $filename;
 	return $filename;
 }
 
