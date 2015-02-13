@@ -220,6 +220,7 @@ sub http {
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
 	my $rc = "X-Frame-Options: SAMEORIGIN\n";
 
+	my $filename = $self->get_template_path();
 	if($filename =~ /\.txt$/) {
 		$rc = "Content-type: text/plain\n";
 	} elsif($language eq 'Japanese') {
