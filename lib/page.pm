@@ -177,7 +177,7 @@ sub get_template_path {
 	my $modulepath = ref($self);
 	$modulepath =~ s/::/\//g;
 
-	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html');
+	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html:htm:txt');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
 	}
@@ -220,7 +220,9 @@ sub http {
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
 	my $rc = "X-Frame-Options: SAMEORIGIN\n";
 
-	if($language eq 'Japanese') {
+	if($filename =~ /\.txt$/) {
+		$rc = "Content-type: text/plain\n";
+	} elsif($language eq 'Japanese') {
 		binmode(STDOUT, ':utf8');
 
 		$rc = "Content-type: text/html; charset=UTF-8\n";
@@ -269,7 +271,7 @@ sub html {
 
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
-	} elsif($filename =~ /.*\.html?$/) {
+	} elsif($filename =~ /\.(html?|txt)$/) {
 		open(my $fin, '<', $filename) || die "$filename: $!";
 
 		my @lines = <$fin>;

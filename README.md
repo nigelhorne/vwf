@@ -21,11 +21,11 @@ added for mobile/robot/search-engine use in addition to web pages,
 and allow new languages to be added easily.
 
 The content directory hierarchy is of the format
-.../language/region/[web|mobile|robot|search]/filename.[html|tmpl].
+.../language/region/[web|mobile|robot|search]/filename.[html|tmpl|txt].
 Language and region are determined by the browser settings. If the template
 isn't found there it looks in
-.../language/[web|mobile|robot|search]/filename.[html|tmpl], and if not
-there it looks in ../[web|mobile|robot|search]/filename.[html|tmpl].
+.../language/[web|mobile|robot|search]/filename.[html|tmpl|txt], and if not
+there it looks in ../[web|mobile|robot|search]/filename.[html|tmpl|txt].
 The fall back is web, so if a mobile browser visits and there is no specific
 mobile page to display then the web page will be displayed.
 
@@ -37,6 +37,10 @@ English. If you were to do a version in Spanish, that would be in
 .../es/web/index.tmpl and so on.  And a version in British English would be
 in .../en/gb/web/index.tmpl (NOT .../en/web/index.tmpl otherwise U.S.
 readers would be directed there).
+
+Files ending in .tmpl will be sent using the Template Toolkit, files ending
+with .html or .htm will be sent as is, and files ending in .txt will
+be sent as is with the Content-Type header set to text/plain.
 
 How To Install and Use:
 -----------------------
