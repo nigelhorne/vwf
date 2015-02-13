@@ -21,14 +21,10 @@ use File::Basename;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
-use lib File::HomeDir->my_home() . '/lib/perl5';
 
 use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
-
-use VWF::index;
-my $pagename = 'VWF::index';
 
 my $info = CGI::Info->new();
 my $tmpdir = $info->tmpdir();
@@ -45,6 +41,9 @@ open(STDERR, '>>', "$tmpdir/$script_name.stderr");
 my $infocache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info');
 my $linguacache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua');
 my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => $script_name);
+
+my $pagename = "VWF::$script_name";
+eval "require $pagename";
 
 my $request = FCGI::Request();
 

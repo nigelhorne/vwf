@@ -18,6 +18,7 @@ use CGI::Buffer { optimise_content => 1 };
 use CHI;
 use CGI::Info;
 use CGI::Lingua;
+use File::Basename;
 
 use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -28,7 +29,9 @@ my $info = CGI::Info->new({
 	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info'),
 });
 
-my $script_name = $info->script_name();
+my @suffixlist = ('.pl', '.fcgi');
+my $script_name = basename($info->script_name(), @suffixlist);
+
 my $script_dir = $info->script_dir();
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
@@ -54,7 +57,8 @@ my $lingua = CGI::Lingua->new({
 	logger => $logger,
 });
 
-use VWF::index;
+my $pagename = "VWF::$script_name";
+eval "require $pagename";
 
 my $display;
 eval {
