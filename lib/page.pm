@@ -135,6 +135,9 @@ sub get_template_path {
 	my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
 	$dir .= '/templates';
 
+	# Look in .../robot or .../mobile first, if appropriate
+	my $prefix = '';
+
 	#  Look in .../en/gb/web, then .../en/web then /web
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
@@ -154,25 +157,32 @@ sub get_template_path {
 			}
 		}
 		if(defined($candidate)) {
-			$dir = $candidate;
+			if($self->{_info}->is_search_engine()) {
+				$prefix = "$candidate/search:$dir/robot:";
+			} elsif($self->{_info}->is_robot()) {
+				$prefix = "$candidate/robot:";
+			} elsif($self->{_info}->is_mobile()) {
+				$prefix = "$candidate/mobile:";
+			} else {
+				$prefix = '';
+			}
+			$prefix .= "$candidate/web:$dir:";
 		}
 	}
 
-	# Look in .../robot or .../mobile first, if appropriate
-	my $prefix;
 	if($self->{_info}->is_search_engine()) {
-		$prefix = "$dir/search:$dir/robot:";
+		$prefix .= "$dir/search:$dir/robot:";
 	} elsif($self->{_info}->is_robot()) {
-		$prefix = "$dir/robot:";
+		$prefix .= "$dir/robot:";
 	} elsif($self->{_info}->is_mobile()) {
-		$prefix = "$dir/mobile:";
-	} else {
-		$prefix = '';
+		$prefix .= "$dir/mobile:";
 	}
 
 	# Fall back to .../web, or if that fails, assume no web, robot or
 	# mobile variant
 	$prefix .= "$dir/web:$dir";
+
+	$self->_log({ message => "prefix: $prefix" });
 
 	my $modulepath = ref($self);
 	$modulepath =~ s/::/\//g;
