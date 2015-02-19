@@ -45,13 +45,13 @@ my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namesp
 my $pagename = "VWF::$script_name";
 eval "require $pagename";
 
+Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
+my $logger = Log::Log4perl->get_logger($script_name);
+
 my $request = FCGI::Request();
 
 while($request->FCGI::Accept() >= 0) {
 	my $info = CGI::Info->new({ cache => $infocache });
-
-	Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
-	my $logger = Log::Log4perl->get_logger($script_name);
 
 	my $fb = FCGI::Buffer->new();
 	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger });
