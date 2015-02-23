@@ -189,7 +189,7 @@ sub get_template_path {
 
 	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html:htm:txt');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
-		die "Can't find suitable html or tmpl file in $modulepath in $dir or a subdir";
+		die "Can't find suitable $prefix html or tmpl file in $modulepath in $dir or a subdir";
 	}
 	$self->_log({ message => "using $filename" });
 	$self->{_filename} = $filename;
