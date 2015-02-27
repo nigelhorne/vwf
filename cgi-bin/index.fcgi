@@ -72,7 +72,6 @@ sub doit
 			# generate_304 => 0,
 		);
 		if($fb->is_cached()) {
-			$request->Finish();
 			return;
 		}
 	}
