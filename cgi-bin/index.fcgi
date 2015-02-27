@@ -51,6 +51,17 @@ my $logger = Log::Log4perl->get_logger($script_name);
 my $request = FCGI::Request();
 
 while($request->FCGI::Accept() >= 0) {
+	eval {
+		doit();
+	};
+	if($@) {
+		$logger->error($@);
+	}
+	# $request->Finish();
+}
+
+sub doit
+{
 	my $info = CGI::Info->new({ cache => $infocache });
 
 	my $fb = FCGI::Buffer->new();
@@ -62,7 +73,7 @@ while($request->FCGI::Accept() >= 0) {
 		);
 		if($fb->is_cached()) {
 			$request->Finish();
-			next;
+			return;
 		}
 	}
 
