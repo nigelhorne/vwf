@@ -158,7 +158,7 @@ sub get_template_path {
 		}
 		if(defined($candidate)) {
 			if($self->{_info}->is_search_engine()) {
-				$prefix = "$candidate/search:$dir/robot:";
+				$prefix = "$candidate/search:$candidate/robot:";
 			} elsif($self->{_info}->is_robot()) {
 				$prefix = "$candidate/robot:";
 			} elsif($self->{_info}->is_mobile()) {
