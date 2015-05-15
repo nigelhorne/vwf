@@ -164,7 +164,7 @@ sub get_template_path {
 			} elsif($self->{_info}->is_mobile()) {
 				$prefix = "$candidate/mobile:";
 			}
-			$prefix .= "$candidate/web:$dir:";
+			$prefix .= "$candidate/web:";
 		}
 	}
 
