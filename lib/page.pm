@@ -163,8 +163,6 @@ sub get_template_path {
 				$prefix = "$candidate/robot:";
 			} elsif($self->{_info}->is_mobile()) {
 				$prefix = "$candidate/mobile:";
-			} else {
-				$prefix = '';
 			}
 			$prefix .= "$candidate/web:$dir:";
 		}
