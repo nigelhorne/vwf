@@ -336,6 +336,7 @@ sub _pfopen {
 	my $suffixes = shift;
 
 	foreach my $dir(split(/:/, $path)) {
+		next unless(-d $dir);
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
 				$self->_log({ message => "check for file $dir/$prefix.$suffix" });
@@ -344,7 +345,7 @@ sub _pfopen {
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
-			$self->_log({ message => "check for file $dir/$prefix" });
+			$self->_log({ message => "using $dir/$prefix" });
 			return "$dir/$prefix";
 		}
 	}
