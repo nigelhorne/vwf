@@ -5,9 +5,6 @@
 
 # Build the data to be displayed on the index page
 
-# use File::HomeDir;
-# use lib File::HomeDir->my_home() . '/lib/perl5';
-
 use strict;
 use warnings;
 use diagnostics;
@@ -23,10 +20,13 @@ use File::Basename;
 use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
+# use File::HomeDir;
+# use lib File::HomeDir->my_home() . '/lib/perl5';
+
 
 my $cachedir = CGI::Info->tmpdir() . '/cache';
 my $info = CGI::Info->new({
-	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Info'),
+	cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info')
 });
 
 my @suffixlist = ('.pl', '.fcgi');
@@ -52,13 +52,18 @@ if(CGI::Buffer::can_cache()) {
 
 my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
-	cache => CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => 'CGI::Lingua'),
+	cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua'),
 	info => $info,
 	logger => $logger,
 });
 
 my $pagename = "VWF::$script_name";
 eval "require $pagename";
+
+if($@) {
+	$logger->error($@);
+	die $@;
+}
 
 my $display;
 eval {
