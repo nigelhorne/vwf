@@ -166,6 +166,7 @@ sub get_template_path {
 			}
 			$prefix .= "$candidate/web:";
 		}
+		$prefix .= "default/web:";
 	}
 
 	if($self->{_info}->is_search_engine()) {
