@@ -165,8 +165,9 @@ sub get_template_path {
 				$prefix = "$candidate/mobile:";
 			}
 			$prefix .= "$candidate/web:";
+		} else {
+			$prefix .= "$dir/default/web:";
 		}
-		$prefix .= "default/web:";
 	}
 
 	if($self->{_info}->is_search_engine()) {
