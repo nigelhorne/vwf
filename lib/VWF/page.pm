@@ -165,7 +165,8 @@ sub get_template_path {
 				$prefix = "$candidate/mobile:";
 			}
 			$prefix .= "$candidate/web:";
-		} elsif(-d "$dir/default/web") {
+		}
+		if(-d "$dir/default/web") {
 			$prefix .= "$dir/default/web:";
 		}
 	}
