@@ -167,7 +167,15 @@ sub get_template_path {
 			$prefix .= "$candidate/web:";
 		}
 	}
-	if(-d "$dir/default/web") {
+	if(-d "$dir/default") {
+		my $candidate = "$dir/default";
+		if($self->{_info}->is_search_engine()) {
+			$prefix = "$candidate/search:$candidate/robot:";
+		} elsif($self->{_info}->is_robot()) {
+			$prefix = "$candidate/robot:";
+		} elsif($self->{_info}->is_mobile()) {
+			$prefix = "$candidate/mobile:";
+		}
 		$prefix .= "$dir/default/web:";
 	}
 
