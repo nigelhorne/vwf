@@ -170,11 +170,11 @@ sub get_template_path {
 	if(-d "$dir/default") {
 		my $candidate = "$dir/default";
 		if($self->{_info}->is_search_engine()) {
-			$prefix = "$candidate/search:$candidate/robot:";
+			$prefix .= "$candidate/search:$candidate/robot:";
 		} elsif($self->{_info}->is_robot()) {
-			$prefix = "$candidate/robot:";
+			$prefix .= "$candidate/robot:";
 		} elsif($self->{_info}->is_mobile()) {
-			$prefix = "$candidate/mobile:";
+			$prefix .= "$candidate/mobile:";
 		}
 		$prefix .= "$dir/default/web:";
 	}
@@ -346,18 +346,35 @@ sub _pfopen {
 	my $prefix = shift;
 	my $suffixes = shift;
 
+	our $savedpaths;
+
+	my $candidate;
+	if(defined($suffixes)) {
+		$candidate = "$prefix;$path;$suffix";
+	} else {
+		$candidate = "$prefix;$path";
+	}
+	if($savedpaths->{$candidate}) {
+		$self->_log({ message => "remembered $savedpaths->{$candidate}" });
+		return $savedpaths->{$candidate};
+	}
+
 	foreach my $dir(split(/:/, $path)) {
 		next unless(-d $dir);
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
 				$self->_log({ message => "check for file $dir/$prefix.$suffix" });
 				if(-r "$dir/$prefix.$suffix") {
-					return "$dir/$prefix.$suffix";
+					my $rc = "$dir/$prefix.$suffix";
+					$savedpaths->{$candidate} = $rc;
+					return $rc;
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
-			$self->_log({ message => "using $dir/$prefix" });
-			return "$dir/$prefix";
+			my $rc = "$dir/$suffix";
+			$savedpaths->{$candidate} = $rc;
+			$self->_log({ message => "using $rc" });
+			return $rc;
 		}
 	}
 }
