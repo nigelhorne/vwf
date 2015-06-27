@@ -351,7 +351,7 @@ sub _pfopen {
 
 	my $candidate;
 	if(defined($suffixes)) {
-		$candidate = "$prefix;$path;$suffix";
+		$candidate = "$prefix;$path;$suffixes";
 	} else {
 		$candidate = "$prefix;$path";
 	}
@@ -365,14 +365,14 @@ sub _pfopen {
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
 				$self->_log({ message => "check for file $dir/$prefix.$suffix" });
-				if(-r "$dir/$prefix.$suffix") {
-					my $rc = "$dir/$prefix.$suffix";
+				my $rc = "$dir/$prefix.$suffix";
+				if(-r $rc) {
 					$savedpaths->{$candidate} = $rc;
 					return $rc;
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
-			my $rc = "$dir/$suffix";
+			my $rc = "$dir/$prefix";
 			$savedpaths->{$candidate} = $rc;
 			$self->_log({ message => "using $rc" });
 			return $rc;
