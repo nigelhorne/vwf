@@ -127,6 +127,7 @@ sub new {
 
 sub get_template_path {
 	my $self = shift;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	if($self->{_filename}) {
 		return $self->{_filename};
@@ -193,7 +194,7 @@ sub get_template_path {
 
 	$self->_log({ message => "prefix: $prefix" });
 
-	my $modulepath = ref($self);
+        my $modulepath = $args{'modulepath'} || ref($self);
 	$modulepath =~ s/::/\//g;
 
 	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:html:htm:txt');
