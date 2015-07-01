@@ -139,7 +139,7 @@ sub get_template_path {
 	# Look in .../robot or .../mobile first, if appropriate
 	my $prefix = '';
 
-	#  Look in .../en/gb/web, then .../en/web then /web
+	# Look in .../en/gb/web, then .../en/web then /web
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
 		my $candidate;
@@ -303,13 +303,20 @@ sub html {
 	} else {
 		warn "Unhandled file type $filename";
 	}
+
+	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/)) {
+		unless($1 =~ /^&/) {
+			$self->_log({ message => "Found mailto link $1, you should remove it or use " . obfuscate($1) . ' instead' });
+		}
+	}
+
 	return $rc;
 }
 
 sub as_string {
 	my ($self, $args) = @_;
 
-	# TODO: Get all cookies and send them to to template.
+	# TODO: Get all cookies and send them to the template.
 	# 'cart' is an example
 	unless($args && $args->{cart}) {
 		$purchases = $self->{_info}->get_cookie(cookie_name => 'cart');
@@ -391,6 +398,10 @@ sub _log {
 			$self->{_logger}->info($params{'message'});
 		}
 	}
+}
+
+sub obfuscate {
+	map { '&#' . ord($_) . ';' } split(//, shift);
 }
 
 1;
