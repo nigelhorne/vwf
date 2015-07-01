@@ -1,7 +1,8 @@
 vwf
 ===
 
-Versatile Web Framework - easily build a website to support different languages and client platforms
+Versatile Web Framework - a framework to build a website easily in Perl that
+supports different languages and client platforms.
 
 Licenced under GPL2.0 for personal use only.
 
@@ -10,15 +11,14 @@ What This Does:
 
 VWF is a framework to easily display web pages tailored to the wishes
 of the browser, e.g. language to use and mobile/web content. It supports
-Template Toolkit (http://template-toolkit.org/) and HTML files.
+Template Toolkit (http://template-toolkit.org/), text and HTML files.
 
-The idea is call index.pl which will then automatically display
+The idea is to create index.pl which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language
-setting (e.g. en-GB), and type (e.g. mobile).
-
-By putting the pages in a directory hierarchy new versions can be quickly
-added for mobile/robot/search-engine use in addition to web pages,
-and allow new languages to be added easily.
+setting (e.g. en-GB) and type (e.g. mobile). By putting the pages in a
+directory hierarchy new versions can be quickly added for
+mobile/robot/search-engine use in addition to web pages, and allow new
+languages to be added easily.
 
 The content directory hierarchy is of the format
 .../language/region/[web|mobile|robot|search]/filename.[html|tmpl|txt].
