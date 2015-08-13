@@ -13,8 +13,8 @@ before_install:
   - cpanm --installdeps --no-interactive --verbose --notest DBD::SQLite
   - cpanm --notest --no-interactive --verbose DBD::SQLite Locale::Object::Country
 install:
-  - cpanm --installdeps --notest --no-interactive --verbose Log::Log4perl CGI::Carp CHI CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached
-  - cpanm --notest --no-interactive --verbose Log::Log4perl CGI::Carp CHI CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached
+  - cpanm --installdeps --notest --no-interactive --verbose Log::Log4perl CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached
+  - cpanm --notest --no-interactive --verbose Log::Log4perl CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached
 script:
   - perl cgi-bin/index.fcgi
   - perl cgi-bin/index.pl
