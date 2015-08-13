@@ -84,6 +84,8 @@ then you would add 'rootdir: /usr/lib/example.com'.
 
 The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.com.
 
+Finally change conf/index.l4pconf to the logging mechanism of your choice.
+
 Worked example:
 
 I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
