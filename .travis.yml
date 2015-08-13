@@ -10,10 +10,10 @@ perl:
 # This can be removed once CGI::Lingua 0.54 has been published
 before_install:
   # Needed for Locale::Object
-  - cpanm --installdeps --notest DBD::SQLite
-  - cpanm --notest --verbose DBD::SQLite Locale::Object::Country
+  - cpanm --installdeps --quiet --notest DBD::SQLite
+  - cpanm --notest --quiet DBD::SQLite Locale::Object::Country
 install:
-  - cpanm --installdeps --verbose Log::Log4perl CGI::Carp CHI CGI::Info CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir
+  - cpanm --installdeps --notest --quiet Log::Log4perl CGI::Carp CHI CGI::Info CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir
   - cpanm --verbose Log::Log4perl CGI::Carp CHI CGI::Info CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir
 script:
   - perl cgi-bin/index.fcgi
