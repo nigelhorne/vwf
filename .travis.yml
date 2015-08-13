@@ -1,0 +1,12 @@
+language: perl
+perl:
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+install:
+  - cpanm --installdeps Log::Log4perl CGI::Carp qw(fatalsToBrowser) CHI CGI::Info CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir
+  - cpanm Log::Log4perl CGI::Carp qw(fatalsToBrowser) CHI CGI::Info CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir
+script:
+  - perl cgi-bin/index.fcgi
+  - perl cgi-bin/index.pl

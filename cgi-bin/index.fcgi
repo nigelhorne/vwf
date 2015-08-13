@@ -42,6 +42,9 @@ my $infocache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ]
 my $linguacache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua');
 my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => $script_name);
 
+Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
+my $logger = Log::Log4perl->get_logger($script_name);
+
 my $pagename = "VWF::$script_name";
 eval "require $pagename";
 
@@ -49,9 +52,6 @@ if($@) {
 	$logger->error($@);
 	die $@;
 }
-
-Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
-my $logger = Log::Log4perl->get_logger($script_name);
 
 my $request = FCGI::Request();
 
