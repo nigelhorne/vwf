@@ -22,9 +22,10 @@ use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
 
-use lib '/usr/lib';	# This needs to point to the VWF directory lives,
+# use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
+use lib './lib';
 
 my $info = CGI::Info->new();
 my $tmpdir = $info->tmpdir();
