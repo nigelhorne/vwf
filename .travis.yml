@@ -16,5 +16,5 @@ install:
   - cpanm --installdeps --notest --no-interactive --verbose CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl
   - cpanm --notest --no-interactive --verbose CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl
 script:
-  - perl cgi-bin/index.fcgi
-  - perl cgi-bin/index.pl
+  - perl cgi-bin/index.fcgi ''
+  - perl cgi-bin/index.pl ''
