@@ -242,8 +242,7 @@ sub http {
 		$language = 'English';
 	}
 
-	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
-	my $rc = "X-Frame-Options: SAMEORIGIN\n";
+	my $rc;
 
 	my $filename = $self->get_template_path();
 	if($filename =~ /\.txt$/) {
@@ -261,7 +260,8 @@ sub http {
 		$rc = "Content-type: text/html; charset=ISO-8859-1\n";
 	}
 
-	return $rc . "\n";
+	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
+	return $rc . "X-Frame-Options: SAMEORIGIN\n\n";
 }
 
 sub html {
