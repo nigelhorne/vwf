@@ -62,7 +62,7 @@ while($request->FCGI::Accept() >= 0) {
 	};
 	if($@) {
 		my $msg = $@;
-		warn $msg unless($defined($ENV{'REMOTE_ADDR'}));
+		warn $msg unless(defined($ENV{'REMOTE_ADDR'}));
 		$logger->error($msg);
 	}
 	# $request->Finish();
