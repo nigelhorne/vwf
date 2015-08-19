@@ -46,6 +46,23 @@ sub new {
 	return bless { dbh => $dbh }, $class;
 }
 
+# Returns a reference to an array of hash references of all the data
+sub selectall_hashref {
+	my $self = shift;
+
+	my $table = ref($self);
+	$table =~ s/.*:://;
+
+	my $sth = $dbh->prepare("SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'");
+	$sth->execute() || die "$table->selectall_hashref";
+	my @rc;
+	while (my $href = $sth->fetchrow_hashref()) {
+		push @rc, $href;
+	}
+
+	return \@rc;
+}
+
 sub AUTOLOAD {
 	my $column = $AUTOLOAD;
 
