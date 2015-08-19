@@ -2,7 +2,7 @@ vwf
 ===
 
 Versatile Web Framework - a framework to build a website easily in Perl that
-supports different languages and client platforms.
+supports different languages, databases and client platforms.
 
 Licenced under GPL2.0 for personal use only.
 
@@ -86,6 +86,9 @@ The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.
 
 Finally change conf/index.l4pconf to the logging mechanism of your choice.
 
+The database system is yet to be documented, but essentially it provides
+a simple way to include dynamic data in your templates.
+
 Worked example:
 
 I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
@@ -116,6 +119,5 @@ Updates:
 --------
 
 git clone https://github.com/nigelhorne/vwf.git
-
 
 Nigel Horne (njh@bandsman.co.uk)

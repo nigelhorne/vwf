@@ -58,7 +58,7 @@ my $lingua = CGI::Lingua->new({
 	logger => $logger,
 });
 
-my $pagename = "VWF::$script_name";
+my $pagename = "VWF::Display::$script_name";
 eval "require $pagename";
 
 if($@) {
@@ -68,7 +68,7 @@ if($@) {
 
 my $display;
 eval {
-	$display = VWF::index->new({
+	$display = VWF::Display::index->new({
 		info => $info,
 		lingua => $lingua,
 		logger => $logger,

@@ -46,7 +46,7 @@ my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namesp
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 
-my $pagename = "VWF::$script_name";
+my $pagename = "VWF::Display::$script_name";
 eval "require $pagename";
 
 if($@) {

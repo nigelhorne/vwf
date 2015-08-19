@@ -1,4 +1,4 @@
-package VwF::table;
+package VWF::Display::table;
 
 use Config::Auto;
 use Text::xSV::Slurp;
