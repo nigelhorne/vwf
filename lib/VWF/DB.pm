@@ -2,6 +2,12 @@ package VWF::DB;
 
 my $dbh;
 
+BEGIN {
+	if($directory) {
+		die($directory);
+	}
+}
+
 sub new {
 	my $proto = shift;
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
@@ -11,6 +17,15 @@ sub new {
 	if($dbh) {
 		return bless { dbh => $dbh }, $class;
 	}
+
+	init(\%args);
+
+	return bless { dbh => $dbh }, $class;
+}
+
+# Can also be run as a class level VWF::DB::init(args)
+sub init {
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	die 'databases list not given' unless($args{'databases'});
 	die 'directory not given' unless($args{'directory'});
@@ -42,8 +57,6 @@ sub new {
 			f_file => $slurp_file,
 		};
 	}
-
-	return bless { dbh => $dbh }, $class;
 }
 
 # Returns a reference to an array of hash references of all the data
