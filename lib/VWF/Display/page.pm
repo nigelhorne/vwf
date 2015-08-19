@@ -173,6 +173,8 @@ sub get_template_path {
 			$prefix .= "$candidate/web:";
 		}
 	}
+
+	$self->_log({ message => "check for directory $dir/default" });
 	if(-d "$dir/default") {
 		my $candidate = "$dir/default";
 		if($self->{_info}->is_search_engine()) {
