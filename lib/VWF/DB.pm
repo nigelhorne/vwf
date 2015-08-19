@@ -46,4 +46,29 @@ sub new {
 	return bless { dbh => $dbh }, $class;
 }
 
+sub AUTOLOAD {
+	my $column = $AUTOLOAD;
+
+	$column =~ s/.*:://;
+
+	return if($column eq 'DESTROY');
+
+	my $self = shift;
+
+	my $table = ref($self);
+	$table =~ s/.*:://;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
+	my $query = "SELECT DISTINCT $column FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	my @args;
+	foreach my $c1(keys(%args)) {
+		$query .= " AND $c1 LIKE ?";
+		push @args, $args{$c1};
+	}
+	my $sth = $self->{'dbh'}->prepare($query);
+	$sth->execute(@args);
+
+	return map { $_->[0] } @{$sth->fetchall_arrayref()};
+}
+
 1;
