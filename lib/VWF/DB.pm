@@ -2,12 +2,6 @@ package VWF::DB;
 
 my $dbh;
 
-BEGIN {
-	if($directory) {
-		die($directory);
-	}
-}
-
 sub new {
 	my $proto = shift;
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
@@ -67,7 +61,7 @@ sub selectall_hashref {
 	$table =~ s/.*:://;
 
 	my $sth = $dbh->prepare("SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'");
-	$sth->execute() || die "$table->selectall_hashref";
+	$sth->execute() || die($query);
 	my @rc;
 	while (my $href = $sth->fetchrow_hashref()) {
 		push @rc, $href;
@@ -75,6 +69,26 @@ sub selectall_hashref {
 
 	return \@rc;
 }
+
+# Returns a hash reference for one row in a table
+sub fetchrow_hashref {
+	my $self = shift;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
+	my $table = ref($self);
+	$table =~ s/.*:://;
+
+	my $query = "SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	my @args;
+	foreach my $c1(keys(%args)) {
+		$query .= " AND $c1 LIKE ?";
+		push @args, $args{$c1};
+	}
+	my $sth = $self->{'dbh'}->prepare($query);
+	$sth->execute(@args) || die($query);
+	return $sth->fetchrow_hashref();
+}
+
 
 sub AUTOLOAD {
 	my $column = $AUTOLOAD;
@@ -96,7 +110,7 @@ sub AUTOLOAD {
 		push @args, $args{$c1};
 	}
 	my $sth = $self->{'dbh'}->prepare($query);
-	$sth->execute(@args);
+	$sth->execute(@args) || die($query);
 
 	return map { $_->[0] } @{$sth->fetchall_arrayref()};
 }
