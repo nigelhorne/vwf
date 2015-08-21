@@ -1,5 +1,8 @@
 package VWF::DB;
 
+use File::Glob;
+use File::Basename;
+
 my $dbh;
 
 sub new {
@@ -17,11 +20,10 @@ sub new {
 	return bless { dbh => $dbh }, $class;
 }
 
-# Can also be run as a class level VWF::DB::init(args)
+# Can also be run as a class level VWF::DB::init(directory => '../databases')
 sub init {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	die 'databases list not given' unless($args{'databases'});
 	die 'directory not given' unless($args{'directory'});
 
 	my $directory = $args{'directory'};
@@ -30,11 +32,10 @@ sub init {
 	$dbh = DBI->connect('dbi:CSV:csv_sep_char=!');
 	$dbh->{'RaiseError'} = 1;
 
-	foreach my $db(@{$args{'databases'}}) {
-		my $table = $db;
+	foreach my $slurp_file(<$directory/*.db>) {
+		my $table = basename($slurp_file, '.db');
 		$table =~ tr/-/_/;
 
-		my $slurp_file = "$directory/../databases/$db.db";
 		unless(-r $slurp_file) {
 			die "Can't open $slurp_file";
 		}
