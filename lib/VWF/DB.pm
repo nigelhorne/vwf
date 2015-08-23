@@ -2,6 +2,7 @@ package VWF::DB;
 
 use File::Glob;
 use File::Basename;
+use DBI;
 
 my $dbh;
 
