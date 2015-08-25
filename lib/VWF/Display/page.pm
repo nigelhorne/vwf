@@ -297,6 +297,8 @@ sub html {
 
 		$vals->{cart} = $self->{_info}->get_cookie(cookie_name => 'cart');
 
+		$vals = { %{$vals}, %{$self->{_info}->params()} };
+
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
 	} elsif($filename =~ /\.(html?|txt)$/) {
