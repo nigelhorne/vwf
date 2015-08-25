@@ -55,15 +55,23 @@ sub init {
 	}
 }
 
-# Returns a reference to an array of hash references of all the data
+# Returns a reference to an array of hash references of all the data meeting
+# the given criteria
 sub selectall_hashref {
 	my $self = shift;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $table = ref($self);
 	$table =~ s/.*:://;
 
-	my $sth = $dbh->prepare("SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'");
-	$sth->execute() || die($query);
+	my $query = "SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	my @args;
+	foreach my $c1(keys(%args)) {
+		$query .= " AND $c1 LIKE ?";
+		push @args, $args{$c1};
+	}
+	my $sth = $self->{'dbh'}->prepare($query);
+	$sth->execute(@args) || die($query);
 	my @rc;
 	while (my $href = $sth->fetchrow_hashref()) {
 		push @rc, $href;
