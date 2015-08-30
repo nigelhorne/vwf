@@ -161,38 +161,11 @@ sub get_template_path {
 				$candidate = undef;
 			}
 		}
-		if(defined($candidate)) {
-			if($self->{_info}->is_search_engine()) {
-				$prefix = "$candidate/search:$candidate/web:$candidate/robot:";
-			} elsif($self->{_info}->is_robot()) {
-				$prefix = "$candidate/robot:";
-			} elsif($self->{_info}->is_mobile()) {
-				$prefix = "$candidate/mobile:";
-			}
-			$prefix .= "$candidate/web:";
-		}
+		$prefix = $self->_append_browser_type({ directory => $candidate });
 	}
 
-	$self->_log({ message => "check for directory $dir/default" });
-	if(-d "$dir/default") {
-		my $candidate = "$dir/default";
-		if($self->{_info}->is_search_engine()) {
-			$prefix .= "$candidate/search:$candidate/web:$candidate/robot:";
-		} elsif($self->{_info}->is_robot()) {
-			$prefix .= "$candidate/robot:";
-		} elsif($self->{_info}->is_mobile()) {
-			$prefix .= "$candidate/mobile:";
-		}
-		$prefix .= "$candidate/web:";
-	}
-
-	if($self->{_info}->is_search_engine()) {
-		$prefix .= "$dir/search:$dir/robot:";
-	} elsif($self->{_info}->is_robot()) {
-		$prefix .= "$dir/robot:";
-	} elsif($self->{_info}->is_mobile()) {
-		$prefix .= "$dir/mobile:";
-	}
+	$prefix .= $self->_append_browser_type({ directory => "$dir/default" });
+	$prefix .= $self->_append_browser_type({ directory => $dir });
 
 	# Fall back to .../web, or if that fails, assume no web, robot or
 	# mobile variant
@@ -410,6 +383,29 @@ sub _log {
 
 sub obfuscate {
 	map { '&#' . ord($_) . ';' } split(//, shift);
+}
+
+sub _append_browser_type {
+	my $self = shift;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
+	my $directory = $args{'directory'};
+
+	my $rc;
+
+	if(defined($directory) && (-d $directory)) {
+		if($self->{_info}->is_search_engine()) {
+			$rc = "$directory/search:$directory/web:$directory/robot:";
+		} elsif($self->{_info}->is_robot()) {
+			$rc = "$directory/robot:";
+		} elsif($self->{_info}->is_mobile()) {
+			$rc = "$directory/mobile:";
+		}
+		$rc .= "$directory/web:";
+	}
+	$self->_log({ message => "_append_directory_type: $directory=>$rc" });
+
+	return $rc;
 }
 
 1;
