@@ -126,7 +126,6 @@ sub new {
 		_info => $info,
 		_lingua => $args{lingua},
 		_logger => $args{logger},
-		_key => (defined($info->params())) ? $info->params()->{key} : undef,
 	}, $class;
 }
 
@@ -164,7 +163,7 @@ sub get_template_path {
 		}
 		if(defined($candidate)) {
 			if($self->{_info}->is_search_engine()) {
-				$prefix = "$candidate/search:$candidate/robot:";
+				$prefix = "$candidate/search:$candidate/web:$candidate/robot:";
 			} elsif($self->{_info}->is_robot()) {
 				$prefix = "$candidate/robot:";
 			} elsif($self->{_info}->is_mobile()) {
@@ -178,13 +177,13 @@ sub get_template_path {
 	if(-d "$dir/default") {
 		my $candidate = "$dir/default";
 		if($self->{_info}->is_search_engine()) {
-			$prefix .= "$candidate/search:$candidate/robot:";
+			$prefix .= "$candidate/search:$candidate/web:$candidate/robot:";
 		} elsif($self->{_info}->is_robot()) {
 			$prefix .= "$candidate/robot:";
 		} elsif($self->{_info}->is_mobile()) {
 			$prefix .= "$candidate/mobile:";
 		}
-		$prefix .= "$dir/default/web:";
+		$prefix .= "$candidate/web:";
 	}
 
 	if($self->{_info}->is_search_engine()) {
