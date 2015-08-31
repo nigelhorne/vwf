@@ -391,9 +391,11 @@ sub _append_browser_type {
 
 	my $directory = $args{'directory'};
 
+	return unless(defined($directory));
+
 	my $rc;
 
-	if(defined($directory) && (-d $directory)) {
+	if(-d $directory) {
 		if($self->{_info}->is_search_engine()) {
 			$rc = "$directory/search:$directory/web:$directory/robot:";
 		} elsif($self->{_info}->is_robot()) {
