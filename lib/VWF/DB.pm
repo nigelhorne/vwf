@@ -70,6 +70,7 @@ sub selectall_hashref {
 		$query .= " AND $c1 LIKE ?";
 		push @args, $args{$c1};
 	}
+	$query .= ' ORDER BY name';
 	my $sth = $self->{'dbh'}->prepare($query);
 	$sth->execute(@args) || die($query);
 	my @rc;
@@ -94,12 +95,13 @@ sub fetchrow_hashref {
 		$query .= " AND $c1 LIKE ?";
 		push @args, $args{$c1};
 	}
+	$query .= ' ORDER BY name';
 	my $sth = $self->{'dbh'}->prepare($query);
 	$sth->execute(@args) || die($query);
 	return $sth->fetchrow_hashref();
 }
 
-
+# Returns an array of the matches
 sub AUTOLOAD {
 	my $column = $AUTOLOAD;
 
