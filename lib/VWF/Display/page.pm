@@ -253,23 +253,23 @@ sub html {
 			ABSOLUTE => 1,
 		});
 
-		# The values in config are defaults which can be overriden by
-		# the values in params
-		my $vals;
+		my $info = $self->{_info};
 
-		if(defined($params)) {
-			if(defined($self->{_config})) {
-				$vals = { %{$self->{_config}}, %{$params} };
-			} else {
-				$vals = $params;
+		# The values in config are defaults which can be overriden by
+		# the values in info, then the values in params
+		my $vals;
+		if(defined($self->{_config})) {
+			$vals = { %{$self->{_config}}, %{$info->params()} };
+			if(defined($params)) {
+				$vals = { %{$vals}, %{$params} };
 			}
-		} elsif(defined($self->{_config})) {
-			$vals = $self->{_config};
+		} elsif(defined($params)) {
+			$vals = { %{$info->params()}, %{$params} };
+		} else {
+			$vals = $info->params();
 		}
 
-		$vals->{cart} = $self->{_info}->get_cookie(cookie_name => 'cart');
-
-		$vals = { %{$vals}, %{$self->{_info}->params()} };
+		$vals->{cart} = $info->get_cookie(cookie_name => 'cart');
 
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
