@@ -405,7 +405,9 @@ sub _append_browser_type {
 		}
 		$rc .= "$directory/web:";
 	}
-	$self->_log({ message => "_append_directory_type: $directory=>$rc" });
+	if(defined($rc)) {
+		$self->_log({ message => "_append_directory_type: $directory=>$rc" });
+	}
 
 	return $rc;
 }
