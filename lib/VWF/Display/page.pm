@@ -6,6 +6,7 @@ package VWF::Display::page;
 use Config::Auto;
 use CGI::Info;
 use File::Spec;
+use Template::Filters;
 
 my %blacklist = (
 	'MD' => 1,
@@ -120,6 +121,8 @@ sub new {
 	if($@) {
 		die "Configuration error: $@" . $path . '/' . $info->domain_name();
 	}
+
+	Template::Filters->use_html_entities();
 
 	return bless {
 		_config => $config,
@@ -300,7 +303,7 @@ sub as_string {
 	# TODO: Get all cookies and send them to the template.
 	# 'cart' is an example
 	unless($args && $args->{cart}) {
-		$purchases = $self->{_info}->get_cookie(cookie_name => 'cart');
+		my $purchases = $self->{_info}->get_cookie(cookie_name => 'cart');
 		if($purchases) {
 			my %cart = split(/:/, $purchases);
 			$args->{cart} = \%cart;
