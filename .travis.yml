@@ -15,8 +15,8 @@ before_install:
   - sudo apt-get update -q
   - sudo apt-get install -y libdb-dev
 install:
-  - cpanm --installdeps --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto
-  - cpanm --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto
+  - cpanm --installdeps --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template
+  - cpanm --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template
 script:
   - perl cgi-bin/index.fcgi ''
   - perl cgi-bin/index.pl ''
