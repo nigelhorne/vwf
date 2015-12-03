@@ -150,6 +150,9 @@ sub get_template_path {
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
 		my $candidate;
+
+		$self->_log({ message => 'Requested language: ' . $lingua->requested_language() });
+
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
 			$self->_log({ message => "check for directory $candidate" });
