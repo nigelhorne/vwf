@@ -167,7 +167,9 @@ sub get_template_path {
 				$candidate = undef;
 			}
 		}
-		$prefix = $self->_append_browser_type({ directory => $candidate });
+		if($candidate) {
+			$prefix = $self->_append_browser_type({ directory => $candidate });
+		}
 	}
 
 	$prefix .= $self->_append_browser_type({ directory => "$dir/default" });
