@@ -414,11 +414,14 @@ sub _append_browser_type {
 		}
 		$rc .= "$directory/web:";
 	}
+
 	if(defined($rc)) {
 		$self->_log({ message => "_append_directory_type: $directory=>$rc" });
+		return $rc;
 	}
 
-	return $rc;
+	return '';	# Don't return undef or else the caller may use an uninit variable
+
 }
 
 1;
