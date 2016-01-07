@@ -29,7 +29,6 @@ sub html {
 		"From: webmaster\n",
 		"Subject: VWF sending an e-mail\n\n",
 		"Hello, world\n";
-	}
 
 	close $fout;
 
