@@ -49,10 +49,30 @@ my $logger = Log::Log4perl->get_logger($script_name);
 my $pagename = "VWF::Display::$script_name";
 eval "require $pagename";
 
+use VWF::DB::index;
+
+my $database_dir = "$script_dir/../databases";
+BBPortal::DB::init({ directory => $database_dir, logger => $logger });
+
+my $index = BBPortal::DB::index->new();
 if($@) {
 	$logger->error($@);
 	die $@;
 }
+
+# http://www.fastcgi.com/docs/faq.html#PerlSignals
+my $requestcount = 0;
+my $handling_request = 0;
+my $exit_requested = 0;
+
+sub sig_handler {
+	$exit_requested = 1;
+	exit(0) if(!$handling_request);
+}
+
+$SIG{USR1} = \&sig_handler;
+$SIG{TERM} = \&sig_handler;
+$SIG{PIPE} = 'IGNORE';
 
 my $request = FCGI::Request();
 
@@ -65,11 +85,21 @@ while($request->FCGI::Accept() >= 0) {
 		warn $msg unless(defined($ENV{'REMOTE_ADDR'}));
 		$logger->error($msg);
 	}
-	# $request->Finish();
+	$request->Finish();
+	$handling_request = 0;
+	if($exit_requested) {
+		last;
+	}
+	if($ENV{SCRIPT_FILENAME}) {
+		if(-M $ENV{SCRIPT_FILENAME} < 0) {
+			last;
+		}
+	}
 }
 
 sub doit
 {
+	CGI::Info->reset();
 	my $info = CGI::Info->new({ cache => $infocache });
 
 	my $fb = FCGI::Buffer->new();
@@ -103,7 +133,10 @@ sub doit
 	my $error = $@;
 
 	if(defined($display)) {
-		print $display->as_string();
+		# Pass in a handle to the database
+		print $display->as_string({
+			index => $index, cachedir => $cachedir
+		});
 	} else {
 		# No permission to show this page
 		print "Status: 403 Forbidden\n";

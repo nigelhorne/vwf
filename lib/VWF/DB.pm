@@ -1,10 +1,13 @@
 package VWF::DB;
 
+use warnings;
+
 use File::Glob;
 use File::Basename;
 use DBI;
 
-my $dbh;
+our @databases;
+our $directory;
 
 sub new {
 	my $proto = shift;
@@ -12,47 +15,52 @@ sub new {
 
 	my $class = ref($proto) || $proto;
 
-	if($dbh) {
-		return bless { dbh => $dbh }, $class;
-	}
-
 	init(\%args);
 
-	return bless { dbh => $dbh }, $class;
+	return bless { logger => $args{'logger'} }, $class;
 }
 
 # Can also be run as a class level VWF::DB::init(directory => '../databases')
 sub init {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	die 'directory not given' unless($args{'directory'});
+	$directory ||= $args{'directory'};
+	throw Error::Simple('directory not given') unless($directory);
+}
 
-	my $directory = $args{'directory'};
+sub _open {
+	my $self = shift;
+
+	my $table = ref($self);
+	$table =~ s/.*:://;
+
+	return if($self->{table});
 
 	# Read in the databases
-	$dbh = DBI->connect('dbi:CSV:csv_sep_char=!');
+	my $dbh = DBI->connect('dbi:CSV:csv_sep_char=!');
 	$dbh->{'RaiseError'} = 1;
 
-	foreach my $slurp_file(<$directory/*.db>) {
-		my $table = basename($slurp_file, '.db');
-		$table =~ tr/-/_/;
+	my $slurp_file = "$directory/$table.db";
 
-		unless(-r $slurp_file) {
-			die "Can't open $slurp_file";
-		}
-
-		if($args{'logger'}) {
-			$args{'logger'}->debug("read in $table from $slurp_file");
-		}
-
-		$dbh->{csv_tables}->{$table} = {
-			allow_loose_quotes => 1,
-			blank_is_undef => 1,
-			empty_is_undef => 1,
-			binary => 1,
-			f_file => $slurp_file,
-		};
+	unless(-r $slurp_file) {
+		throw Error::Simple("Can't open $slurp_file");
 	}
+
+	if($self->{'logger'}) {
+		$self->{'logger'}->debug("read in $table from $slurp_file");
+	}
+
+	$dbh->{csv_tables}->{$table} = {
+		allow_loose_quotes => 1,
+		blank_is_undef => 1,
+		empty_is_undef => 1,
+		binary => 1,
+		f_file => $slurp_file,
+	};
+
+	push @databases, $table;
+
+	$self->{$table} = $dbh;
 }
 
 # Returns a reference to an array of hash references of all the data meeting
@@ -64,15 +72,17 @@ sub selectall_hashref {
 	my $table = ref($self);
 	$table =~ s/.*:://;
 
-	my $query = "SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	$self->_open() if(!$self->{$table});
+
+	my $query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
 	my @args;
 	foreach my $c1(keys(%args)) {
 		$query .= " AND $c1 LIKE ?";
 		push @args, $args{$c1};
 	}
-	$query .= ' ORDER BY name';
-	my $sth = $self->{'dbh'}->prepare($query);
-	$sth->execute(@args) || die($query);
+	$query .= ' ORDER BY entry';
+	my $sth = $self->{$table}->prepare($query);
+	$sth->execute(@args) || throw Error::Simple($query);
 	my @rc;
 	while (my $href = $sth->fetchrow_hashref()) {
 		push @rc, $href;
@@ -89,15 +99,17 @@ sub fetchrow_hashref {
 	my $table = ref($self);
 	$table =~ s/.*:://;
 
-	my $query = "SELECT * FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	$self->_open() if(!$self->{table});
+
+	my $query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
 	my @args;
 	foreach my $c1(keys(%args)) {
 		$query .= " AND $c1 LIKE ?";
 		push @args, $args{$c1};
 	}
-	$query .= ' ORDER BY name';
-	my $sth = $self->{'dbh'}->prepare($query);
-	$sth->execute(@args) || die($query);
+	$query .= ' ORDER BY entry';
+	my $sth = $self->{$table}->prepare($query);
+	$sth->execute(@args) || throw Error::Simple($query);
 	return $sth->fetchrow_hashref();
 }
 
@@ -111,18 +123,27 @@ sub AUTOLOAD {
 
 	my $self = shift;
 
+	if(!defined(wantarray)) {
+		throw Error::Simple("$self->$column called in scalar context");
+	}
+
 	my $table = ref($self);
 	$table =~ s/.*:://;
+
+	$self->_open() if(!$self->{$table});
+
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	my $query = "SELECT DISTINCT $column FROM $table WHERE name IS NOT NULL AND name NOT LIKE '#%'";
+	my $query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
 	my @args;
 	foreach my $c1(keys(%args)) {
-		$query .= " AND $c1 LIKE ?";
+		# $query .= " AND $c1 LIKE ?";
+		$query .= " AND $c1 = ?";
 		push @args, $args{$c1};
 	}
-	my $sth = $self->{'dbh'}->prepare($query);
-	$sth->execute(@args) || die($query);
+	$query .= ' ORDER BY entry';
+	my $sth = $self->{$table}->prepare($query);
+	$sth->execute(@args) || throw Error::Simple($query);
 
 	return map { $_->[0] } @{$sth->fetchall_arrayref()};
 }

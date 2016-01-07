@@ -1,4 +1,4 @@
-vwf
+VWF
 ===
 
 Versatile Web Framework - a framework to build a website easily in Perl that
@@ -13,7 +13,7 @@ VWF is a framework to easily display web pages tailored to the wishes
 of the browser, e.g. language to use and mobile/web content. It supports
 Template Toolkit (http://template-toolkit.org/), text and HTML files.
 
-The idea is to create index.pl which will then automatically display
+The idea is to create index.fcgi which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language
 setting (e.g. en-GB) and type (e.g. mobile). By putting the pages in a
 directory hierarchy new versions can be quickly added for
@@ -42,19 +42,22 @@ Files ending in .tmpl will be sent using the Template Toolkit, files ending
 with .html or .htm will be sent as is, and files ending in .txt will
 be sent as is with the Content-Type header set to text/plain.
 
+Data stored in the flat files .../databases/*.db is be made available to
+the display packages and hence to the templates.
+
 How To Install and Use:
 -----------------------
 
 Firstly you'll need to ensure that your index page points to the VWF delivery
 page for example by adding these to your .htaccess file:
-RedirectPermanent	/index.html	http://[YOURSITE]/cgi-bin/index.pl
-RedirectPermanent	/index.htm	http://[YOURSITE]/cgi-bin/index.pl
+RedirectPermanent	/index.html	http://[YOURSITE]/cgi-bin/index.fcgi
+RedirectPermanent	/index.htm	http://[YOURSITE]/cgi-bin/index.fcgi
 
 Next copy the contents of the lib directory to /usr/lib/VMF (or a place
-of your choice), and the sample index.pl of the cgi-bin directory to /cgi-bin
+of your choice), and the sample index.fcgi of the cgi-bin directory to /cgi-bin
 in your webroot.
 
-Next modify index.pl changing the "use /usr/lib" directive to point to
+Next modify index.fcgi changing the "use /usr/lib" directive to point to
 where you've installed the VWF lib files such as page.pm.  Use /usr/lib, for
 example, if you put it into /usr/lib/VWF/page.pm
 
@@ -68,8 +71,8 @@ Next install any dependancies from CPAN, such as CGI::Lingua, CGI::Buffer,
 CGI::IDS, Data::Throttler, Config::Auto and Template.
 
 You'll need to create cgi-bin files for each of your page sets (e.g. create
-foo.pl for .../web/*/*/foo.html). That's easier than you think because most
-of the time you'll use index.pl as a template and change the two places
+foo.fcgi for .../web/*/*/foo.html). That's easier than you think because most
+of the time you'll use index.fcgi as a template and change the two places
 that VWF::index appear to VWF::foo.
 
 Now you need to tell VWF where to find the configuration files. Create a
@@ -104,13 +107,14 @@ njh@compaq:~$ find /home/njh/public_html/
 /home/njh/public_html/
 /home/njh/public_html/index.html
 /home/njh/public_html/cgi-bin
-/home/njh/public_html/cgi-bin/index.pl
+/home/njh/public_html/cgi-bin/index.fcgi
 /home/njh/public_html/.htaccess
 njh@compaq:~$ find /home/njh/bandsman.mooo.com/
 /home/njh/bandsman.mooo.com/
 /home/njh/bandsman.mooo.com/templates
 /home/njh/bandsman.mooo.com/templates/VWF
 /home/njh/bandsman.mooo.com/templates/VWF/index.html
+/home/njh/bandsman.mooo.com/databases/index.db
 njh@compaq:~$
 
 FIXME: Configuration files should be in .../conf, not .../lib/conf
