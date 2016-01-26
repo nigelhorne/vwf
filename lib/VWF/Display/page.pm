@@ -141,6 +141,9 @@ sub get_template_path {
 	}
 
 	my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
+	if($self->{_logger}) {
+		$self->{_logger}->debug("Rootdir: $dir");
+	}
 	$dir .= '/templates';
 
 	# Look in .../robot or .../mobile first, if appropriate

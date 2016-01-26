@@ -52,9 +52,9 @@ eval "require $pagename";
 use VWF::DB::index;
 
 my $database_dir = "$script_dir/../databases";
-BBPortal::DB::init({ directory => $database_dir, logger => $logger });
+VWF::DB::init({ directory => $database_dir, logger => $logger });
 
-my $index = BBPortal::DB::index->new();
+my $index = VWF::DB::index->new();
 if($@) {
 	$logger->error($@);
 	die $@;
