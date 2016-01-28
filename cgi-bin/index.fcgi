@@ -104,6 +104,9 @@ sub doit
 
 	my $fb = FCGI::Buffer->new();
 	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger });
+	if(!$ENV{'REMOTE_ADDR'}) {
+		$fb->init(lint_content => 1);
+	}
 	if($fb->can_cache()) {
 		$fb->init(
 			cache => $buffercache,
