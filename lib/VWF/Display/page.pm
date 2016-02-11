@@ -401,10 +401,17 @@ sub _append_browser_type {
 	my $self = shift;
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
+	if($self->{_logger}) {
+		$self->{_logger}->trace('_append_browser_type');
+	}
+
 	my $directory = $args{'directory'};
 
 	return unless(defined($directory));
 
+	if($self->{_logger}) {
+		$self->{_logger}->debug("_append_browser_type: directory = $directory");
+	}
 	my $rc;
 
 	if(-d $directory) {
@@ -416,9 +423,7 @@ sub _append_browser_type {
 			$rc = "$directory/mobile:";
 		}
 		$rc .= "$directory/web:";
-	}
 
-	if(defined($rc)) {
 		$self->_log({ message => "_append_directory_type: $directory=>$rc" });
 		return $rc;
 	}
