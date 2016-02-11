@@ -21,6 +21,7 @@ use File::Basename;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
+use Log::Any::Adapter;
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -67,7 +68,15 @@ my $exit_requested = 0;
 
 sub sig_handler {
 	$exit_requested = 1;
-	exit(0) if(!$handling_request);
+	$logger->trace('In sig_handler');
+	if(!$handling_request) {
+		$logger->info('Shutting down');
+		if($buffercache) {
+			$buffercache->purge();
+		}
+		CHI->stats->flush();
+		exit(0);
+	}
 }
 
 $SIG{USR1} = \&sig_handler;
@@ -76,7 +85,18 @@ $SIG{PIPE} = 'IGNORE';
 
 my $request = FCGI::Request();
 
-while($request->FCGI::Accept() >= 0) {
+while($handling_request = ($request->Accept() >= 0)) {
+	$requestcount++;
+	if($ENV{'REMOTE_ADDR'}) {
+		Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
+	} else {
+		Log::Any::Adapter->set('Stdout');
+	}
+	$logger = Log::Any->get_logger(category => $script_name);
+	$logger->info("Request $requestcount", $ENV{'REMOTE_ADDR'} ? " $ENV{'REMOTE_ADDR'}" : '');
+
+	$Error::Debug = 1;
+
 	eval {
 		doit();
 	};
@@ -96,6 +116,12 @@ while($request->FCGI::Accept() >= 0) {
 		}
 	}
 }
+
+$logger->info("Shutting down");
+if($buffercache) {
+	$buffercache->purge();
+}
+CHI->stats->flush();
 
 sub doit
 {
