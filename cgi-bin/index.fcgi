@@ -168,9 +168,9 @@ sub doit
 		});
 	} else {
 		# No permission to show this page
-		print "Status: 403 Forbidden\n";
-		print "Content-type: text/plain\n";
-		print "Pragma: no-cache\n\n";
+		print "Status: 403 Forbidden\n",
+			"Content-type: text/plain\n",
+			"Pragma: no-cache\n\n";
 
 		warn $error if $error;
 
