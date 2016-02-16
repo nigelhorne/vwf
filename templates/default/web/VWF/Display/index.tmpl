@@ -1,0 +1,14 @@
+<html>
+	<body>
+		[% IF action == 'sent' %]
+			Your e-mail was sent
+		[% END %]
+	<body>
+		<P>
+			Sorry, for now this page is only available in English.
+			If you would like to volunteer to help to
+			translate some of it to [% lingua.requested_language() %], please
+			<A HREF="?page=mailto&recipient=webmaster">contact the Webmaster</A>.
+		</p>
+	</body>
+</html>
