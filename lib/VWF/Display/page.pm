@@ -84,6 +84,12 @@ sub new {
 			if($blacklist{uc($lingua->country())}) {
 				die "$ENV{REMOTE_ADDR} is from a blacklisted country " . $lingua->country();
 			}
+			my $language = $lingua->language_code_alpha2();
+			if(-d "$path/$language") {
+				$path .= "/$language";
+			} elsif(-d "$path/default") {
+				$path .= '/default';
+			}
 		}
 	}
 	my $path;
