@@ -36,28 +36,34 @@ sub _open {
 
 	return if($self->{table});
 
-	# Read in the databases
-	my $dbh = DBI->connect('dbi:CSV:csv_sep_char=!');
-	$dbh->{'RaiseError'} = 1;
+	# Read in the database
+	my $dbh;
 
-	my $slurp_file = "$directory/$table.db";
+	my $slurp_file = "$directory/$table.csv";
+	if(-r $slurp_file) {
+		$dbh = DBI->connect('dbi:CSV:csv_sep_char=!');
+		$dbh->{'RaiseError'} = 1;
 
-	unless(-r $slurp_file) {
-		throw Error::Simple("Can't open $slurp_file");
+		if($self->{'logger'}) {
+			$self->{'logger'}->debug("read in $table from $slurp_file");
+		}
+
+		$dbh->{csv_tables}->{$table} = {
+			allow_loose_quotes => 1,
+			blank_is_undef => 1,
+			empty_is_undef => 1,
+			binary => 1,
+			f_file => $slurp_file,
+		};
+
+	} else {
+		$slurp_file = "$directory/$table.xml";
+		if(-r $slurp_file) {
+			$dbh = DBI->connect('dbi:File:f_ext=.xml');
+		} else {
+			throw Error::Simple("Can't open $slurp_file");
+		}
 	}
-
-	if($self->{'logger'}) {
-		$self->{'logger'}->debug("read in $table from $slurp_file");
-	}
-
-	$dbh->{csv_tables}->{$table} = {
-		allow_loose_quotes => 1,
-		blank_is_undef => 1,
-		empty_is_undef => 1,
-		binary => 1,
-		f_file => $slurp_file,
-	};
-
 	push @databases, $table;
 
 	$self->{$table} = $dbh;
@@ -82,7 +88,7 @@ sub selectall_hashref {
 	}
 	$query .= ' ORDER BY entry';
 	my $sth = $self->{$table}->prepare($query);
-	$sth->execute(@args) || throw Error::Simple($query);
+	$sth->execute(@args) || throw Error::Simple("$query: @args");
 	my @rc;
 	while (my $href = $sth->fetchrow_hashref()) {
 		push @rc, $href;
@@ -109,7 +115,7 @@ sub fetchrow_hashref {
 	}
 	$query .= ' ORDER BY entry';
 	my $sth = $self->{$table}->prepare($query);
-	$sth->execute(@args) || throw Error::Simple($query);
+	$sth->execute(@args) || throw Error::Simple("$query: @args");
 	return $sth->fetchrow_hashref();
 }
 

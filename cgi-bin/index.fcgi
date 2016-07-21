@@ -22,10 +22,12 @@ use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
 use Log::Any::Adapter;
+use Error::Simple;
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
+use lib '../lib';
 use lib './lib';
 
 my $info = CGI::Info->new();
