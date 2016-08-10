@@ -45,7 +45,7 @@ sub html {
 		$self->{_logger}->trace("E-mail sent to $to");
 	}
 
-	return $self->SUPER::html({ action => 'sent' });
+	return $self->SUPER::html({ action => 'sent', updated => $index->updated() });
 }
 
 1;

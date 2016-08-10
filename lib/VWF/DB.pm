@@ -74,6 +74,8 @@ sub _open {
 	push @databases, $table;
 
 	$self->{$table} = $dbh;
+	my @statb = stat($slurp_file);
+	$self->{'_updated'} = $statb[9];
 }
 
 # Returns a reference to an array of hash references of all the data meeting
@@ -124,6 +126,13 @@ sub fetchrow_hashref {
 	my $sth = $self->{$table}->prepare($query);
 	$sth->execute(@args) || throw Error::Simple("$query: @args");
 	return $sth->fetchrow_hashref();
+}
+
+# Time that the database was last updated
+sub updated {
+	my $self = shift;
+
+	return $self->{'_updated'};
 }
 
 # Returns an array of the matches
