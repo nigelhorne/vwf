@@ -130,7 +130,7 @@ CHI->stats->flush();
 sub doit
 {
 	CGI::Info->reset();
-	my $info = CGI::Info->new({ cache => $infocache });
+	my $info = CGI::Info->new({ cache => $infocache, logger => $logger });
 
 	my $fb = FCGI::Buffer->new();
 	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger });
