@@ -102,7 +102,8 @@ sub new {
 				File::Spec->updir(),
 				'conf'
 			);
-		unless(-d $path) {
+
+		if(!-d $path) {
 			$path = File::Spec->catdir(
 					$info->script_dir(),
 					File::Spec->updir(),
@@ -110,7 +111,7 @@ sub new {
 				);
 		}
 
-		unless(-d $path) {
+		if(!-d $path) {
 			if($ENV{'DOCUMENT_ROOT'}) {
 				$path = File::Spec->catdir(
 					$ENV{'DOCUMENT_ROOT'},
@@ -124,6 +125,16 @@ sub new {
 					'lib',
 					'conf'
 				);
+			}
+		}
+
+		if(!-d $path) {
+			if($args{default_config_directory}) {
+				$path = $args{default_config_directory};
+			} elsif($args{logger}) {
+				while (($key,$value) = each %ENV) {
+					$args{logger}->debug("$key=$value");
+				}
 			}
 		}
 	}

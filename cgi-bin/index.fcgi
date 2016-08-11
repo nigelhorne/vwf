@@ -22,7 +22,7 @@ use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
 use Log::Any::Adapter;
-use Error::Simple;
+use Error qw(:try);
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -99,14 +99,16 @@ while($handling_request = ($request->Accept() >= 0)) {
 
 	$Error::Debug = 1;
 
-	eval {
+	try {
 		doit();
-	};
-	if($@) {
-		my $msg = $@;
-		warn $msg unless(defined($ENV{'REMOTE_ADDR'}));
+	} catch Error with {
+		my $msg = shift;
+		warn "$msg\n", $msg->stacktrace unless(defined($ENV{'REMOTE_ADDR'}));
 		$logger->error($msg);
-	}
+		if($buffercache) {
+			$buffercache->clear();
+		}
+	};
 	$request->Finish();
 	$handling_request = 0;
 	if($exit_requested) {
