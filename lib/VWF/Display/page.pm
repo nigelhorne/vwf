@@ -79,13 +79,11 @@ sub new {
 		if($@) {
 			unlink($db_file);
 		}
-		my $lingua = $args{lingua};
-		if($lingua) {
+		if($lingua = $args{lingua}) {
 			if($blacklist{uc($lingua->country())}) {
 				die "$ENV{REMOTE_ADDR} is from a blacklisted country " . $lingua->country();
 			}
-			my $language = $lingua->language_code_alpha2();
-			if(-d "$path/$language") {
+			if((my $language = $lingua->language_code_alpha2()) && (-d "$path/$language")) {
 				$path .= "/$language";
 			} elsif(-d "$path/default") {
 				$path .= '/default';
