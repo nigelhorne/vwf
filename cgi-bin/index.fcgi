@@ -112,15 +112,40 @@ $SIG{PIPE} = 'IGNORE';
 my $request = FCGI::Request();
 
 while($handling_request = ($request->Accept() >= 0)) {
+	unless($ENV{'REMOTE_ADDR'}) {
+		# debugging from the command line
+		$ENV{'NO_CACHE'} = 1;
+		if((!defined($ENV{'HTTP_ACCEPT_LANGUAGE'})) && defined($ENV{'LANG'})) {
+			my $lang = $ENV{'LANG'};
+			$lang =~ s/\..*$//;
+			$lang =~ tr/_/-/;
+			$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
+		}
+		Log::Any::Adapter->set('Stdout');
+		$logger = Log::Any->get_logger(category => $script_name);
+		try {
+			doit();
+		} catch Error with {
+			my $msg = shift;
+			warn "$msg\n", $msg->stacktrace;
+			$logger->error($msg);
+		};
+		exit;
+	}
+
 	$requestcount++;
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
 	$logger = Log::Any->get_logger(category => $script_name);
-	$logger->info("Request $requestcount: ", $ENV{'REMOTE_ADDR'});
+	$logger->info("Request $requestcount", $ENV{'REMOTE_ADDR'});
 
 	$Error::Debug = 1;
 
 	try {
 		doit();
+	};
+	if($@) {
+		my $msg = $@;
+		warn $msg;
 	} catch Error with {
 		my $msg = shift;
 		warn "$msg\n";
@@ -191,16 +216,28 @@ sub doit
 			index => $index, cachedir => $cachedir
 		});
 	} else {
-		# No permission to show this page
-		print "Status: 403 Forbidden\n",
-			"Content-type: text/plain\n",
-			"Pragma: no-cache\n\n";
+		$logger->debug('disabling cache');
+		$fb->init(
+			cache => undef,
+		);
+		if($error eq 'Unknown page to display') {
+			print "Status: 400 Bad Request\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
 
-		warn $error if $error;
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "I don't know what you want me to display.\n";
+			}
+		} else {
+			# No permission to show this page
+			print "Status: 403 Forbidden\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
 
-		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-			print "There is a problem with your connection. Please contact your ISP.\n";
-			print $error if $error;
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "There is a problem with your connection. Please contact your ISP.\n";
+			}
 		}
+		throw Error::Simple($error ? $error : $info->as_string());
 	}
 }
