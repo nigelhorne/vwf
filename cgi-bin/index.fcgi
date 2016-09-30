@@ -59,30 +59,6 @@ if($@) {
 	die $@;
 }
 
-unless($ENV{'REMOTE_ADDR'}) {
-	# debugging from the command line
-	$ENV{'NO_CACHE'} = 1;
-	if((!defined($ENV{'HTTP_ACCEPT_LANGUAGE'})) && defined($ENV{'LANG'})) {
-		my $lang = $ENV{'LANG'};
-		$lang =~ s/\..*$//;
-		$lang =~ tr/_/-/;
-		$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
-	}
-	Log::Any::Adapter->set('Stdout');
-	$logger = Log::Any->get_logger(category => $script_name);
-	try {
-		doit();
-	} catch Error with {
-		my $msg = shift;
-		warn "$msg\n", $msg->stacktrace;
-		$logger->error($msg);
-		if($buffercache) {
-			$buffercache->clear();
-		}
-	};
-	exit;
-}
-
 # open STDERR, ">&STDOUT";
 close STDERR;
 open(STDERR, '>>', "$tmpdir/$script_name.stderr");
@@ -130,7 +106,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 			warn "$msg\n", $msg->stacktrace;
 			$logger->error($msg);
 		};
-		exit;
+		last;
 	}
 
 	$requestcount++;
