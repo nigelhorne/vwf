@@ -28,4 +28,4 @@ script:
   - perl -MO=Lint cgi-bin/index.pl
   - perl -MO=Lint cgi-bin/index.fcgi
   - perl -c -Mwarnings::unused cgi-bin/index.pl
-  - perl -c -Mwarnings::unused cgi-bin/index.fvci
+  - perl -c -Mwarnings::unused cgi-bin/index.fcgi
