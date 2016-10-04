@@ -1,12 +1,16 @@
+language: perl
+
 os:
   - linux
   # - osx
-language: perl
+
 perl:
+  - "5.22"
   - "5.20"
   - "5.18"
   - "5.16"
   - "5.14"
+
 # This can be removed once CGI::Lingua 0.54 has been published
 before_install:
   # Needed for Locale::Object
@@ -14,11 +18,14 @@ before_install:
   - cpanm --notest --quiet DBD::SQLite Locale::Object::Country
   - sudo apt-get update -q
   - sudo apt-get install -y libdb-dev
+
 install:
-  - cpanm --installdeps --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template B::Lint Error::Simple
-  - cpanm --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template B::Lint Error::Simple
+  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template B::Lint Error::Simple warnings::unused
+
 script:
   - perl cgi-bin/index.fcgi ''
   - perl cgi-bin/index.pl ''
   - perl -MO=Lint cgi-bin/index.pl
   - perl -MO=Lint cgi-bin/index.fcgi
+  - perl -c -Mwarnings::unused cgi-bin/index.pl
+  - perl -c -Mwarnings::unused cgi-bin/index.fvci
