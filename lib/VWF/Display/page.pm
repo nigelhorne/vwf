@@ -305,6 +305,7 @@ sub html {
 		} else {
 			$vals = $info->params();
 		}
+		$vals->{script_name} = $info->script_name();
 
 		$vals->{cart} = $info->get_cookie(cookie_name => 'cart');
 		$vals->{lingua} = $self->{_lingua};
