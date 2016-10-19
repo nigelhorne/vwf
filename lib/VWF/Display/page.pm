@@ -7,6 +7,7 @@ use Config::Auto;
 use CGI::Info;
 use File::Spec;
 use Template::Filters;
+use HTML::SocialMedia;
 
 my %blacklist = (
 	'MD' => 1,
@@ -151,6 +152,9 @@ sub new {
 		_info => $info,
 		_lingua => $args{lingua},
 		_logger => $args{logger},
+		 _social_media => HTML::SocialMedia->new(twitter => $config->{'twitter'})->as_string(
+			twitter_follow_button => 1
+		),
 	}, $class;
 }
 
