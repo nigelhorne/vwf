@@ -153,7 +153,7 @@ sub new {
 		_lingua => $args{lingua},
 		_logger => $args{logger},
 		 _social_media => HTML::SocialMedia->new(twitter => $config->{'twitter'})->as_string(
-			twitter_follow_button => 1
+			twitter_tweet_button => 1
 		),
 	}, $class;
 }
