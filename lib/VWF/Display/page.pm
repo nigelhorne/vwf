@@ -27,6 +27,8 @@ my %blacklist = (
 	'PK' => 1,
 );
 
+our $sm;
+
 sub new {
 	my $proto = shift;
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
@@ -157,10 +159,13 @@ sub new {
 	};
 
 	if(my $twitter = $config->{'twitter'}) {
-		$self->{'_social_media'}->{'twitter_tweet_button'} = HTML::SocialMedia->new(twitter => $twitter)->as_string(
-			twitter_tweet_button => 1
-		);
+		$sm ||= HTML::SocialMedia->new(twitter => $twitter);
+		$self->{'_social_media'}->{'twitter_tweet_button'} = $sm->as_string(twitter_tweet_button => 1);
+	} elsif(!defined($sm)) {
+		$sm = HTML::SocialMedia->new();
 	}
+	$self->{'_social_media'}->{'facebook_like_button'} = $sm->as_string(facebook_like_button => 1);
+
 	return bless $self, $class;
 }
 
