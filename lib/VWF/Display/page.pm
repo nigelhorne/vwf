@@ -147,15 +147,21 @@ sub new {
 
 	Template::Filters->use_html_entities();
 
-	return bless {
+	my $self = {
 		_config => $config,
 		_info => $info,
 		_lingua => $args{lingua},
 		_logger => $args{logger},
-		 _social_media => HTML::SocialMedia->new(twitter => $config->{'twitter'})->as_string(
+		# _cachedir => $args{cachedir},
+		# _page => $info->param('page'),
+	};
+
+	if(my $twitter = $config->{'twitter'}) {
+		$self->{'_social_media'}->{'tweet_tweet_button'} = HTML::SocialMedia->new(twitter => $twitter)->as_string(
 			twitter_tweet_button => 1
-		),
-	}, $class;
+		);
+	}
+	return bless $self, $class;
 }
 
 sub get_template_path {
