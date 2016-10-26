@@ -165,6 +165,7 @@ sub new {
 		$sm = HTML::SocialMedia->new();
 	}
 	$self->{'_social_media'}->{'facebook_like_button'} = $sm->as_string(facebook_like_button => 1);
+	$self->{'_social_media'}->{'google_plusone'} = $sm->as_string(google_plusone => 1);
 
 	return bless $self, $class;
 }
