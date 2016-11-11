@@ -153,8 +153,15 @@ sub doit
 	CGI::Info->reset();
 	my $info = CGI::Info->new({ cache => $infocache, logger => $logger });
 
+	my $lingua = CGI::Lingua->new({
+		supported => [ 'en-gb' ],
+		cache => $linguacache,
+		info => $info,
+		logger => $logger,
+	});
+
 	my $fb = FCGI::Buffer->new();
-	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger });
+	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger, lingua => $lingua });
 	if(!$ENV{'REMOTE_ADDR'}) {
 		$fb->init(lint_content => 1);
 	}
@@ -167,13 +174,6 @@ sub doit
 			return;
 		}
 	}
-
-	my $lingua = CGI::Lingua->new({
-		supported => [ 'en-gb' ],
-		cache => $linguacache,
-		info => $info,
-		logger => $logger,
-	});
 
 	my $display;
 	eval {
