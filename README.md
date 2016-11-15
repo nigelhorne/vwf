@@ -9,7 +9,7 @@ Licenced under GPL2.0 for personal use only.
 What This Does:
 ---------------
 
-VWF is a framework to easily display web pages tailored to the wishes
+VWF is a web application framework to easily display web pages tailored to the wishes
 of the browser, e.g. language to use and mobile/web content. It supports
 Template Toolkit (http://template-toolkit.org/), text and HTML files.
 
@@ -98,18 +98,18 @@ I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
 
 The file layout is:
 
-njh@compaq:~$ find ~njh/VWF/
+$ find ~njh/VWF/
 /home/njh/VWF/
 /home/njh/VWF/page.pm
 /home/njh/VWF/index.pm
 /home/njh/VWF/table.pm
-njh@compaq:~$ find /home/njh/public_html/
+$ find /home/njh/public_html/
 /home/njh/public_html/
 /home/njh/public_html/index.html
 /home/njh/public_html/cgi-bin
 /home/njh/public_html/cgi-bin/index.fcgi
 /home/njh/public_html/.htaccess
-njh@compaq:~$ find /home/njh/bandsman.mooo.com/
+$ find /home/njh/bandsman.mooo.com/
 /home/njh/bandsman.mooo.com/
 /home/njh/bandsman.mooo.com/templates
 /home/njh/bandsman.mooo.com/templates/VWF
