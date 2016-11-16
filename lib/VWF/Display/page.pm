@@ -329,6 +329,7 @@ sub html {
 
 		$vals->{cart} = $info->get_cookie(cookie_name => 'cart');
 		$vals->{lingua} = $self->{_lingua};
+		$vals->{info} = $info;
 
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
