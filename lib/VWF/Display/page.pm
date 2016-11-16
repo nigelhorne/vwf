@@ -7,7 +7,7 @@ use Config::Auto;
 use CGI::Info;
 use File::Spec;
 use Template::Filters;
-use Template::Plugin::Envhash;
+use Template::Plugin::EnvHash;
 use HTML::SocialMedia;
 
 my %blacklist = (
