@@ -42,8 +42,10 @@ Files ending in .tmpl will be sent using the Template Toolkit, files ending
 with .html or .htm will be sent as is, and files ending in .txt will
 be sent as is with the Content-Type header set to text/plain.
 
-Data stored in the flat files .../databases/*.db is be made available to
-the display packages and hence to the templates.
+Data stored in the files .../databases/ is be made available to
+the display packages and hence to the templates. CSV, XML and SQLite format
+files are supported.
+
 
 How To Install and Use:
 -----------------------
