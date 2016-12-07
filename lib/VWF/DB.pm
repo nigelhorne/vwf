@@ -48,7 +48,9 @@ sub _open {
 
 	my $slurp_file = File::Spec->catfile($directory, "$table.sql");
 	if(-r $slurp_file) {
-		$dbh = DBI->connect("dbi:SQLite:dbname=$slurp_file",'','');
+		$dbh = DBI->connect("dbi:SQLite:dbname=$slurp_file", undef, undef, {
+			sqlite_open_flags => SQLITE_OPEN_READONLY,
+		});
 		if($self->{'logger'}) {
 			$self->{'logger'}->debug("read in $table from SQLite $slurp_file");
 		}
