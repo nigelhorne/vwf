@@ -23,6 +23,7 @@ use FCGI::Buffer;
 use File::HomeDir;
 use Log::Any::Adapter;
 use Error qw(:try);
+use CGI::ACL;
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -67,6 +68,14 @@ open(STDERR, '>>', "$tmpdir/$script_name.stderr");
 my $requestcount = 0;
 my $handling_request = 0;
 my $exit_requested = 0;
+
+# CHI->stats->enable();
+
+my @blacklist_country_list = (
+	'BY', 'MD', 'RU', 'CN', 'BR', 'UY', 'TR', 'MA', 'VE', 'SA', 'CY',
+	'CO', 'MX', 'IN', 'RS', 'PK', 'UA'
+);
+my $acl = new_ok('CGI::ACL')->deny_country(country => \@blacklist_country_list);
 
 sub sig_handler {
 	$exit_requested = 1;
@@ -159,6 +168,18 @@ sub doit
 		info => $info,
 		logger => $logger,
 	});
+
+	if($ENV{'REMOTE_ADDR'} && ($acl->all_denied(lingua => $lingua))) {
+		print "Status: 403 Forbidden\n",
+			"Content-type: text/plain\n",
+			"Pragma: no-cache\n\n";
+
+		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+			print "Access Denied\n";
+		}
+		$logger->info($ENV{'REMOTE_ADDR'} . ': access denied');
+		return;
+	}
 
 	my $fb = FCGI::Buffer->new();
 	$fb->init({ info => $info, optimise_content => 1, lint_content => 0, logger => $logger, lingua => $lingua });
