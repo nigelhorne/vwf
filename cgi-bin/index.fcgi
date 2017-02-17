@@ -75,7 +75,7 @@ my @blacklist_country_list = (
 	'BY', 'MD', 'RU', 'CN', 'BR', 'UY', 'TR', 'MA', 'VE', 'SA', 'CY',
 	'CO', 'MX', 'IN', 'RS', 'PK', 'UA'
 );
-my $acl = new_ok('CGI::ACL')->deny_country(country => \@blacklist_country_list);
+my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list);
 
 sub sig_handler {
 	$exit_requested = 1;
