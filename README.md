@@ -48,7 +48,7 @@ files are supported.
 
 
 How To Install and Use
----------------------
+----------------------
 
 Firstly you'll need to ensure that your index page points to the VWF delivery
 page for example by adding these to your .htaccess file:
