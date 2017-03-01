@@ -6,8 +6,8 @@ supports different languages, databases and client platforms.
 
 Licenced under GPL2.0 for personal use only.
 
-What This Does:
----------------
+What This Does
+--------------
 
 VWF is a web application framework to easily display web pages tailored to the wishes
 of the browser, e.g. language to use and mobile/web content. It supports
@@ -47,13 +47,14 @@ the display packages and hence to the templates. CSV, XML and SQLite format
 files are supported.
 
 
-How To Install and Use:
------------------------
+How To Install and Use
+---------------------
 
 Firstly you'll need to ensure that your index page points to the VWF delivery
 page for example by adding these to your .htaccess file:
-RedirectPermanent	/index.html	http://[YOURSITE]/cgi-bin/index.fcgi
-RedirectPermanent	/index.htm	http://[YOURSITE]/cgi-bin/index.fcgi
+
+    RedirectPermanent	/index.html	http://[YOURSITE]/cgi-bin/index.fcgi
+    RedirectPermanent	/index.htm	http://[YOURSITE]/cgi-bin/index.fcgi
 
 Next copy the contents of the lib directory to /usr/lib/VMF (or a place
 of your choice), and the sample index.fcgi of the cgi-bin directory to /cgi-bin
@@ -64,10 +65,11 @@ where you've installed the VWF lib files such as page.pm.  Use /usr/lib, for
 example, if you put it into /usr/lib/VWF/page.pm
 
 Next create a directory hierarchy containing the pages to be displayed, e.g.
-.../web/en/index.tmpl
-.../web/en/gb/index.tmpl
-.../web/fr/index.tmpl
-.../mobile/en/index.tmpl
+
+    .../web/en/index.tmpl
+    .../web/en/gb/index.tmpl
+    .../web/fr/index.tmpl
+    .../mobile/en/index.tmpl
 
 Next install any dependancies from CPAN, such as CGI::Lingua, CGI::Buffer,
 CGI::IDS, Data::Throttler, Config::Auto and Template.
@@ -82,7 +84,8 @@ conf directory in a place such as /usr/lib/conf if the libaries went into
 /usr/lib/VMF.
 
 The configuration file takes the form of:
-	rootdir: /full/path/to/template directory.
+
+    rootdir: /full/path/to/template directory.
 
 For example, if your index.tmpl file lives in /usr/lib/example.com/templates/VWF/web/index.tmpl,
 then you would add 'rootdir: /usr/lib/example.com'.
@@ -100,30 +103,29 @@ I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
 
 The file layout is:
 
-$ find ~njh/VWF/
-/home/njh/VWF/
-/home/njh/VWF/page.pm
-/home/njh/VWF/index.pm
-/home/njh/VWF/table.pm
-$ find /home/njh/public_html/
-/home/njh/public_html/
-/home/njh/public_html/index.html
-/home/njh/public_html/cgi-bin
-/home/njh/public_html/cgi-bin/index.fcgi
-/home/njh/public_html/.htaccess
-$ find /home/njh/bandsman.mooo.com/
-/home/njh/bandsman.mooo.com/
-/home/njh/bandsman.mooo.com/templates
-/home/njh/bandsman.mooo.com/templates/VWF
-/home/njh/bandsman.mooo.com/templates/VWF/index.html
-/home/njh/bandsman.mooo.com/databases/index.db
-njh@compaq:~$
+    $ find ~njh/VWF/
+    /home/njh/VWF/
+    /home/njh/VWF/page.pm
+    /home/njh/VWF/index.pm
+    /home/njh/VWF/table.pm
+    $ find /home/njh/public_html/
+    /home/njh/public_html/
+    /home/njh/public_html/index.html
+    /home/njh/public_html/cgi-bin
+    /home/njh/public_html/cgi-bin/index.fcgi
+    /home/njh/public_html/.htaccess
+    $ find /home/njh/bandsman.mooo.com/
+    /home/njh/bandsman.mooo.com/
+    /home/njh/bandsman.mooo.com/templates
+    /home/njh/bandsman.mooo.com/templates/VWF
+    /home/njh/bandsman.mooo.com/templates/VWF/index.html
+    /home/njh/bandsman.mooo.com/databases/index.db
 
 FIXME: Configuration files should be in .../conf, not .../lib/conf
 
-Updates:
---------
+Updates
+-------
 
 git clone https://github.com/nigelhorne/vwf.git
 
-Nigel Horne (njh@bandsman.co.uk)
+Nigel Horne, `<njh at bandsman.co.uk>`
