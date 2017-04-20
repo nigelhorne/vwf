@@ -10,7 +10,7 @@
 
 use strict;
 use warnings;
-use diagnostics;
+# use diagnostics;
 
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::Carp qw(fatalsToBrowser);
@@ -23,6 +23,7 @@ use FCGI::Buffer;
 use File::HomeDir;
 use Log::Any::Adapter;
 use Error qw(:try);
+use Log::WarnDie;
 use CGI::ACL;
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
