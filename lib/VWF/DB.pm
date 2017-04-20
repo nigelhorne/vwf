@@ -33,7 +33,14 @@ sub init {
 
 sub set_logger {
         my $self = shift;
-        my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
+	if(ref($_[0]) eq 'HASH') {
+		%args = %{$_[0]};
+	} elsif(scalar(@_) % 2 == 0) {
+		%args = @_;
+	} else {
+		$args{'logger'} = shift;
+	}
 
         $self->{'logger'} = $args{'logger'};
 }
