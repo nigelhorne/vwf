@@ -46,7 +46,6 @@ Data stored in the files .../databases/ is be made available to
 the display packages and hence to the templates. CSV, XML and SQLite format
 files are supported.
 
-
 How To Install and Use
 ----------------------
 
@@ -85,7 +84,9 @@ conf directory in a place such as /usr/lib/conf if the libaries went into
 
 The configuration file takes the form of:
 
-    rootdir: /full/path/to/template directory.
+    rootdir: /full/path/to/template directory
+    memory_cache: where short-term volatile information is stored, such as the country of origin of the client.
+    disc_cache: where long-term information is stored, such as copies of output to see is HTTP 304 can be returned. 
 
 For example, if your index.tmpl file lives in /usr/lib/example.com/templates/VWF/web/index.tmpl,
 then you would add 'rootdir: /usr/lib/example.com'.
@@ -120,6 +121,9 @@ The file layout is:
     /home/njh/bandsman.mooo.com/templates/VWF
     /home/njh/bandsman.mooo.com/templates/VWF/index.html
     /home/njh/bandsman.mooo.com/databases/index.db
+
+Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
+cached copies of pages that will be inconsistent with the new site.
 
 FIXME: Configuration files should be in .../conf, not .../lib/conf
 
