@@ -122,6 +122,13 @@ The file layout is:
     /home/njh/bandsman.mooo.com/templates/VWF/index.html
     /home/njh/bandsman.mooo.com/databases/index.db
 
+VWF is smart enough that you can debug from the command line before you deploy.  Interesting possiblilties
+include
+
+    cgi-bin/index.fcgi --mobile
+    cgi-bin/index.fcgi lang=en
+    cgi-bin/index.fcgi key=value
+
 Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
 cached copies of pages that will be inconsistent with the new site.
 
