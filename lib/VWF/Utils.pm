@@ -132,3 +132,5 @@ sub create_memory_cache {
 	}
 	return CHI->new(%chi_args);
 }
+
+1;
