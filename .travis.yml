@@ -22,7 +22,7 @@ before_install:
   - sudo apt-get install -y libdb-dev
 
 install:
-  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen YAML:XS
+  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen
 
 script:
   - perl cgi-bin/index.fcgi ''
