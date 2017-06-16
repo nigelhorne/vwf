@@ -111,8 +111,9 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$logger = Log::Any->get_logger(category => $script_name);
 		$index->set_logger(logger => $logger);
 		Log::WarnDie->dispatcher($logger);
+		$Error::Debug = 1;
 		try {
-			doit();
+			doit(debug => 1);
 		} catch Error with {
 			my $msg = shift;
 			warn "$msg\n", $msg->stacktrace;
@@ -126,10 +127,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 	$logger = Log::Any->get_logger(category => $script_name);
 	$logger->info("Request $requestcount", $ENV{'REMOTE_ADDR'});
 
-	$Error::Debug = 1;
-
 	try {
-		doit();
+		doit(debug => 0);
 	};
 	if($@) {
 		my $msg = $@;
@@ -162,6 +161,8 @@ CHI->stats->flush();
 
 sub doit
 {
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
 	CGI::Info->reset();
 	my $info = CGI::Info->new({ cache => $infocache, logger => $logger });
 
@@ -170,6 +171,7 @@ sub doit
 		cache => $linguacache,
 		info => $info,
 		logger => $logger,
+		debug => $args{'debug'},
 	});
 
 	if($ENV{'REMOTE_ADDR'} && ($acl->all_denied(lingua => $lingua))) {
