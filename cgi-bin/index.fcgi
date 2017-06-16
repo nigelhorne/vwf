@@ -113,8 +113,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 		}
 		Log::Any::Adapter->set('Stdout', log_level => 'debug');
 		$logger = Log::Any->get_logger(category => $script_name);
-		$index->set_logger(logger => $logger);
 		Log::WarnDie->dispatcher($logger);
+		$index->set_logger(logger => $logger);
 		$Error::Debug = 1;
 		try {
 			doit(debug => 1);
