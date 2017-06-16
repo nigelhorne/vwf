@@ -25,6 +25,7 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use Log::WarnDie;
 use CGI::ACL;
+use autodie qw(:all);
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -40,9 +41,12 @@ my $script_dir = $info->script_dir();
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 
-my $infocache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info');
-my $linguacache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua');
-my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => $script_name);
+# my $infocache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info');
+# my $linguacache = CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua');
+# my $buffercache = CHI->new(driver => 'BerkeleyDB', root_dir => $cachedir, namespace => $script_name);
+my $infocache = CHI->new(driver => 'Null');
+my $linguacache = CHI->new(driver => 'Null');
+my $buffercache = CHI->new(driver => 'Null');
 
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);

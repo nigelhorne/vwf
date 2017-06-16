@@ -5,7 +5,7 @@ use warnings;
 use File::Glob;
 use File::Basename;
 use DBI;
-use File::Spec;
+use File::pfopen;
 
 our @databases;
 our $directory;
@@ -71,7 +71,7 @@ sub _open {
 			$self->{'logger'}->debug("read in $table from SQLite $slurp_file");
 		}
 	} else {
-		$slurp_file = File::Spec->catfile($directory, "$table.csv");
+		$slurp_file = File::pfopen::pfopen($directory, $table, 'csv:db');
 		if(-r $slurp_file) {
 			my $sep_char = $args{'sep_char'};
 			$dbh = DBI->connect("dbi:CSV:csv_sep_char=$sep_char");

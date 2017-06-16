@@ -9,6 +9,7 @@ use File::Spec;
 use Template::Filters;
 use Template::Plugin::EnvHash;
 use HTML::SocialMedia;
+use VWF::Utils;
 
 my %blacklist = (
 	'MD' => 1,
@@ -143,7 +144,13 @@ sub new {
 	}
 	my $config;
 	eval {
-		$config = Config::Auto::parse($info->domain_name(), path => $path);
+		if(-r File::Spec->catdir($path, $info->domain_name())) {
+			$config = Config::Auto::parse($info->domain_name(), path => $path);
+		} elsif (-r File::Spec->catdir($path, 'default')) {
+			$config = Config::Auto::parse('default', path => $path);
+		} else {
+			die 'no suitable config file found';
+		}
 	};
 	if($@) {
 		die "Configuration error: $@" . $path . '/' . $info->domain_name();

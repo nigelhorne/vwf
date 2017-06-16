@@ -2,4 +2,4 @@ entry!email
 
 # A flatfile database that is available to the VWF via the VWF::DB package
 # This is a sample
-nigel_horne!njh@bandsman.co.uk
+nigel horne!njh@bandsman.co.uk

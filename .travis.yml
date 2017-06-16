@@ -22,7 +22,7 @@ before_install:
   - sudo apt-get install -y libdb-dev
 
 install:
-  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Memcached Cache::Memcached Log::Log4perl CHI::Driver::BerkeleyDB Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File
+  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie
 
 script:
   - perl cgi-bin/index.fcgi ''
@@ -31,3 +31,4 @@ script:
   - perl -MO=Lint cgi-bin/index.fcgi
   - perl -c -Mwarnings::unused cgi-bin/index.pl
   - perl -c -Mwarnings::unused cgi-bin/index.fcgi
+  - perl cgi-bin/index.fcgi person=nigel+horne
