@@ -152,7 +152,7 @@ sub new {
 			die 'no suitable config file found';
 		}
 	};
-	if($@) {
+	if($@ || !defined($config)) {
 		die "Configuration error: $@" . $path . '/' . $info->domain_name();
 	}
 
