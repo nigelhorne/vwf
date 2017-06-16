@@ -27,10 +27,11 @@ use lib './lib';
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
 
-my $cachedir = CGI::Info->tmpdir() . '/cache';
-my $info = CGI::Info->new({
-	cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info')
-});
+# my $cachedir = CGI::Info->tmpdir() . '/cache';
+# my $info = CGI::Info->new({
+	# cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info')
+# });
+my $info = CGI::Info->new();
 
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
@@ -41,7 +42,7 @@ my $logger = Log::Log4perl->get_logger($script_name);
 
 if(CGI::Buffer::can_cache()) {
 	CGI::Buffer::set_options(
-		cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
+		# cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
 		info => $info,
 		logger => $logger,
 		# generate_304 => 0,
@@ -55,7 +56,7 @@ if(CGI::Buffer::can_cache()) {
 
 my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
-	cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua'),
+	# cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua'),
 	info => $info,
 	logger => $logger,
 });
