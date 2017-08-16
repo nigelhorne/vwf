@@ -27,7 +27,10 @@ sub init {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	$directory ||= $args{'directory'};
-	$directory ||= $args{'logger'};
+	$logger ||= $args{'logger'};
+	if($args{'databases'}) {
+		@databases = $args{'databases'};
+	}
 	throw Error::Simple('directory not given') unless($directory);
 }
 
