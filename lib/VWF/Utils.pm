@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use CHI;
 use Error;
+use Log::Any::Adapter;
 
 sub create_disc_cache {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
