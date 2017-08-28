@@ -5,6 +5,7 @@ use warnings;
 use File::Glob;
 use File::Basename;
 use DBI;
+use File::Spec;
 use File::pfopen 0.02;
 
 our @databases;
@@ -64,8 +65,8 @@ sub _open {
 	my $dbh;
 
 	my $directory = $self->{'directory'} || $directory;
-
 	my $slurp_file = File::Spec->catfile($directory, "$table.sql");
+
 	if(-r $slurp_file) {
 		$dbh = DBI->connect("dbi:SQLite:dbname=$slurp_file", undef, undef, {
 			sqlite_open_flags => SQLITE_OPEN_READONLY,
@@ -173,6 +174,37 @@ sub fetchrow_hashref {
 	my $sth = $self->{$table}->prepare($query);
 	$sth->execute(@args) || throw Error::Simple("$query: @args");
 	return $sth->fetchrow_hashref();
+}
+
+# Execute the given SQL on the data
+sub execute {
+	my $self = shift;
+	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
+	my $table = ref($self);
+	$table =~ s/.*:://;
+
+	$self->_open() if(!$self->{table});
+
+	my $query = $args{'query'};
+	if($self->{'logger'}) {
+		$self->{'logger'}->debug("fetchrow_hashref $query: " . join(' ', @args));
+	}
+	my $sth = $self->{$table}->prepare($query);
+	$sth->execute() || throw Error::Simple($query);
+	my @rc;
+	while (my $href = $sth->fetchrow_hashref()) {
+		push @rc, $href;
+	}
+
+	return \@rc;
+}
+
+# Time that the database was last updated
+sub updated {
+	my $self = shift;
+
+	return $self->{'_updated'};
 }
 
 # Time that the database was last updated
