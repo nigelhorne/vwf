@@ -37,7 +37,7 @@ sub init {
 }
 
 sub set_logger {
-        my $self = shift;
+	my $self = shift;
 
 	if(ref($_[0]) eq 'HASH') {
 		%args = %{$_[0]};
@@ -47,7 +47,7 @@ sub set_logger {
 		$args{'logger'} = shift;
 	}
 
-        $self->{'logger'} = $args{'logger'};
+	$self->{'logger'} = $args{'logger'};
 }
 
 sub _open {
@@ -233,6 +233,10 @@ sub AUTOLOAD {
 	return if($column eq 'DESTROY');
 
 	my $self = shift or return undef;
+
+	unless(wantarray()) {
+		throw Error::Simple("$self->$column must be called in list context");
+	}
 
 	my $table = ref($self);
 	$table =~ s/.*:://;
