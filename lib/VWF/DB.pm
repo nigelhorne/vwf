@@ -7,6 +7,7 @@ use File::Basename;
 use DBI;
 use File::Spec;
 use File::pfopen 0.02;
+use Text::CSV::Slurp;
 
 our @databases;
 our $directory;
@@ -84,22 +85,28 @@ sub _open {
 			$dbh->{'RaiseError'} = 1;
 
 			if($self->{'logger'}) {
-				$self->{'logger'}->debug("read in $table from CVS $slurp_file");
+				$self->{'logger'}->debug("read in $table from CSV $slurp_file");
 			}
 
-			$dbh->{csv_tables}->{$table} = {
+			my %options = (
 				allow_loose_quotes => 1,
 				blank_is_undef => 1,
 				empty_is_undef => 1,
 				binary => 1,
 				f_file => $slurp_file,
 				escape_char => '\\',
-			};
+				sep_char => $sep_char,
+			);
+
+			$dbh->{csv_tables}->{$table} = \%options;
+			delete $options{f_file};
+
+			$self->{'data'} = Text::CSV::Slurp->load(file => $slurp_file, %options);
 		} else {
 			$slurp_file = File::Spec->catfile($directory, "$table.xml");
 			if(-r $slurp_file) {
 				# You'll need to install XML::Twig and
-				# AnyData::Format::XML;
+				# AnyData::Format::XML
 				# The DBD::AnyData in CPAN doesn't work - grab a
 				# patched version from https://github.com/nigelhorne/DBD-AnyData.git
 				$dbh = DBI->connect('dbi:AnyData(RaiseError=>1):');
@@ -113,6 +120,7 @@ sub _open {
 			}
 		}
 	}
+
 	push @databases, $table;
 
 	$self->{$table} = $dbh;
@@ -130,6 +138,13 @@ sub selectall_hashref {
 	$table =~ s/.*:://;
 
 	$self->_open() if(!$self->{$table});
+
+	if($self->{'data'}) {
+		if($self->{'logger'}) {
+			$self->{'logger'}->trace("$table: selectall_hashref fast track return");
+		}
+		return $self->{'data'};
+	}
 
 	my $query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
 	my @args;
@@ -198,13 +213,6 @@ sub execute {
 	}
 
 	return \@rc;
-}
-
-# Time that the database was last updated
-sub updated {
-	my $self = shift;
-
-	return $self->{'_updated'};
 }
 
 # Time that the database was last updated
