@@ -215,6 +215,10 @@ sub doit
 	};
 
 	my $error = $@;
+	if($error) {
+		$logger->error($error);
+		$display = undef;
+	}
 
 	if(defined($display)) {
 		# Pass in a handle to the database
@@ -233,6 +237,14 @@ sub doit
 
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "I don't know what you want me to display.\n";
+			}
+		} elsif($error =~ /Can\'t locate .* in \@INC/) {
+			print "Status: 500 Internal Server Error\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
+
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "Software error - contact the webmaster\n";
 			}
 		} else {
 			# No permission to show this page
