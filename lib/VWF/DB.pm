@@ -88,6 +88,7 @@ sub _open {
 			$self->{'temp'} = $slurp_file;
 		} else {
 			($fin, $slurp_file) = File::pfopen::pfopen($directory, $table, 'csv:db');
+		}
 		if(defined($slurp_file) && (-r $slurp_file)) {
 			close($fin);
 			my $sep_char = $args{'sep_char'};
