@@ -1,6 +1,7 @@
 package VWF::DB;
 
 use warnings;
+use strict;
 
 use File::Glob;
 use File::Basename;
@@ -83,6 +84,7 @@ sub _open {
 			$self->{'logger'}->debug("read in $table from SQLite $slurp_file");
 		}
 	} else {
+		my $fin;
 		($fin, $slurp_file) = File::pfopen::pfopen($directory, $table, 'csv.gz:db.gz');
 		if(defined($slurp_file) && (-r $slurp_file)) {
 			$fin = File::Temp->new(SUFFIX => '.csv', UNLINK => 0);
@@ -303,10 +305,10 @@ sub AUTOLOAD {
 		push @args, $params{$c1};
 	}
 	$query .= " ORDER BY $column";
-	my $sth = $self->{$table}->prepare($query) || throw Error::Simple($query);
 	if($self->{'logger'}) {
 		$self->{'logger'}->debug("AUTOLOAD $query: " . join(', ', @args));
 	}
+	my $sth = $self->{$table}->prepare($query) || throw Error::Simple($query);
 	$sth->execute(@args) || throw Error::Simple($query);
 
 	if(wantarray()) {
