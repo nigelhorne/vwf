@@ -106,7 +106,6 @@ sub get_file_path {
 	$rc = "$dir/$filename.conf";
 	if((!-f $rc) || (!-r $rc)) {
 		die "Can't open $rc";
-		return;
 	}
 	return $rc;
 }
