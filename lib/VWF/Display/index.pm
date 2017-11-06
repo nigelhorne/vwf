@@ -1,10 +1,13 @@
 package VWF::Display::index;
 
+use strict;
+use warnings;
+
 # Display the index page
 
-use VWF::Display::page;
+use VWF::Display;
 
-our @ISA = ('VWF::Display::page');
+our @ISA = ('VWF::Display');
 
 sub html {
 	my $self = shift;

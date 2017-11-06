@@ -1,5 +1,8 @@
 package VWF::Display::table;
 
+use strict;
+use warnings;
+
 use Config::Auto;
 use Text::xSV::Slurp;
 use File::Slurp;
@@ -54,7 +57,7 @@ sub get_file_path {
 	#  Look in .../en/gb/web, then .../en/web then /web
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
-		my $candidata;
+		my $candidate;
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
 		} elsif($lingua->code_alpha2()) {

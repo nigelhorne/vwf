@@ -1,4 +1,4 @@
-package VWF::Display::page;
+package VWF::Display;
 
 # Display a page. Certain variables are available to all templates, such as
 # the stuff in the configuration file
