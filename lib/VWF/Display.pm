@@ -45,9 +45,7 @@ sub new {
 		require Data::Validate::URI;
 		Data::Validate::URI->import();
 
-		$v = Data::Validate::URI->new();
-		unless($v->is_uri($ENV{'HTTP_REFERER'})) {
-			$status = 0;
+		unless(Data::Validate::URI->new()->is_uri($ENV{'HTTP_REFERER'})) {
 			return 0;
 		}
 	}
@@ -87,14 +85,9 @@ sub new {
 		if($@) {
 			unlink($db_file);
 		}
-		if($lingua = $args{lingua}) {
+		if(my $lingua = $args{lingua}) {
 			if($blacklist{uc($lingua->country())}) {
 				die "$ENV{REMOTE_ADDR} is from a blacklisted country " . $lingua->country();
-			}
-			if((my $language = $lingua->language_code_alpha2()) && (-d "$path/$language")) {
-				$path .= "/$language";
-			} elsif(-d "$path/default") {
-				$path .= '/default';
 			}
 		}
 	}
@@ -138,7 +131,7 @@ sub new {
 			if($args{default_config_directory}) {
 				$path = $args{default_config_directory};
 			} elsif($args{logger}) {
-				while (($key,$value) = each %ENV) {
+				while(my ($key,$value) = each %ENV) {
 					$args{logger}->debug("$key=$value");
 				}
 			}
