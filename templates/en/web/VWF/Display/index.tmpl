@@ -3,6 +3,11 @@
 		<title>VWF Test Page</title>
 	</head>
 	<body>
+		[% IF error %]
+			<p><center><font color="red" size="+2">
+				[% error %]
+			</font><center></p>
+		[% END %]
 		[% IF action == 'sent' %]
 			Your e-mail was sent
 		[% END %]

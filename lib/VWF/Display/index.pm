@@ -35,20 +35,21 @@ sub html {
 		die 'No email entry assigned to ' . $info->person();
 	}
 
-	open(my $fout, '|-', '/usr/sbin/sendmail -t');
+	if(open(my $fout, '|-', '/usr/sbin/sendmail -t')) {
+		print $fout "To: $to\n",
+			"From: webmaster\n",
+			"Subject: VWF sending an e-mail\n\n",
+			"Hello, world\n";
 
-	print $fout "To: $to\n",
-		"From: webmaster\n",
-		"Subject: VWF sending an e-mail\n\n",
-		"Hello, world\n";
+		close $fout;
 
-	close $fout;
+		if($self->{_logger}) {
+			$self->{_logger}->trace("E-mail sent to $to");
+		}
 
-	if($self->{_logger}) {
-		$self->{_logger}->trace("E-mail sent to $to");
+		return $self->SUPER::html({ action => 'sent', updated => $index->updated() });
 	}
-
-	return $self->SUPER::html({ action => 'sent', updated => $index->updated() });
+	return $self->SUPER::html({ error => "Can't find /usr/sbin/sendmail", updated => $index->updated() });
 }
 
 1;
