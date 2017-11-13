@@ -1,17 +1,18 @@
 VWF
 ===
 
-Versatile Web Framework - a framework to build a website easily in Perl that
-supports different languages, databases and client platforms.
+Versatile Web Framework - an MVC framework to rapidly build a website in Perl
+that supports different languages, databases and client platforms.
 
 Licenced under GPL2.0 for personal use only.
 
 What This Does
 --------------
 
-VWF is a web application framework to easily display web pages tailored to the wishes
-of the browser, e.g. language to use and mobile/web content. It supports
-Template Toolkit (http://template-toolkit.org/), text and HTML files.
+VWF is a web application framework to easily display web pages tailored to the
+wishes of the browser, e.g. language to use and mobile/web content.
+It supports Template Toolkit (http://template-toolkit.org/),
+text and HTML files.
 
 The idea is to create index.fcgi which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language
