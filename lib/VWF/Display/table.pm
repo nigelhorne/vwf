@@ -153,7 +153,7 @@ sub load_data {
 	}
 	# Slurp it all in, it won't be that big
 	# Remove comments and empty lines
-	my $in = join('', grep(!/^\s*(#|$)/, read_file($filename)));
+	my $in = join('', grep({ !/^\s*(#|$)/ } read_file($filename)));
 
 	my $data = xsv_slurp(
 		shape => 'aoh',
