@@ -113,9 +113,7 @@ sub get_file_path {
 sub columns {
 	my $self = shift;
 
-	$self->load_data();
-
-	return $self->{_columns};
+	return $self->load_data()->{'_columns'};
 }
 
 sub fetch {
@@ -136,16 +134,14 @@ sub fetch {
 sub fetch_as_hash {
 	my $self = shift;
 
-	$self->load_data();
-
-	return $self->{_data_as_hash};
+	return $self->load_data()->{'_columns'};
 }
 
 sub load_data {
 	my $self = shift;
 
 	if($self->{_data_as_array} && $self->{_data_as_hash}) {
-		return;
+		return $self;
 	}
 	my $filename = $self->get_file_path();
 	unless(-r $filename) {
@@ -188,6 +184,8 @@ sub load_data {
 	);
 
 	$self->{_data_as_hash} = $data;
+
+	return $self;
 }
 
 # sub AUTOLOAD {
