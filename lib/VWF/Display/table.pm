@@ -5,7 +5,7 @@ use warnings;
 
 use Config::Auto;
 use Text::xSV::Slurp;
-use File::Slurp;
+use File::Slurp;	# For read_file
 
 # Read in a small flat file of ! delimted records and make them available
 # as object methods so that they can be read from a page display routine or
@@ -106,6 +106,7 @@ sub get_file_path {
 	$rc = "$dir/$filename.conf";
 	if((!-f $rc) || (!-r $rc)) {
 		die "Can't open $rc";
+		return;
 	}
 	return $rc;
 }
@@ -169,7 +170,7 @@ sub load_data {
 	my @column_names = keys(%{$first});
 	$self->{_columns} = \@column_names;
 
-	$data = xsv_slurp(
+	$self->{_data_as_hash} = xsv_slurp(
 		shape => 'hoh',
 		# FIXME: RT79478
 		# key => $column_names[0],
