@@ -1,7 +1,7 @@
 VWF
 ===
 
-Versatile Web Framework - an MVC framework to rapidly build a website in Perl
+Versatile Web Framework - an MVC framework to rapidly build a responsive website
 that supports different languages, databases and client platforms.
 
 Licenced under GPL2.0 for personal use only.
