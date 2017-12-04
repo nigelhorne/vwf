@@ -52,7 +52,7 @@ sub get_file_path {
         my $self = shift;
 
         my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
-        $dir .= '/database';
+        $dir .= '/databases';
 
         my $filename;
 
