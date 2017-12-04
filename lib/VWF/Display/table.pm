@@ -52,63 +52,23 @@ sub get_file_path {
         my $self = shift;
 
         my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
-	$dir .= '/files';
-
-	#  Look in .../en/gb/web, then .../en/web then /web
-	if($self->{_lingua}) {
-		my $lingua = $self->{_lingua};
-		my $candidate;
-		if($lingua->sublanguage_code_alpha2()) {
-			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
-		} elsif($lingua->code_alpha2()) {
-			$candidate = "$dir/" . $lingua->code_alpha2();
-		} else {
-			$candidate = $dir;
-		}
-		if(!-d $candidate) {
-			if(defined($lingua->code_alpha2())) {
-				$candidate = "$dir/" . $lingua->code_alpha2();
-				if(!-d $candidate) {
-					$candidate = $dir;
-				}
-			} else {
-				$candidate = $dir;
-			}
-		}
-		$dir = $candidate;
-	}
-
-	# Look in .../web, .../robot or .../mobile first,
-	my $prefix;
-	if($self->{_info}->is_mobile()) {
-                $prefix = 'mobile';
-	} elsif($self->{_info}->is_search_engine() || $self->{_info}->is_robot()) {
-		$prefix = 'robot';
-        } else {
-                $prefix = 'web';
-        }
+        $dir .= '/database';
 
         my $filename;
 
-	if($self->{_table}) {
-		$filename = $self->{_table};
-	} else {
-		$filename = ref($self);
-	}
-	$filename =~ s/::/\//g;
-	my $rc = "$dir/$prefix/$filename.conf";
+        if($self->{_table}) {
+                $filename = $self->{_table};
+        } else {
+                $filename = ref($self);
+        }
+        $filename =~ s/::/\//g;
 
-	if((-f $rc) && (-r $rc)) {
-		return $rc;
-	}
-
-	# No web, robot or mobile varient
-	$rc = "$dir/$filename.conf";
-	if((!-f $rc) || (!-r $rc)) {
-		die "Can't open $rc";
-		return;
-	}
-	return $rc;
+        my $rc = "$dir/$filename";
+        if((!-f $rc) || (!-r $rc)) {
+                die "Can't open $rc";
+                return;
+        }
+        return $rc;
 }
 
 sub columns {
