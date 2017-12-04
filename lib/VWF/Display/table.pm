@@ -95,7 +95,7 @@ sub fetch {
 sub fetch_as_hash {
 	my $self = shift;
 
-	return $self->load_data()->{'_columns'};
+	return $self->load_data()->{'_data_as_hash'};
 }
 
 sub load_data {
@@ -143,8 +143,6 @@ sub load_data {
 		},
 		string => \$in
 	);
-
-	$self->{_data_as_hash} = $data;
 
 	return $self;
 }
