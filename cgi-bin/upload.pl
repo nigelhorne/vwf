@@ -18,6 +18,8 @@ use File::Basename;
 use Log::WarnDie;
 use String::Random;
 use HTML::Entities;
+use autodie qw(:all);
+use CGI::Alert 'you@example.com';
 
 use lib '../lib';
 use VWF::Config;
@@ -28,7 +30,7 @@ if(0) {
 	while(my $line = <STDIN>) {
 		print $f $line;
 	}
-	exit;
+	# exit;
 }
 
 print "Status: 200 OK\n",
@@ -60,7 +62,24 @@ if($info->params(upload_dir => $dir, logger => $logger)) {
 my $address = 'njh@bandsman.co.uk';
 my $domain_name = $info->domain_name();
 
+open(my $fout, '>>', '/tmp/scratch_upload');
+
+print $fout "Subject: scratch_upload\n";
+
+print $fout "\n";
+
+foreach my $key (sort keys(%FORM)) {
+	if (length($FORM{$key}) > 0) {
+		print $fout "$key: $FORM{$key}\n";
+	}
+}
+
+print $fout '-' x 40, "\n";
+
 if($ENV{'REQUEST_METHOD'}) {
+        if($ENV{'REQUEST_METHOD'} eq 'DELETE') {
+		print $fout "DELETE\n";
+	}
 	if(($ENV{'REQUEST_METHOD'} eq 'DELETE') && $ENV{'SCRIPT_URI'}) {
 		unlink $info->script_dir() . $ENV{'SCRIPT_URI'};
 	}
@@ -149,11 +168,14 @@ if($FORM{'picture_title'}) {
 		$encoded_name =~ s/ /%20/g;
 		$cache->set($key, $encoded_name, '1 week');
 		$cache->set($encoded_name, $key, '1 week');
+		print $fout "set $encoded_name to $key in the memcache\n";
 		$logger->debug("set $encoded_name to $key in the memcache");
 		if(!defined($cache->get($key))) {
+			print $fout "Can't find new $key in the memcache\n";
 			$logger->warn("Can't find new $key in the memcache");
 		}
 		if(!defined($cache->get($encoded_name))) {
+			print $fout "Can't find new $encoded_name in the memcache\n";
 			$logger->warn("Can't find new $encoded_name in the memcache");
 		}
 	}
@@ -175,6 +197,7 @@ if($FORM{'picture_title'}) {
 		$encoded_name =~ s/ /%20/g;
 		my $key = $cache->get($encoded_name);
 		if(!defined($key)) {
+			print $fout "Can't find $encoded_name in the memcache\n";
 			$logger->warn("Can't find $encoded_name in the memcache");
 		}
 		my $displayname = $file;
@@ -188,8 +211,18 @@ if($FORM{'picture_title'}) {
 		    '"deleteUrl": "', $info->script_name(), "?delete=1&key=$key", '",',
 		    '"deleteType": "GET"',
 		    '}';
+		print $fout '{"name": "', $displayname, '",',
+		    '"size": ', $size, ',',
+		    '"url": "\/uploads\/' . $FORM{'picture_title'} . "\/$file", '",',
+		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
+		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
+		    # '"deleteType": "DELETE"',
+		    '"deleteUrl": "', $info->script_name(), "?delete=1&key=$key", '",',
+		    '"deleteType": "GET"',
+		    '}';
 	}
 	print ']}';
+	print $fout ']}';
 } else {
 	if($FORM{'files'}) {
 		my $filename = $dir . '/' . $FORM{'files'};
