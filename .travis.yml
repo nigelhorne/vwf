@@ -25,10 +25,10 @@ install:
   - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen Log::Any::Adapter::Log4perl Text::CSV::Slurp YAML::XS Mo::builder Gzip::Faster Text::xSV::Slurp
 
 script:
-  - perl cgi-bin/index.fcgi ''
+  - perl cgi-bin/page.fcgi page=index
   - perl cgi-bin/index.pl ''
   - perl -MO=Lint cgi-bin/index.pl
-  - perl -MO=Lint cgi-bin/index.fcgi
+  - perl -MO=Lint cgi-bin/page.fcgi
   - perl -c -Mwarnings::unused cgi-bin/index.pl
-  - perl -c -Mwarnings::unused cgi-bin/index.fcgi
-  - perl cgi-bin/index.fcgi person=nigel+horne
+  - perl -c -Mwarnings::unused cgi-bin/page.fcgi
+  - perl cgi-bin/page.fcgi page=index person=nigel+horne
