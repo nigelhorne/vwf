@@ -150,9 +150,9 @@ if($FORM{'delete'} && $FORM{'key'}) {
 	}
 }
 
-if($FORM{'picture_title'}) {
+if($FORM{'album'}) {
 	if($FORM{'files'}) {
-		my $f = $FORM{'picture_title'};
+		my $f = $FORM{'album'};
 		my $filename = "$dir/$f";
 
 		mkdir $dir;
@@ -193,7 +193,7 @@ if($FORM{'picture_title'}) {
 		} else {
 			print ',';
 		}
-		my $encoded_name = encode_entities($FORM{picture_title});
+		my $encoded_name = encode_entities($FORM{album});
 		$encoded_name =~ s/ /%20/g;
 		my $key = $cache->get($encoded_name);
 		if(!defined($key)) {
@@ -204,7 +204,7 @@ if($FORM{'picture_title'}) {
 		$displayname =~ s/_\d{10}$//;
 		print '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'picture_title'} . "\/$file", '",',
+		    '"url": "\/uploads\/' . $FORM{'album'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
 		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
@@ -213,7 +213,7 @@ if($FORM{'picture_title'}) {
 		    '}';
 		print $fout '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'picture_title'} . "\/$file", '",',
+		    '"url": "\/uploads\/' . $FORM{'album'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
 		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
