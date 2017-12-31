@@ -24,10 +24,6 @@ sub html {
 		return $self->SUPER::html();
 	}
 
-	if(!defined($info->person())) {
-		return $self->SUPER::html({ error => 'Who do you want to contact?' });
-	}
-
 	my $index = $args{'index'};	# Handle into the database
 
 	# Look in the index.db for the name given as the CGI argument and
