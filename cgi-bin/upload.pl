@@ -12,6 +12,17 @@ use warnings;
 
 no lib '.';
 
+BEGIN {
+	if(-d '/home/hornenj/perlmods') {
+		# Running at Dreamhost
+		use lib '/home/hornenj/perlmods/lib/perl/5.14';
+		use lib '/home/hornenj/perlmods/lib/perl/5.14.2';
+		use lib '/home/hornenj/perlmods/share/perl/5.14';
+		use lib '/home/hornenj/perlmods/share/perl/5.14.2';
+		use lib '/home/hornenj/perlmods/lib/perl5';
+	}
+}
+
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::Info;
 use File::Basename;
@@ -19,7 +30,7 @@ use Log::WarnDie;
 use String::Random;
 use HTML::Entities;
 use autodie qw(:all);
-use CGI::Alert 'you@example.com';
+use CGI::Alert 'njh@bandsman.co.uk';
 
 use lib '../lib';
 use VWF::Config;
@@ -53,6 +64,9 @@ my $logger = Log::Log4perl->get_logger($script_name);
 Log::WarnDie->dispatcher($logger);
 
 my $dir = $info->script_dir() . '/../uploads';
+if(!-d $dir) {
+	mkdir $dir;
+}
 my %FORM;
 if($info->params(upload_dir => $dir, logger => $logger)) {
 	%FORM = %{$info->params()};
@@ -150,9 +164,9 @@ if($FORM{'delete'} && $FORM{'key'}) {
 	}
 }
 
-if($FORM{'album'}) {
+if($FORM{'album_title'}) {
 	if($FORM{'files'}) {
-		my $f = $FORM{'album'};
+		my $f = $FORM{'album_title'};
 		my $filename = "$dir/$f";
 
 		mkdir $dir;
@@ -193,7 +207,7 @@ if($FORM{'album'}) {
 		} else {
 			print ',';
 		}
-		my $encoded_name = encode_entities($FORM{album});
+		my $encoded_name = encode_entities($FORM{album_title});
 		$encoded_name =~ s/ /%20/g;
 		my $key = $cache->get($encoded_name);
 		if(!defined($key)) {
@@ -204,7 +218,7 @@ if($FORM{'album'}) {
 		$displayname =~ s/_\d{10}$//;
 		print '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'album'} . "\/$file", '",',
+		    '"url": "\/uploads\/' . $FORM{'album_title'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
 		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
@@ -213,7 +227,7 @@ if($FORM{'album'}) {
 		    '}';
 		print $fout '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'album'} . "\/$file", '",',
+		    '"url": "\/uploads\/' . $FORM{'album_title'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
 		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
