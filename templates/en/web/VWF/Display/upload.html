@@ -18,8 +18,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 <![endif]-->
 <meta charset="utf-8">
-<title>Blog Upload Page</title>
-<meta name="description" content="Upload a blog page">
+<title>Upload A Picture</title>
+<meta name="description" content="Upload a picture">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Bootstrap styles -->
 <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
@@ -36,9 +36,9 @@
 </head>
 <body>
 <div class="container">
-    <h1>Upload A Blog Page</h1>
+    <h1>Upload A Picture</h1>
 	<p>
-		Upload a new page for your blog.
+		Upload a new picture for your album.
 	</p>
     <br>
     <!-- The file upload form used as target for the file upload widget -->
@@ -48,16 +48,8 @@
     <form id="fileupload" action="/cgi-bin/upload.pl" method="POST" enctype="multipart/form-data">
 	<input type="hidden" name="action" value="upload" />
 	<p>
-		Your first name:
-		<input type="text" size="20" name="first" maxlength="40" required>
-		<br>
-		<br>
-		Your last name:
-		<input type="text" size="20" name="last" maxlength="40" required>
-		<br>
-		<br>
-		Your e-mail address:
-		<input type="text" size="30" name="address" maxlength="40" required>
+		Picture Title:
+		<input type="text" size="20" name="picture_title" maxlength="40" required>
 	</p>
 	<!-- Redirect browsers with JavaScript disabled to the origin page -->
 	<noscript><input type="hidden" name="redirect" value="https://blueimp.github.io/jQuery-File-Upload/"></noscript>
@@ -68,7 +60,7 @@
                 <span class="btn btn-success fileinput-button">
                     <i class="glyphicon glyphicon-plus"></i>
                     <span>Add files...</span>
-                    <input type="file" name="files" accept=".ged" multiple>
+                    <input type="file" name="files" accept="image/*" multiple>
                 </span>
                 <button type="submit" class="btn btn-primary start">
                     <i class="glyphicon glyphicon-upload"></i>
