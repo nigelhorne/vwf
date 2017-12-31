@@ -54,6 +54,7 @@ Log::WarnDie->dispatcher($logger);
 # my $pagename = "VWF::Display::$script_name";
 # eval "require $pagename";
 use VWF::Display::index;
+use VWF::Display::upload;
 
 use VWF::DB::index;
 if($@) {
@@ -248,6 +249,8 @@ sub doit
 		# $display = VWF::Display::$page->new($args);
 		if($page eq 'index') {
 			$display = VWF::Display::index->new($args);
+		} elsif($page eq 'upload') {
+			$display = VWF::Display::upload->new($args);
 		} else {
 			$logger->info("Unknown page $page");
 			$invalidpage = 1;
@@ -324,6 +327,7 @@ sub choose
 	print "\n";
 
 	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-		print "/cgi-bin/page.fcgi?page=index\n";
+		print "/cgi-bin/page.fcgi?page=index\n",
+			"/cgi-bin/page.fcgi?page=upload\n";
 	}
 }
