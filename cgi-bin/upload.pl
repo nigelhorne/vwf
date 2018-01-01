@@ -51,7 +51,6 @@ my $info = CGI::Info->new(max_upload_size => 10 * 1024 * 1024);
 
 my $tmpdir = $info->tmpdir();
 my $site = 'VWF';
-my $script_dir = $info->script_dir();
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 
@@ -59,14 +58,12 @@ my $script_name = basename($info->script_name(), @suffixlist);
 close STDERR;
 open(STDERR, '>>', "$tmpdir/$script_name.stderr");
 
+my $script_dir = $info->script_dir();
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 Log::WarnDie->dispatcher($logger);
 
-my $dir = $info->script_dir() . '/../uploads';
-if(!-d $dir) {
-	mkdir $dir;
-}
+my $dir = $info->script_dir() . '/../upload';
 my %FORM;
 if($info->params(upload_dir => $dir, logger => $logger)) {
 	%FORM = %{$info->params()};
@@ -74,7 +71,6 @@ if($info->params(upload_dir => $dir, logger => $logger)) {
 
 # my $address = $FORM{'address'};
 my $address = 'njh@bandsman.co.uk';
-my $domain_name = $info->domain_name();
 
 open(my $fout, '>>', '/tmp/scratch_upload');
 
@@ -132,9 +128,9 @@ if($FORM{'delete'} && $FORM{'key'}) {
 			my $key = $cache->get("$FORM{address}/$file");
 			print '{"name": "', $displayname, '",',
 			    '"size": ', $size, ',',
-			    '"url": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
+			    '"url": "\/upload\/' . $FORM{'address'} . "\/$file", '",',
 			    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
-			    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
+			    # '"deleteUrl": "\/upload\/' . $FORM{'address'} . "\/$file", '",',
 			    # '"deleteType": "DELETE"',
 			    '"deleteUrl": "', $info->script_name(), "?delete=1&key=$key", '",',
 			    '"deleteType": "GET"',
@@ -151,8 +147,12 @@ if($FORM{'delete'} && $FORM{'key'}) {
 		$cache->remove($FORM{'key'});
 		$cache->remove("$address/$file");
 	} else {
-		my $filename = $dir . '/' . $FORM{'files'};
-		my $size = (stat($filename))[7];
+		my $filename = $dir;
+                my $size = 0;
+                if($FORM{'files'}) {
+                        $filename .= '/' . $FORM{'files'};
+                        $size = (stat($filename))[7];
+                }
 		print '{"files": [',
 			  '{',
 			    '"name": "', $FORM{files}, '",',
@@ -164,21 +164,25 @@ if($FORM{'delete'} && $FORM{'key'}) {
 	}
 }
 
-if($FORM{'album_title'}) {
-	if($FORM{'files'}) {
-		my $f = $FORM{'album_title'};
-		my $filename = "$dir/$f";
+if(my $album_title = $FORM{'album_title'}) {
+	if(my $filename = $FORM{'files'}) {
+		my $ndir = "$dir/$album_title";
 
-		mkdir $dir;
-		my $nfilename = "$dir/$f";
-		rename $filename, $nfilename;
+		if(!-d $ndir) {
+			if(!-d $dir) {
+				mkdir $dir;
+			}
+			mkdir $ndir;
+		}
+		my $nfilename = "$ndir/$album_title";
+		rename "$dir/$filename", $nfilename;
 
 		my $rand = String::Random->new();
 		my $key;
 		do {
 			$key = $rand->randregex('\w\w\w\w\w\w\w\w');
 		} while($cache->get($key));	# FIXME: race condition
-		my $encoded_name = encode_entities($f);
+		my $encoded_name = encode_entities($album_title);
 		$encoded_name =~ s/ /%20/g;
 		$cache->set($key, $encoded_name, '1 week');
 		$cache->set($encoded_name, $key, '1 week');
@@ -192,6 +196,7 @@ if($FORM{'album_title'}) {
 			print $fout "Can't find new $encoded_name in the memcache\n";
 			$logger->warn("Can't find new $encoded_name in the memcache");
 		}
+		$dir = $ndir;
 	}
 
 	opendir(my $direct, $dir);
@@ -218,18 +223,18 @@ if($FORM{'album_title'}) {
 		$displayname =~ s/_\d{10}$//;
 		print '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'album_title'} . "\/$file", '",',
+		    '"url": "\/upload\/' . $FORM{'album_title'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
-		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
+		    # '"deleteUrl": "\/upload\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
 		    '"deleteUrl": "', $info->script_name(), "?delete=1&key=$key", '",',
 		    '"deleteType": "GET"',
 		    '}';
 		print $fout '{"name": "', $displayname, '",',
 		    '"size": ', $size, ',',
-		    '"url": "\/uploads\/' . $FORM{'album_title'} . "\/$file", '",',
+		    '"url": "\/upload\/' . $FORM{'album_title'} . "\/$file", '",',
 		    '"thumbnailUrl": "\/icons\/icons8-File-50.png",',
-		    # '"deleteUrl": "\/uploads\/' . $FORM{'address'} . "\/$file", '",',
+		    # '"deleteUrl": "\/upload\/' . $FORM{'address'} . "\/$file", '",',
 		    # '"deleteType": "DELETE"',
 		    '"deleteUrl": "', $info->script_name(), "?delete=1&key=$key", '",',
 		    '"deleteType": "GET"',
