@@ -66,7 +66,6 @@ sub get_file_path {
         my $rc = "$dir/$filename";
         if((!-f $rc) || (!-r $rc)) {
                 die "Can't open $rc";
-                return;
         }
         return $rc;
 }
