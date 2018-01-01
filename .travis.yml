@@ -26,8 +26,9 @@ install:
 
 script:
   - cd cgi-bin && CONFIG_DIRECTORY=../conf perl page.fcgi page=index && perl index.pl ''
-  - perl -MO=Lint cgi-bin/index.pl
-  - perl -MO=Lint cgi-bin/page.fcgi
-  - perl -c -Mwarnings::unused cgi-bin/index.pl
-  - perl -c -Mwarnings::unused cgi-bin/page.fcgi
-  - perl cgi-bin/page.fcgi page=index person=nigel+horne
+  - CONFIG_DIRECTORY=../conf
+  - perl -MO=Lint index.pl
+  - perl -MO=Lint page.fcgi
+  - perl -c -Mwarnings::unused index.pl
+  - perl -c -Mwarnings::unused page.fcgi
+  - perl page.fcgi page=index person=nigel+horne
