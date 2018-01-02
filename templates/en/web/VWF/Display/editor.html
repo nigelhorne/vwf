@@ -4,57 +4,46 @@
 	<!-- see http://samwillis.co.uk/pagedown-bootstrap/demo/browser/demo.html -->
 
 	<head>
-		<title>PageDown Demo Page</title>
-		
+		<title>Add a Blog Entry</title>
+
 		<link rel="stylesheet" type="text/css" href="/css/demo.css" />
-		
+
 		<script type="text/javascript" src="/js/Markdown.Converter.js"></script>
 		<script type="text/javascript" src="/js/Markdown.Sanitizer.js"></script>
 		<script type="text/javascript" src="/js/Markdown.Editor.js"></script>
 	</head>
-	
+
 <body>
     <div class="container">
-        
-        <h1>PageDown-Bootstrap Demo Page</h1>
-        <p>This is a demo of the pagedown editor styled to match bootstrap.</p>
-        
+
+        <h1>Add a Blog Entry</h1>
+        <p>Type in your entry and then click on publish.</p>
+
         <hr />
 
-        <h2>2. This is a custom editor</h2>
-        
         <div class="wmd-panel">
             <div id="wmd-button-bar-second"></div>
-<form action="?page=editor" method="post">
+<form action="/cgi-bin/page.fcgi?page=editor" method="post">
 <input type="hidden" name="action" value="publish">
-<textarea class="wmd-input" id="wmd-input-second">
-This is the *second* editor.
-------------------------------
+<p>Title: <input type="text" name="title"></p>
+<textarea class="wmd-input" name="contents" id="wmd-input-second">
+Put your title here
+-------------------
 
-It has a plugin hook registered that surrounds all words starting with the
-letter A with asterisks before doing the Markdown conversion. Another one gives bare links
-a nicer link text. User input isn't sanitized here:
-
-<marquee>I'm the ghost from the past!</marquee>
-
-http://google.com
-
-http://stackoverflow.com
-
-It also includes a help button.
+Put your text here. You can use HTML if you want.
 </textarea>
 <button type="submit">Publish</button>
         </div>
         <div id="wmd-preview-second" class="wmd-panel wmd-preview"></div>
 
-    </div> 
+    </div>
 
     <script type="text/javascript">
         (function () {
             // var converter1 = Markdown.getSanitizingConverter();
             // var editor1 = new Markdown.Editor(converter1);
             // editor1.run();
-            
+
             var converter2 = new Markdown.Converter();
 
             // converter2.hooks.chain("preConversion", function (text) {
@@ -64,11 +53,11 @@ It also includes a help button.
             converter2.hooks.chain("plainLinkText", function (url) {
                 return "This is a link to " + url.replace(/^https?:\/\//, "");
             });
-            
+
             var help = function () { alert("Do you need help?"); }
-            
+
             var editor2 = new Markdown.Editor(converter2, "-second", { handler: help });
-            
+
             editor2.run();
         })();
     </script>
