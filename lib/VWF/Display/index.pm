@@ -6,6 +6,7 @@ use warnings;
 # Display the index page
 
 use VWF::Display;
+use String::Random;
 
 our @ISA = ('VWF::Display');
 
@@ -16,12 +17,51 @@ sub html {
 	my $info = $self->{_info};
 	my $allowed = {
 		'person' => undef,
+		'action' => 'login',
+		'name' => undef,
+		'password' => undef,
 	};
 	my $params = $info->params({ allowed => $allowed });
+	my $config = $args{'config'};
+	my $logger = $args{'logger'};
 
 	if(!defined($params)) {
 		# Display the main index page
 		return $self->SUPER::html();
+	}
+
+	my $cache;
+	if(defined($params->{'action'})) {
+		$self->{'logindata'} ||= create_disc_cache(config => $config, logger => $logger, namespace => 'logindata', root_dir => $args->{'cachedir'});
+		$cache = $self->{'logindata'};
+		if($params->{'action'} eq 'login') {
+			if((!defined($params->{'name'})) || !defined($params->{'password'})) {
+				return $self->SUPER::html({ error => 'Fill in name and password' });
+			}
+			# FIXME - read from configuration file
+			if(($params->{'name'} ne 'VWF') || ($params->{'name'} ne 'Password')) {
+				return $self->SUPER::html({ error => 'Incorrect name or password' });
+			}
+			my $rand = String::Random->new();
+			my $key;
+			do {
+				$key = $rand->randregex('\w\w\w\w\w\w\w\w');
+			} while($cache->get($key));     # FIXME: race condition
+			$self->set_cookie('session' => $key);
+			$self->{'logindata'}->set('VWF', $key, '1 day');
+			my $script_name = $info->script_name();
+			return "Location: $script_name?page=admin";
+		}
+	}
+	if(my $cookie = $info->get_cookie(cookie_name => 'session')) {
+		if(my $key = $self->{'logindata'}->get('VWF')) {
+			if($cookie eq $key) {
+				my $script_name = $info->script_name();
+				return "Location: $script_name?page=admin";
+			}
+			$cache->delete($key);
+		}
+		return $self->SUPER::html({ error => 'You need to login to access the admin screen' });
 	}
 
 	if(!defined($info->person())) {

@@ -11,5 +11,16 @@
 		[% IF action == 'sent' %]
 			Your e-mail was sent
 		[% END %]
+		<p>
+			Admin Login<br>
+			<form method="post" action="#">
+				<input name="action" value="login" type="hidden">
+				<label for="name">Name:</label>
+				<input name="name" id=name" type="text" value="[%- name %]">
+				<label for="password">Password:</label>
+				<input name="password" id="password" type="password">
+				<button type="submit" value="Submit">Login</button>
+			</form>
+		</p>
 	</body>
 </html>
