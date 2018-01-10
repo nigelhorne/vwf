@@ -25,6 +25,7 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
 use Log::WarnDie 0.09;
+use CGI::ACL;
 use autodie qw(:all);
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
@@ -36,7 +37,6 @@ use VWF::Config;
 
 my $info = CGI::Info->new();
 my $tmpdir = $info->tmpdir();
-my $cachedir = "$tmpdir/cache";
 my $script_dir = $info->script_dir();
 my $config;
 
@@ -80,6 +80,11 @@ open(STDERR, '>>', "$tmpdir/$script_name.stderr");
 my $requestcount = 0;
 my $handling_request = 0;
 my $exit_requested = 0;
+
+my @blacklist_country_list = (
+	'RU', 'CN',
+);
+my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('131.161.0.0/16');
 
 sub sig_handler {
 	$exit_requested = 1;
@@ -202,6 +207,19 @@ sub doit
 		syslog => $syslog,
 	});
 
+	if($ENV{'REMOTE_ADDR'} && ($acl->all_denied(lingua => $lingua))) {
+		print "Status: 403 Forbidden\n",
+			"Content-type: text/plain\n",
+			"Pragma: no-cache\n\n";
+
+		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+			print "Access Denied\n";
+		}
+		# $logger->info($ENV{'REMOTE_ADDR'} . ': access denied');
+		$logger->warn($ENV{'REMOTE_ADDR'}, ': access denied');
+		return;
+	}
+
 	my $args = {
 		info => $info,
 		optimise_content => 1,
@@ -224,6 +242,7 @@ sub doit
 
 	$fb->init($args);
 
+	my $cachedir = "$tmpdir/cache";
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
@@ -239,6 +258,7 @@ sub doit
 	my $display;
 	my $invalidpage;
 	$args = {
+		cachedir => $cachedir,
 		info => $info,
 		logger => $logger,
 		lingua => $lingua,
@@ -248,6 +268,7 @@ sub doit
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
 		# $display = VWF::Display::$page->new($args);
+
 		if($page eq 'index') {
 			$display = VWF::Display::index->new($args);
 		} elsif($page eq 'upload') {

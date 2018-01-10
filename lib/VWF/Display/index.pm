@@ -32,7 +32,7 @@ sub html {
 
 	my $cache;
 	if(defined($params->{'action'})) {
-		$self->{'logindata'} ||= create_disc_cache(config => $config, logger => $logger, namespace => 'logindata', root_dir => $args->{'cachedir'});
+		$self->{'logindata'} ||= create_disc_cache(config => $config, logger => $logger, namespace => 'logindata', root_dir => $args{'cachedir'});
 		$cache = $self->{'logindata'};
 		if($params->{'action'} eq 'login') {
 			if((!defined($params->{'name'})) || !defined($params->{'password'})) {
