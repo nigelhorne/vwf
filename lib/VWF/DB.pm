@@ -1,5 +1,7 @@
 package VWF::DB;
 
+# Read-only access to databases
+
 use warnings;
 use strict;
 
@@ -15,6 +17,7 @@ use Error::Simple;
 our @databases;
 our $directory;
 our $logger;
+our $cache;
 
 sub new {
 	my $proto = shift;
@@ -24,7 +27,11 @@ sub new {
 
 	# init(\%args);
 
-	return bless { logger => $args{'logger'} || $logger, directory => $args{'directory'} || $directory }, $class;
+	return bless {
+		logger => $args{'logger'} || $logger,
+		directory => $args{'directory'} || $directory,
+		cache => $args{'cache'} || $cache
+	}, $class;
 }
 
 # Can also be run as a class level VWF::DB::init(directory => '../databases')
@@ -33,6 +40,7 @@ sub init {
 
 	$directory ||= $args{'directory'};
 	$logger ||= $args{'logger'};
+	$cache ||= $args{'cache'};
 	if($args{'databases'}) {
 		@databases = $args{'databases'};
 	}
@@ -210,9 +218,20 @@ sub selectall_hashref {
 	}
 	my $sth = $self->{$table}->prepare($query);
 	$sth->execute(@args) || throw Error::Simple("$query: @args");
+
+	my $key = "$query " . join(', ', @args);
+	my $c;
+	if($c = $self->{cache}) {
+		if(my $rc = $c->get($key)) {
+			return $rc;
+		}
+	}
 	my @rc;
 	while (my $href = $sth->fetchrow_hashref()) {
 		push @rc, $href;
+	}
+	if($c) {
+		$c->set($key, \@rc, '1 hour');
 	}
 
 	return \@rc;
