@@ -247,7 +247,12 @@ sub fetchrow_hashref {
 
 	$self->_open() if(!$self->{table});
 
-	my $query = "SELECT DISTINCT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	my $query;
+	if(wantarray) {
+		$query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	} else {
+		$query = "SELECT DISTINCT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	}
 	my @args;
 	foreach my $c1(keys(%args)) {
 		$query .= " AND $c1 LIKE ?";
@@ -312,7 +317,12 @@ sub AUTOLOAD {
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	my $query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	my $query;
+	if(wantarray) {
+		$query = "SELECT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	} else {
+		$query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+	}
 	my @args;
 	foreach my $c1(keys(%params)) {
 		# $query .= " AND $c1 LIKE ?";
@@ -330,7 +340,7 @@ sub AUTOLOAD {
 	my $sth = $self->{$table}->prepare($query) || throw Error::Simple($query);
 	$sth->execute(@args) || throw Error::Simple($query);
 
-	if(wantarray()) {
+	if(wantarray) {
 		return map { $_->[0] } @{$sth->fetchall_arrayref()};
 	}
 	return $sth->fetchrow_array();	# Return the first match only
