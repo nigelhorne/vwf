@@ -58,10 +58,6 @@ use VWF::Display::upload;
 use VWF::Display::editor;
 
 use VWF::DB::index;
-if($@) {
-	$logger->error($@);
-	die $@;
-}
 
 my $database_dir = "$script_dir/../databases";
 VWF::DB::init({ directory => $database_dir, logger => $logger });
