@@ -328,6 +328,9 @@ sub AUTOLOAD {
 	}
 	my @args;
 	foreach my $c1(keys(%params)) {
+		if(!defined($params{$c1})) {
+			$self->{'logger'}->debug("AUTOLOAD params $c1 isn't defined");
+		}
 		# $query .= " AND $c1 LIKE ?";
 		$query .= " AND $c1 = ?";
 		push @args, $params{$c1};

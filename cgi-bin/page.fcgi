@@ -238,7 +238,7 @@ sub doit
 
 	$fb->init($args);
 
-	my $cachedir = "$tmpdir/cache";
+	my $cachedir = $args{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
