@@ -1,6 +1,12 @@
 <html>
 	<head>
 		<title>VWF Test Page</title>
+		[% IF twitter %]
+			<meta name="twitter:site" content="@[% twitter %]">
+			[% IF SiteTitle %]
+				<meta name="twitter:title" content="[% SiteTitle.join(' ') %]">
+			[% END %]
+		[% END %]
 	</head>
 	<body>
 		[% IF error %]
