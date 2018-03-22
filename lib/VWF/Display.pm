@@ -250,7 +250,7 @@ sub set_cookie {
 }
 
 sub http {
-	my ($self, $params) = @_;
+	my $self = shift;
 
 	# TODO: Only session cookies as the moment
 	my $cookies = $self->{_cookies};
@@ -295,7 +295,7 @@ sub http {
 }
 
 sub html {
-	my $self = shift;
+	my ($self, $params) = @_;
 
 	my $filename = $self->get_template_path();
 	my $rc;
