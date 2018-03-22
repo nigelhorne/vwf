@@ -295,7 +295,7 @@ sub http {
 }
 
 sub html {
-	my ($self, $params) = @_;
+	my $self = shift;
 
 	my $filename = $self->get_template_path();
 	my $rc;

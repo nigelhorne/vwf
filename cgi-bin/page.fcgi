@@ -117,6 +117,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$index->set_logger($logger);
 		$info->set_logger($logger);
 		$Error::Debug = 1;
+		# CHI->stats->enable();
 		try {
 			doit(debug => 1);
 		} catch Error with {
