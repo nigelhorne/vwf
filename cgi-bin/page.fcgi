@@ -322,7 +322,7 @@ sub doit
 				"Pragma: no-cache\n\n";
 
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-				print "There is a problem with your connection. Please contact your ISP.\n";
+				print "There is a problem with your connection. Please contact your ISP. ($error)\n";
 			}
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
