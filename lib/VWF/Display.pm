@@ -170,7 +170,7 @@ sub new {
 		$smcache = ::create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
 		$sm = HTML::SocialMedia->new({ cache => $smcache, lingua => $args{lingua}, logger => $args{logger} });
 	}
-	$self->{'_social_media'}->{'facebook_like_button'} = $sm->as_string(facebook_like_button => 1);
+	$self->{'_social_media'}->{'facebook_share_button'} = $sm->as_string(facebook_share_button => 1);
 	$self->{'_social_media'}->{'google_plusone'} = $sm->as_string(google_plusone => 1);
 
 	return bless $self, $class;
@@ -383,7 +383,6 @@ sub as_string {
 		}
 	}
 
-	return $self->http() . $html;
 	# my $html = $self->html($args);
 	# unless($html) {
 		# return;
@@ -417,6 +416,7 @@ sub _pfopen {
 		return $savedpaths->{$candidate};
 	}
 
+	$self->_debug({ message => "_pfopen: path=$path; prefix = $prefix" });
 	foreach my $dir(split(/:/, $path)) {
 		next unless(-d $dir);
 		if($suffixes) {
