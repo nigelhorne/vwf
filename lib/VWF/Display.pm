@@ -383,11 +383,17 @@ sub as_string {
 		}
 	}
 
-	my $html = $self->html($args);
-	unless($html) {
-		return;
-	}
 	return $self->http() . $html;
+	# my $html = $self->html($args);
+	# unless($html) {
+		# return;
+	# }
+	# return $self->http() . $html;
+	my $rc = $self->http();
+	if($rc =~ /^Location:\s/ms) {
+		return $rc;
+	}
+	return $rc . $self->html($args);
 }
 
 # my $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo', 'txt:bin' );

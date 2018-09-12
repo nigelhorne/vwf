@@ -6,6 +6,9 @@
 # use File::HomeDir;
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
+# Can be tested at the command line, e.g.:
+# rootdir=$(pwd)/.. ./page.fcgi page=index
+
 use strict;
 use warnings;
 # use diagnostics;
@@ -25,6 +28,7 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
 use Log::WarnDie 0.09;
+use HTTP::Date;
 use CGI::ACL;
 use autodie qw(:all);
 
