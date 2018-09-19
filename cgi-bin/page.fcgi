@@ -105,6 +105,9 @@ $SIG{PIPE} = 'IGNORE';
 
 my $request = FCGI::Request();
 
+# It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
+# But I don't think that's possible with the FCGI module
+
 while($handling_request = ($request->Accept() >= 0)) {
 	unless($ENV{'REMOTE_ADDR'}) {
 		# debugging from the command line
