@@ -95,6 +95,7 @@ sub sig_handler {
 			$buffercache->purge();
 		}
 		CHI->stats->flush();
+		Log::WarnDie->dispatcher(undef);
 		exit(0);
 	}
 }
@@ -169,6 +170,7 @@ if($buffercache) {
 	$buffercache->purge();
 }
 CHI->stats->flush();
+Log::WarnDie->dispatcher(undef);
 exit(0);
 
 sub doit
