@@ -28,8 +28,8 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
 use Log::WarnDie 0.09;
-use HTTP::Date;
 use CGI::ACL;
+use HTTP::Date;
 use autodie qw(:all);
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
@@ -335,8 +335,7 @@ sub doit
 				"Pragma: no-cache\n\n";
 
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-				print "There is a problem with your connection. Please contact your ISP. ($error)\n";
-				print $error;
+				print "Access Denied\n";
 			}
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
