@@ -247,9 +247,7 @@ sub doit
 		};
 	}
 
-	my $fb = FCGI::Buffer->new();
-
-	$fb->init($args);
+	my $fb = FCGI::Buffer->new()->init($args);
 
 	my $cachedir = $args{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
 	if($fb->can_cache()) {
