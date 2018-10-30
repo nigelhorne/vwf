@@ -182,7 +182,7 @@ sub doit
 
 	$logger->debug('In doit - domain is ', $info->domain_name());
 
-	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 	$config ||= VWF::Config->new({ logger => $logger, info => $info });
 	$infocache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
@@ -212,7 +212,7 @@ sub doit
 		cache => $linguacache,
 		info => $info,
 		logger => $logger,
-		debug => $args{'debug'},
+		debug => $params{'debug'},
 		syslog => $syslog,
 	});
 
@@ -249,7 +249,7 @@ sub doit
 
 	my $fb = FCGI::Buffer->new()->init($args);
 
-	my $cachedir = $args{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
