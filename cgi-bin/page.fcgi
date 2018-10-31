@@ -236,7 +236,7 @@ sub doit
 		logger => $logger,
 		lingua => $lingua
 	};
-	if(!$ENV{'REMOTE_ADDR'}) {
+	if($params{'debug'}) {
 		$args->{'lint_content'} = 1;
 	}
 	if(!$info->is_search_engine() && $config->rootdir() && ((!defined($info->param('action'))) || ($info->param('action') ne 'send'))) {
