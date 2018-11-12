@@ -6,6 +6,9 @@
 # use File::HomeDir;
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
+# Can be tested at the command line, e.g.:
+# rootdir=$(pwd)/.. ./page.fcgi page=index
+
 use strict;
 use warnings;
 # use diagnostics;
@@ -26,6 +29,7 @@ use Error qw(:try);
 use File::Spec;
 use Log::WarnDie 0.09;
 use CGI::ACL;
+use HTTP::Date;
 use autodie qw(:all);
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
@@ -77,9 +81,12 @@ my $requestcount = 0;
 my $handling_request = 0;
 my $exit_requested = 0;
 
+# CHI->stats->enable();
+
 my @blacklist_country_list = (
 	'RU', 'CN',
 );
+
 my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('131.161.0.0/16');
 
 sub sig_handler {
@@ -91,6 +98,7 @@ sub sig_handler {
 			$buffercache->purge();
 		}
 		CHI->stats->flush();
+		Log::WarnDie->dispatcher(undef);
 		exit(0);
 	}
 }
@@ -100,6 +108,9 @@ $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 
 my $request = FCGI::Request();
+
+# It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
+# But I don't think that's possible with the FCGI module
 
 while($handling_request = ($request->Accept() >= 0)) {
 	unless($ENV{'REMOTE_ADDR'}) {
@@ -162,6 +173,7 @@ if($buffercache) {
 	$buffercache->purge();
 }
 CHI->stats->flush();
+Log::WarnDie->dispatcher(undef);
 exit(0);
 
 sub doit
@@ -170,7 +182,7 @@ sub doit
 
 	$logger->debug('In doit - domain is ', $info->domain_name());
 
-	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 	$config ||= VWF::Config->new({ logger => $logger, info => $info });
 	$infocache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
@@ -200,7 +212,7 @@ sub doit
 		cache => $linguacache,
 		info => $info,
 		logger => $logger,
-		debug => $args{'debug'},
+		debug => $params{'debug'},
 		syslog => $syslog,
 	});
 
@@ -224,7 +236,7 @@ sub doit
 		logger => $logger,
 		lingua => $lingua
 	};
-	if(!$ENV{'REMOTE_ADDR'}) {
+	if($params{'debug'}) {
 		$args->{'lint_content'} = 1;
 	}
 	if(!$info->is_search_engine() && $config->rootdir() && ((!defined($info->param('action'))) || ($info->param('action') ne 'send'))) {
@@ -235,11 +247,9 @@ sub doit
 		};
 	}
 
-	my $fb = FCGI::Buffer->new();
+	my $fb = FCGI::Buffer->new()->init($args);
 
-	$fb->init($args);
-
-	my $cachedir = $args{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
@@ -261,6 +271,7 @@ sub doit
 		lingua => $lingua,
 		config => $config,
 	};
+
 	eval {
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
@@ -322,7 +333,7 @@ sub doit
 				"Pragma: no-cache\n\n";
 
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-				print "There is a problem with your connection. Please contact your ISP.\n";
+				print "Access Denied\n";
 			}
 			$logger->error($error);
 		}

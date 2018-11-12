@@ -170,7 +170,7 @@ sub new {
 		$smcache = ::create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
 		$sm = HTML::SocialMedia->new({ cache => $smcache, lingua => $args{lingua}, logger => $args{logger} });
 	}
-	$self->{'_social_media'}->{'facebook_like_button'} = $sm->as_string(facebook_like_button => 1);
+	$self->{'_social_media'}->{'facebook_share_button'} = $sm->as_string(facebook_share_button => 1);
 	$self->{'_social_media'}->{'google_plusone'} = $sm->as_string(google_plusone => 1);
 
 	return bless $self, $class;
@@ -383,11 +383,16 @@ sub as_string {
 		}
 	}
 
-	my $html = $self->html($args);
-	unless($html) {
-		return;
+	# my $html = $self->html($args);
+	# unless($html) {
+		# return;
+	# }
+	# return $self->http() . $html;
+	my $rc = $self->http();
+	if($rc =~ /^Location:\s/ms) {
+		return $rc;
 	}
-	return $self->http() . $html;
+	return $rc . $self->html($args);
 }
 
 # my $f = pfopen('/tmp:/var/tmp:/home/njh/tmp', 'foo', 'txt:bin' );
@@ -411,19 +416,20 @@ sub _pfopen {
 		return $savedpaths->{$candidate};
 	}
 
+	$self->_debug({ message => "_pfopen: path=$path; prefix = $prefix" });
 	foreach my $dir(split(/:/, $path)) {
 		next unless(-d $dir);
 		if($suffixes) {
 			foreach my $suffix(split(/:/, $suffixes)) {
-				$self->_debug({ message => "check for file $dir/$prefix.$suffix" });
-				my $rc = "$dir/$prefix.$suffix";
+				my $rc = File::Spec->catdir($dir, "$prefix.$suffix");
+				$self->_debug({ message => "check for file $rc" });
 				if(-r $rc) {
 					$savedpaths->{$candidate} = $rc;
 					return $rc;
 				}
 			}
 		} elsif(-r "$dir/$prefix") {
-			my $rc = "$dir/$prefix";
+			my $rc = File::Spec->catdir($dir, $prefix);
 			$savedpaths->{$candidate} = $rc;
 			$self->_debug({ message => "using $rc" });
 			return $rc;

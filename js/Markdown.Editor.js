@@ -165,7 +165,7 @@
     function Chunks() { }
 
     // startRegex: a regular expression to find the start tag
-    // endRegex: a regular expresssion to find the end tag
+    // endRegex: a regular expression to find the end tag
     Chunks.prototype.findTags = function (startRegex, endRegex) {
 
         var chunkObj = this;
@@ -1988,7 +1988,7 @@
         // Go backwards as many lines a possible, such that each line
         //  a) starts with ">", or
         //  b) is almost empty, except for whitespace, or
-        //  c) is preceeded by an unbroken chain of non-empty lines
+        //  c) is preceded by an unbroken chain of non-empty lines
         //     leading up to a line that starts with ">" and at least one more character
         // and in addition
         //  d) at least one line fulfills a)

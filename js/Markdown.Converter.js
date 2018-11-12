@@ -112,7 +112,7 @@ else
         // given a URL that was encountered by itself (without markup), should return the link text that's to be given to this link
         pluginHooks.addNoop("plainLinkText");
         
-        // called with the orignal text as given to makeHtml. The result of this plugin hook is the actual markdown source that will be cooked
+        // called with the original text as given to makeHtml. The result of this plugin hook is the actual markdown source that will be cooked
         pluginHooks.addNoop("preConversion");
         
         // called with the text once all normalizations have been completed (tabs to spaces, line endings, etc.), but before any conversions have
