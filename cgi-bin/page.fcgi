@@ -324,6 +324,7 @@ sub doit
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "There is a problem with your connection. Please contact your ISP.\n";
 			}
+			$logger->error($error);
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
