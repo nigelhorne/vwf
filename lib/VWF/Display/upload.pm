@@ -18,11 +18,13 @@ sub html {
 		'title' => undef,
 		'contents' => undef,
 		'lang' => qr/^[A-Z][A-Z]/i,
+		'lint_content' => qr/^\d$/,
 	};
 	my %params = %{$info->params({ allow => $allowed })};
 
 	delete $params{'page'};
 	delete $params{'lang'};
+	delete $params{'lint_content'};
 
 	unless(scalar(keys %params)) {
 		# Display a blank editor page

@@ -20,6 +20,8 @@ sub html {
 		'action' => 'login',
 		'name' => undef,
 		'password' => undef,
+		'lang' => qr/^[A-Z][A-Z]/i,
+		'lint_content' => qr/^\d$/,
 	};
 	my $params = $info->params({ allowed => $allowed });
 	my $config = $args{'config'};

@@ -127,7 +127,7 @@ VWF is smart enough that you can debug from the command line before you deploy. 
 include
 
     cgi-bin/index.fcgi --mobile
-    cgi-bin/index.fcgi lang=en
+    cgi-bin/index.fcgi lang=fr
     cgi-bin/index.fcgi key=value
     rootdir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
 
