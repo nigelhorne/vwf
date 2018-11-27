@@ -129,6 +129,7 @@ include
     cgi-bin/index.fcgi --mobile
     cgi-bin/index.fcgi lang=en
     cgi-bin/index.fcgi key=value
+    rootdir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
 
 Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
 cached copies of pages that will be inconsistent with the new site.

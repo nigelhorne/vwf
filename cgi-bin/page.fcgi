@@ -7,7 +7,11 @@
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
 # Can be tested at the command line, e.g.:
-# rootdir=$(pwd)/.. ./page.fcgi page=index
+#	rootdir=$(pwd)/.. ./page.fcgi page=index
+# To mimic a mobile site:
+#	rootdir=$(pwd)/.. ./page.fcgi mobile=1 page=index
+# To turn off linting of HTML on a search-engine landing page
+#	rootdir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
 use strict;
 use warnings;
@@ -234,6 +238,7 @@ sub doit
 		optimise_content => 1,
 		lint_content => 0,
 		logger => $logger,
+		lint_content => $info->param('lint_content') // $args{'debug'},
 		lingua => $lingua
 	};
 	if($params{'debug'}) {
