@@ -236,14 +236,11 @@ sub doit
 	my $args = {
 		info => $info,
 		optimise_content => 1,
-		lint_content => 0,
 		logger => $logger,
 		lint_content => $info->param('lint_content') // $params{'debug'},
 		lingua => $lingua
 	};
-	if($params{'debug'}) {
-		$args->{'lint_content'} = 1;
-	}
+
 	if(!$info->is_search_engine() && $config->rootdir() && ((!defined($info->param('action'))) || ($info->param('action') ne 'send'))) {
 		$args->{'save_to'} = {
 			directory => File::Spec->catfile($config->rootdir(), 'save_to'),
