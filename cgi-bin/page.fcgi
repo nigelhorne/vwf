@@ -3,9 +3,6 @@
 # VWF is licensed under GPL2.0 for personal use only
 # njh@bandsman.co.uk
 
-# use File::HomeDir;
-# use lib File::HomeDir->my_home() . '/lib/perl5';
-
 # Can be tested at the command line, e.g.:
 #	rootdir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
@@ -31,10 +28,13 @@ use File::HomeDir;
 use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
-use Log::WarnDie 0.09;
 use CGI::ACL;
+use Log::WarnDie 0.09;
 use HTTP::Date;
 use autodie qw(:all);
+
+# use File::HomeDir;
+# use lib File::HomeDir->my_home() . '/lib/perl5';
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
@@ -150,8 +150,13 @@ while($handling_request = ($request->Accept() >= 0)) {
 	$index->set_logger($logger);
 	$info->set_logger($logger);
 
+	my $start = [Time::HiRes::gettimeofday()];
+
 	try {
 		doit(debug => 0);
+		my $timetaken = Time::HiRes::tv_interval($start);
+
+		$logger->info("$script_name completed in $timetaken seconds");
 	} catch Error with {
 		my $msg = shift;
 		$logger->error($msg);
