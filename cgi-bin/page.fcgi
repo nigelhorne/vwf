@@ -55,7 +55,7 @@ my $infocache;
 my $linguacache;
 my $buffercache;
 
-Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
+Log::Log4perl::init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 Log::WarnDie->dispatcher($logger);
 
