@@ -91,7 +91,7 @@ my @blacklist_country_list = (
 	'RU', 'CN',
 );
 
-my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('131.161.0.0/16');
+my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('131.161.0.0/16')->allow_ip('127.0.0.1');
 
 sub sig_handler {
 	$exit_requested = 1;
