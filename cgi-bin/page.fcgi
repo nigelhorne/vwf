@@ -137,7 +137,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 			doit(debug => 1);
 		} catch Error with {
 			my $msg = shift;
-			warn "$msg\n", $msg->stacktrace;
+			warn "$msg\n", $msg->stacktrace();
 			$logger->error($msg);
 		};
 		last;
@@ -159,7 +159,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$logger->info("$script_name completed in $timetaken seconds");
 	} catch Error with {
 		my $msg = shift;
-		$logger->error($msg);
+		$logger->error("$msg: ", msg->stacktrace());
 		if($buffercache) {
 			$buffercache->clear();
 		}
