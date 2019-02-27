@@ -275,18 +275,19 @@ sub http {
 
 	my $filename = $self->get_template_path();
 	if($filename =~ /\.txt$/) {
-		$rc = "Content-type: text/plain\n";
+		$rc = "Content-Type: text/plain\n";
 	} elsif($language eq 'Japanese') {
 		binmode(STDOUT, ':utf8');
 
-		$rc = "Content-type: text/html; charset=UTF-8\n";
+		$rc = "Content-Type: text/html; charset=UTF-8\n";
 	} elsif($language eq 'Polish') {
 		binmode(STDOUT, ':utf8');
 
-		# print "Content-type: text/html; charset=ISO-8859-2\n";
-		$rc = "Content-type: text/html; charset=UTF-8\n";
+		# print "Content-Type: text/html; charset=ISO-8859-2\n";
+		$rc = "Content-Type: text/html; charset=UTF-8\n";
 	} else {
-		$rc = "Content-type: text/html; charset=ISO-8859-1\n";
+		# $rc = "Content-Type: text/html; charset=ISO-8859-1\n";
+		$rc = "Content-Type: text/html; charset=UTF-8\n";
 	}
 
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
