@@ -212,7 +212,7 @@ sub doit
 	$info = CGI::Info->new($options);
 
 	open(my $fout, '>>', $vwflog);
-	print $fout,
+	print $fout
 		$info->domain_name(),
 		"\t",
 		($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
