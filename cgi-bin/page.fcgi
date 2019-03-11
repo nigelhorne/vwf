@@ -217,7 +217,7 @@ sub doit
 		"\t",
 		($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
 		"\t",
-		$info_as_string(),
+		$info->as_string(),
 		"\n"
 	);
 	close($fout);
