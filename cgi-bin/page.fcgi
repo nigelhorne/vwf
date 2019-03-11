@@ -51,6 +51,8 @@ my $config;
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 
+my $vwflog = File::Spec->catfile($info->logdir(), 'vwf.log');
+
 my $infocache;
 my $linguacache;
 my $buffercache;
@@ -208,6 +210,17 @@ sub doit
 		$options->{'syslog'} = $syslog;
 	}
 	$info = CGI::Info->new($options);
+
+	open(my $fout, '>>', $vwflog);
+	print($fout,
+		$info->domain_name(),
+		"\t",
+		($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
+		"\t",
+		$info_as_string(),
+		"\n"
+	);
+	close($fout);
 
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
