@@ -211,15 +211,19 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
-	open(my $fout, '>>', $vwflog);
-	print $fout
-		$info->domain_name(),
-		"\t",
-		($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
-		"\t",
-		$info->as_string(),
-		"\n";
-	close($fout);
+	if($vwflog) {
+		open(my $fout, '>>', $vwflog);
+		print $fout
+			$info->domain_name(),
+			"\t",
+			($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
+			"\t",
+			$info->browser_type(),
+			"\t",
+			$info->as_string(),
+			"\n";
+		close($fout);
+	}
 
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
