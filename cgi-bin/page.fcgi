@@ -211,26 +211,6 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
-	if($vwflog) {
-		open(my $fout, '>>', $vwflog);
-		print $fout
-			$info->domain_name(),
-			"\t",
-			($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''),
-			"\t",
-			$info->browser_type(),
-			"\t",
-			$info->as_string(),
-			"\n";
-		close($fout);
-	}
-
-	if(!defined($info->param('page'))) {
-		$logger->info('No page given in ', $info->as_string());
-		choose();
-		return;
-	}
-
 	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 	my $lingua = CGI::Lingua->new({
 		supported => [ 'en-gb' ],
@@ -241,7 +221,24 @@ sub doit
 		syslog => $syslog,
 	});
 
-	if($ENV{'REMOTE_ADDR'} && ($acl->all_denied(lingua => $lingua))) {
+	if($vwflog) {
+		open(my $fout, '>>', $vwflog);
+		print $fout
+			'"', $info->domain_name(), '",',
+			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+			'"', $info->browser_type(), '",',
+			'"', $lingua->language(), '",',
+			'"', $info->as_string(), "\"\n";
+		close($fout);
+	}
+
+	if(!defined($info->param('page'))) {
+		$logger->info('No page given in ', $info->as_string());
+		choose();
+		return;
+	}
+
+	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
 		print "Status: 403 Forbidden\n",
 			"Content-type: text/plain\n",
 			"Pragma: no-cache\n\n";
