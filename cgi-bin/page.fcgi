@@ -163,7 +163,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$logger->info("$script_name completed in $timetaken seconds");
 	} catch Error with {
 		my $msg = shift;
-		$logger->error("$msg: ", msg->stacktrace());
+		$logger->error("$msg: ", $msg->stacktrace());
 		if($buffercache) {
 			$buffercache->clear();
 		}
