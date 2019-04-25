@@ -43,6 +43,8 @@ use lib '../lib';
 
 use VWF::Config;
 
+Log::WarnDie->filter(\&filter);
+
 my $info = CGI::Info->new();
 my $tmpdir = $info->tmpdir();
 my $script_dir = $info->script_dir();
@@ -246,7 +248,6 @@ sub doit
 		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 			print "Access Denied\n";
 		}
-		# $logger->info($ENV{'REMOTE_ADDR'} . ': access denied');
 		$logger->warn($ENV{'REMOTE_ADDR'}, ': access denied');
 		return;
 	}
@@ -383,4 +384,13 @@ sub choose
 			"/cgi-bin/page.fcgi?page=upload\n",
 			"/cgi-bin/page.fcgi?page=editor\n";
 	}
+}
+
+# False positives we don't need in the logs
+sub filter {
+	return 0 if($_[0] =~ /Can't locate Net\/OAuth\/V1_0A\/ProtectedResourceRequest.pm in /);
+	return 0 if($_[0] =~ /Can't locate auto\/NetAddr\/IP\/InetBase\/AF_INET6.al in /);
+	return 0 if($_[0] =~ /S_IFFIFO is not a valid Fcntl macro at /);
+
+	return 1;
 }
