@@ -218,6 +218,7 @@ if(my $album_title = $FORM{'album_title'}) {
 		if(!defined($key)) {
 			print $fout "Can't find $encoded_name in the memcache\n";
 			$logger->warn("Can't find $encoded_name in the memcache");
+			next;
 		}
 		my $displayname = $file;
 		$displayname =~ s/_\d{10}$//;
