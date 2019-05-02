@@ -31,6 +31,7 @@ use File::Spec;
 use CGI::ACL;
 use Log::WarnDie 0.09;
 use HTTP::Date;
+use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
 # use File::HomeDir;
@@ -42,6 +43,9 @@ use autodie qw(:all);
 use lib '../lib';
 
 use VWF::Config;
+
+$TAINT = 1;
+taint_env();
 
 Log::WarnDie->filter(\&filter);
 
