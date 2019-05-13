@@ -118,6 +118,7 @@ sub sig_handler {
 $SIG{USR1} = \&sig_handler;
 $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
+$ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
 my $request = FCGI::Request();
 
