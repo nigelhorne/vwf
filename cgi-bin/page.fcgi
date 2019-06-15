@@ -51,11 +51,16 @@ Log::WarnDie->filter(\&filter);
 
 my $info = CGI::Info->new();
 my $tmpdir = $info->tmpdir();
+
 my $script_dir = $info->script_dir();
 my $config;
 
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
+
+# open STDERR, ">&STDOUT";
+close STDERR;
+open(STDERR, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"));
 
 my $vwflog = File::Spec->catfile($info->logdir(), 'vwf.log');
 
@@ -83,10 +88,6 @@ if($@) {
 	$logger->error($@);
 	die $@;
 }
-
-# open STDERR, ">&STDOUT";
-close STDERR;
-open(STDERR, '>>', "$tmpdir/$script_name.stderr");
 
 # http://www.fastcgi.com/docs/faq.html#PerlSignals
 my $requestcount = 0;
