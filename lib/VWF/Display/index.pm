@@ -15,6 +15,8 @@ sub html {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $info = $self->{_info};
+	die unless($info);
+
 	my $allowed = {
 		'person' => undef,
 		'action' => 'login',
