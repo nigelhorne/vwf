@@ -19,10 +19,10 @@ before_install:
   - cpanm --installdeps --quiet --notest DBD::SQLite
   - cpanm --notest --quiet DBD::SQLite Locale::Object::Country Gzip::Faster
   - sudo apt-get update -q
-  - sudo apt-get install -y libdb-dev libyaml-syck-perl
+  - sudo apt-get install -y libdb-dev libyaml-syck-perl liblog-log4perl-perl
 
 install:
-  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen Log::Any::Adapter::Log4perl Text::CSV::Slurp YAML::XS Mo::builder Gzip::Faster Text::xSV::Slurp String::Random Taint::Runtime
+  - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen Log::Any::Adapter::Log4perl Text::CSV::Slurp YAML::XS Mo::builder Gzip::Faster Text::xSV::Slurp String::Random Taint::Runtime Log::Log4perl
 
 script:
   - cd cgi-bin && CONFIG_DIRECTORY=../conf perl page.fcgi page=index && perl index.pl ''
