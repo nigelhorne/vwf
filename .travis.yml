@@ -4,22 +4,28 @@ os:
   - linux
   # - osx
 
+env: AUTOMATED_TESTING=1
+
 perl:
+  - "5.30"
+  - "5.28"
   - "5.26"
   - "5.24"
   - "5.22"
-  - "5.20"
-  - "5.18"
-  - "5.16"
+  # - "5.20"
+  # - "5.18"
+  # - "5.16"
   # - "5.14"
+
+sudo: false
 
 # This can be removed once CGI::Lingua 0.54 has been published
 before_install:
   # Needed for Locale::Object
   - cpanm --installdeps --quiet --notest DBD::SQLite
   - cpanm --notest --quiet DBD::SQLite Locale::Object::Country Gzip::Faster
-  - sudo apt-get update -q
-  - sudo apt-get install -y libdb-dev libyaml-syck-perl liblog-log4perl-perl
+  # - sudo apt-get update -q
+  # - sudo apt-get install -y libdb-dev libyaml-syck-perl liblog-log4perl-perl
 
 install:
   - cpanm --skip-satisfied --notest --quiet CGI::Carp CGI::Lingua File::Basename FCGI FCGI::Buffer File::HomeDir CGI::Buffer CHI::Driver::Null Cache::Memcached Log::Log4perl Config::Auto Template B::Lint Error::Simple warnings::unused HTML::SocialMedia Template::Plugin::EnvHash CGI::ACL Log::WarnDie Log::Dispatch::File XML::Simple DBD::CSV IPC::System::Simple autodie File::pfopen Log::Any::Adapter::Log4perl Text::CSV::Slurp YAML::XS Mo::builder Gzip::Faster Text::xSV::Slurp String::Random Taint::Runtime Log::Log4perl CGI::Info
@@ -32,3 +38,16 @@ script:
   - perl -c -Mwarnings::unused index.pl
   - perl -c -Mwarnings::unused page.fcgi
   - perl page.fcgi page=index person=nigel+horne
+
+jobs:
+  include:
+    - stage: Windows
+      os: windows
+      language: shell
+      before_install:
+        - cinst -y strawberryperl
+        - export "PATH=/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
+      install:
+        - cpanm --notest --installdeps .
+      script:
+	- cd cgi-bin && CONFIG_DIRECTORY=..\\conf perl page.fcgi page=index && perl index.pl ''
