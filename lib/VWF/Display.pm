@@ -162,6 +162,10 @@ sub new {
 		# _page => $info->param('page'),
 	};
 
+	if(my $key = $info->param('key')) {
+		$self->{'_key'} = $key;
+	}
+
 	if(my $twitter = $config->{'twitter'}) {
 		$smcache ||= ::create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
 		$sm ||= HTML::SocialMedia->new({ twitter => $twitter, cache => $smcache, lingua => $args{lingua}, logger => $args{logger} });
@@ -196,10 +200,10 @@ sub get_template_path {
 	# Look in .../en/gb/web, then .../en/web then /web
 	if($self->{_lingua}) {
 		my $lingua = $self->{_lingua};
-		my $candidate;
 
 		$self->_debug({ message => 'Requested language: ' . $lingua->requested_language() });
 
+		my $candidate;
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
 			$self->_debug({ message => "check for directory $candidate" });
@@ -228,7 +232,7 @@ sub get_template_path {
 
 	$self->_debug({ message => "prefix: $prefix" });
 
-        my $modulepath = $args{'modulepath'} || ref($self);
+	my $modulepath = $args{'modulepath'} || ref($self);
 	$modulepath =~ s/::/\//g;
 
 	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
@@ -296,7 +300,8 @@ sub http {
 }
 
 sub html {
-	my ($self, $params) = @_;
+	my $self = shift;
+	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $filename = $self->get_template_path();
 	my $rc;
@@ -316,11 +321,11 @@ sub html {
 		# the values in info, then the values in params
 		my $vals;
 		if(defined($self->{_config})) {
-                        if($info->params()) {
-                                $vals = { %{$self->{_config}}, %{$info->params()} };
-                        } else {
-                                $vals = $self->{_config};
-                        }
+			if($info->params()) {
+				$vals = { %{$self->{_config}}, %{$info->params()} };
+			} else {
+				$vals = $self->{_config};
+			}
 			if(defined($params)) {
 				$vals = { %{$vals}, %{$params} };
 			}
@@ -333,7 +338,9 @@ sub html {
 
 		$vals->{cart} = $info->get_cookie(cookie_name => 'cart');
 		$vals->{lingua} = $self->{_lingua};
+		$vals->{social_media} = $self->{_social_media};
 		$vals->{info} = $info;
+		$vals->{as_string} = $info->as_string();
 
 		$template->process($filename, $vals, \$rc) ||
 			die $template->error();
@@ -473,12 +480,12 @@ sub _append_browser_type {
 	my $rc;
 
 	if(-d $directory) {
-                if($self->{_info}->is_mobile()) {
-                        $rc = "$directory/mobile:";
-                } elsif($self->{_info}->is_search_engine()) {
-                        $rc = "$directory/search:$directory/web:$directory/robot:";
-                } elsif($self->{_info}->is_robot()) {
-                        $rc = "$directory/robot:";
+		if($self->{_info}->is_search_engine()) {
+			$rc = "$directory/search:$directory/web:$directory/robot:";
+		} elsif($self->{_info}->is_mobile()) {
+			$rc = "$directory/mobile:";
+		} elsif($self->{_info}->is_robot()) {
+			$rc = "$directory/robot:";
 		}
 		$rc .= "$directory/web:";
 
