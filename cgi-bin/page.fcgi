@@ -10,6 +10,9 @@
 # To turn off linting of HTML on a search-engine landing page
 #	rootdir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
+# TODO: Intercept /meta-data and return TEXT/PLAIN of the status of the server
+#	and VWF system
+
 use strict;
 use warnings;
 # use diagnostics;
