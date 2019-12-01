@@ -124,6 +124,10 @@ $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
+$Error::Debug = 1;
+
+$SIG{__WARN__} = sub { die @_ };
+
 my $request = FCGI::Request();
 
 # It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
@@ -144,7 +148,6 @@ while($handling_request = ($request->Accept() >= 0)) {
 		Log::WarnDie->dispatcher($logger);
 		$index->set_logger($logger);
 		$info->set_logger($logger);
-		$Error::Debug = 1;
 		# CHI->stats->enable();
 		try {
 			doit(debug => 1);
