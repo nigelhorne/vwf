@@ -80,7 +80,7 @@ sub html {
 
 	# Insert code here to error if $to isn't defined
 	if(!defined($to)) {
-		die 'No email entry assigned to ' . $info->person();
+		die 'No email entry assigned to ', $info->person();
 	}
 
 	if(open(my $fout, '|-', '/usr/sbin/sendmail -t')) {

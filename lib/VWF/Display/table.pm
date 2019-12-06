@@ -39,7 +39,7 @@ sub new {
 		$config = Config::Auto::parse($info->domain_name(), path => $path);
 	};
 	if($@) {
-		die "Configuration error: $@" . $path . '/' . $info->domain_name();
+		die "Configuration error: $@: $path/", $info->domain_name();
 	}
 	return bless {
 		_config => $config,
