@@ -208,7 +208,7 @@ sub doit
 	$logger->debug('In doit - domain is ', $info->domain_name());
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
-	$config ||= VWF::Config->new({ logger => $logger, info => $info });
+	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
 	$infocache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {

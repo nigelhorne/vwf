@@ -89,6 +89,10 @@ sub new {
 			}
 		}
 	}
+	if($args{'debug'}) {
+		# Not sure this really does anything
+		$Config::Auto::Debug = 1;
+	}
 	my $config;
 	eval {
 		if($args{logger}) {
