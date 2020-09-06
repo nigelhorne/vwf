@@ -56,7 +56,7 @@ sub create_disc_cache {
 			if($config->{disc_cache}->{'port'}) {
 				$servers[0] .= ':' . $config->{disc_cache}->{port};
 			} else {
-				throw Error::Simple('port is not optional');
+				throw Error::Simple('port is not optional in ' . $config->{'config_path'});
 			}
 			$chi_args{'server'} = $servers[0];
 			if($logger) {
@@ -124,7 +124,7 @@ sub create_memory_cache {
 			if($config->{memory_cache}->{'port'}) {
 				$servers[0] .= ':' . $config->{memory_cache}->{port};
 			} else {
-				throw Error::Simple('port is not optional');
+				throw Error::Simple('port is not optional in ' . $config->{'config_path'});
 			}
 			$chi_args{'server'} = $servers[0];
 			if($logger) {
