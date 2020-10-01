@@ -1,7 +1,7 @@
 package VWF::DB;
 
 # Author Nigel Horne: njh@bandsman.co.uk
-# Copyright (C) 2015-2018, Nigel Horne
+# Copyright (C) 2015-2020, Nigel Horne
 
 # Usage is subject to licence terms.
 # The licence terms of this software are as follows:
@@ -54,7 +54,7 @@ sub new {
 
 	my $class = ref($proto) || $proto;
 
-	if($class eq 'VWF::DB') {
+	if($class eq __PACKAGE__) {
 		die "$class: abstract class";
 	}
 
@@ -69,7 +69,7 @@ sub new {
 	}, $class;
 }
 
-# Can also be run as a class level VWF::DB::init(directory => '../databases')
+# Can also be run as a class level __PACKAGE__::init(directory => '../databases')
 sub init {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
