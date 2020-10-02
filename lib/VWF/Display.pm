@@ -357,7 +357,7 @@ sub html {
 
 		$rc = join('', @lines);
 	} else {
-		warn "Unhandled file type $filename";
+		throw Error::Simple("Unhandled file type $filename");
 	}
 
 	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/)) {
