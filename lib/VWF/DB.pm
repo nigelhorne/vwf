@@ -11,8 +11,13 @@ package VWF::DB;
 #	above e-mail.
 
 # Abstract class giving read-only access to CSV, XML and SQLite databases via Perl without writing any SQL.
+# Look for databases in $directory in this order;
+#	SQLite (file ends with .sql)
+#	PSV (pipe separated file, file ends with .psv)
+#	CSV (file ends with .csv or .db, can be gzipped)
+#	XML (file ends with .xml)
 
-# You can access the files in $directory/foo.csv via this class:
+# For example, you can access the files in /var/db/foo.csv via this class:
 
 # package MyPackageName::DB::foo;
 
@@ -23,27 +28,35 @@ package VWF::DB;
 # 1;
 
 # You can then access the data using:
-# my $foo = NJH::Snippets::DB::foo->new();
+# my $foo = MyPackageName::DB::foo->new(directory => '/var/db');
 # my $row = $foo->fetchrow_hashref(customer_id => '12345);
 # print Data::Dumper->new([$row])->Dump();
 
+# CSV files can have empty lines of comment lines starting with '#', to make them more readable
+
+# If the table has a column called "entry", sorts are based on that
+# To turn that off, pass 'no_entry' to the constructor, for legacy
+# reasons it's enabled by default
+# TODO: Switch that to off by default, and enable by passing 'entry'
+
 # TODO: support a directory hierachy of databases
 # TODO: consider returning an object or array of objects, rather than hashes
+# TODO:	Add redis database - could be of use for Geo::Coder::Free
+#	use select() to select a database - use the table arg
+#	new(database => 'redis://servername');
 
 use warnings;
 use strict;
 
+use DBD::SQLite::Constants qw/:file_open/;	# For SQLITE_OPEN_READONLY
 use File::Basename;
-use DBI;
 use File::Spec;
 use File::pfopen 0.02;
 use File::Temp;
-use Gzip::Faster;
-use DBD::SQLite::Constants qw/:file_open/;	# For SQLITE_OPEN_READONLY
 use Error::Simple;
+use Error::DB::Open;
 use Carp;
 
-our @databases;
 our $directory;
 our $logger;
 our $cache;
@@ -65,20 +78,18 @@ sub new {
 		logger => $args{'logger'} || $logger,
 		directory => $args{'directory'} || $directory,	# The directory conainting the tables in XML, SQLite or CSV format
 		cache => $args{'cache'} || $cache,
-		table => $args{'table'}	# The name of the file containing the table, defaults to the class name
+		table => $args{'table'},	# The name of the file containing the table, defaults to the class name
+		no_entry => $args{'no_entry'} || 0,
 	}, $class;
 }
 
-# Can also be run as a class level __PACKAGE__::init(directory => '../databases')
+# Can also be run as a class level __PACKAGE__::DB::init(directory => '../databases')
 sub init {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	$directory ||= $args{'directory'};
 	$logger ||= $args{'logger'};
 	$cache ||= $args{'cache'};
-	if($args{'databases'}) {
-		@databases = $args{'databases'};
-	}
 }
 
 sub set_logger {
@@ -98,6 +109,8 @@ sub set_logger {
 
 	$self->{'logger'} = $args{'logger'};
 }
+
+# Open the database.
 
 sub _open {
 	my $self = shift;
@@ -124,6 +137,10 @@ sub _open {
 	}
 
 	if(-r $slurp_file) {
+		require DBI;
+
+		DBI->import();
+
 		$dbh = DBI->connect("dbi:SQLite:dbname=$slurp_file", undef, undef, {
 			sqlite_open_flags => SQLITE_OPEN_READONLY,
 		});
@@ -132,17 +149,27 @@ sub _open {
 		if($self->{'logger'}) {
 			$self->{'logger'}->debug("read in $table from SQLite $slurp_file");
 		}
+		$self->{'type'} = 'DBI';
 	} else {
 		my $fin;
 		($fin, $slurp_file) = File::pfopen::pfopen($dir, $table, 'csv.gz:db.gz');
 		if(defined($slurp_file) && (-r $slurp_file)) {
+			require Gzip::Faster;
+			Gzip::Faster->import();
+
 			close($fin);
 			$fin = File::Temp->new(SUFFIX => '.csv', UNLINK => 0);
 			print $fin gunzip_file($slurp_file);
 			$slurp_file = $fin->filename();
 			$self->{'temp'} = $slurp_file;
 		} else {
-			($fin, $slurp_file) = File::pfopen::pfopen($dir, $table, 'csv:db');
+			($fin, $slurp_file) = File::pfopen::pfopen($dir, $table, 'psv');
+			if(defined($fin)) {
+				# Pipe separated file
+				$args{'sep_char'} = '|';
+			} else {
+				($fin, $slurp_file) = File::pfopen::pfopen($dir, $table, 'csv:db');
+			}
 		}
 		if(defined($slurp_file) && (-r $slurp_file)) {
 			close($fin);
@@ -174,7 +201,11 @@ sub _open {
 				f_file => $slurp_file,
 				escape_char => '\\',
 				sep_char => $sep_char,
-				auto_diag => 1,
+				# Don't do this, causes "Bizarre copy of HASH
+				#	in scalar assignment in error_diag
+				#	RT121127
+				# auto_diag => 1,
+				auto_diag => 0,
 				# Don't do this, it causes "Attempt to free unreferenced scalar"
 				# callbacks => {
 					# after_parse => sub {
@@ -225,13 +256,16 @@ sub _open {
 			)};
 
 			# Ignore blank lines or lines starting with # in the CSV file
-			@data = grep { $_->{'entry'} !~ /^\s*#/ } grep { defined($_->{'entry'}) } @data;
+			unless($self->{no_entry}) {
+				@data = grep { $_->{'entry'} !~ /^\s*#/ } grep { defined($_->{'entry'}) } @data;
+			}
 			# $self->{'data'} = @data;
 			my $i = 0;
 			$self->{'data'} = ();
 			foreach my $d(@data) {
 				$self->{'data'}[$i++] = $d;
 			}
+			$self->{'type'} = 'CSV';
 		} else {
 			$slurp_file = File::Spec->catfile($dir, "$table.xml");
 			if(-r $slurp_file) {
@@ -242,12 +276,11 @@ sub _open {
 				}
 				$dbh->func($table, 'XML', $slurp_file, 'xmlsimple_import');
 			} else {
-				throw Error::Simple("Can't open $dir/$table");
+				throw Error::DB::Open(-file => $slurp_file);
 			}
+			$self->{'type'} = 'XML';
 		}
 	}
-
-	push @databases, $table;
 
 	$self->{$table} = $dbh;
 	my @statb = stat($slurp_file);
@@ -257,66 +290,116 @@ sub _open {
 # Returns a reference to an array of hash references of all the data meeting
 # the given criteria
 sub selectall_hashref {
-	my @rc = selectall_hash(@_);
+	my $self = shift;
+	my @rc = $self->selectall_hash(@_);
 	return \@rc;
 }
 
 # Returns an array of hash references
 sub selectall_hash {
 	my $self = shift;
-	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $table = $self->{table} || ref($self);
 	$table =~ s/.*:://;
 
 	$self->_open() if(!$self->{$table});
 
-	if((scalar(keys %args) == 0) && $self->{'data'}) {
+	if((scalar(keys %params) == 0) && $self->{'data'}) {
 		if($self->{'logger'}) {
 			$self->{'logger'}->trace("$table: selectall_hash fast track return");
 		}
-		return @{$self->{'data'}};
+		# This use of a temporary variable is to avoid
+		#	"Implicit scalar context for array in return"
+		# return @{$self->{'data'}};
+		my @rc = @{$self->{'data'}};
+		return @rc;
 	}
-	# if((scalar(keys %args) == 1) && $self->{'data'} && defined($args{'entry'})) {
+	# if((scalar(keys %params) == 1) && $self->{'data'} && defined($params{'entry'})) {
 	# }
 
-	my $query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
-	my @args;
-	foreach my $c1(sort keys(%args)) {	# sort so that the key is always the same
-		$query .= " AND $c1 LIKE ?";
-		push @args, $args{$c1};
+	my $query;
+	my $done_where = 0;
+	if(($self->{'type'} eq 'CSV') && !$self->{no_entry}) {
+		$query = "SELECT * FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+		$done_where = 1;
+	} else {
+		$query = "SELECT * FROM $table";
 	}
-	$query .= ' ORDER BY entry';
+	my @query_args;
+	foreach my $c1(sort keys(%params)) {	# sort so that the key is always the same
+		my $arg = $params{$c1};
+		if(ref($arg)) {
+			if($self->{'logger'}) {
+				$self->{'logger'}->fatal("selectall_hash $query: argument is not a string");
+			}
+			throw Error::Simple("$query: argument is not a string");
+		}
+		if(!defined($arg)) {
+			my @call_details = caller(0);
+			throw Error::Simple("$query: value for $c1 is not defined in call from " .
+				$call_details[2] . ' of ' . $call_details[1]);
+		}
+		if($done_where) {
+			if($arg =~ /\@/) {
+				$query .= " AND $c1 LIKE ?";
+			} else {
+				$query .= " AND $c1 = ?";
+			}
+		} else {
+			if($arg =~ /\@/) {
+				$query .= " WHERE $c1 LIKE ?";
+			} else {
+				$query .= " WHERE $c1 = ?";
+			}
+			$done_where = 1;
+		}
+		push @query_args, $arg;
+	}
+	if(!$self->{no_entry}) {
+		$query .= ' ORDER BY entry';
+	}
 	if($self->{'logger'}) {
-		if(defined($args[0])) {
-			$self->{'logger'}->debug("selectall_hash $query: " . join(', ', @args));
+		if(defined($query_args[0])) {
+			$self->{'logger'}->debug("selectall_hash $query: ", join(', ', @query_args));
 		} else {
 			$self->{'logger'}->debug("selectall_hash $query");
 		}
 	}
 	my $key = $query;
-	if(defined($args[0])) {
-		$key .= ' ' . join(', ', @args);
+	if(defined($query_args[0])) {
+		$key .= ' ' . join(', ', @query_args);
 	}
 	my $c;
 	if($c = $self->{cache}) {
 		if(my $rc = $c->get($key)) {
-			return @{$rc};
+			# This use of a temporary variable is to avoid
+			#	"Implicit scalar context for array in return"
+			# return @{$rc};
+			my @rc = @{$rc};
+			return @rc;
 		}
 	}
-	my $sth = $self->{$table}->prepare($query);
-	$sth->execute(@args) || throw Error::Simple("$query: @args");
 
-	my @rc;
-	while(my $href = $sth->fetchrow_hashref()) {
-		push @rc, $href;
-		last if(!wantarray);
-	}
-	if($c && wantarray) {
-		$c->set($key, \@rc, '1 hour');
-	}
+	if(my $sth = $self->{$table}->prepare($query)) {
+		$sth->execute(@query_args) ||
+			throw Error::Simple("$query: @query_args");
 
-	return @rc;
+		my @rc;
+		while(my $href = $sth->fetchrow_hashref()) {
+			push @rc, $href;
+			last if(!wantarray);
+		}
+		if($c && wantarray) {
+			$c->set($key, \@rc, '1 hour');
+		}
+
+		return @rc;
+	}
+	if($self->{'logger'}) {
+		$self->{'logger'}->warn("selectall_hash failure on $query: @query_args");
+	}
+	throw Error::Simple("$query: @query_args");
 }
 
 # Returns a hash reference for one row in a table
@@ -337,22 +420,48 @@ sub fetchrow_hashref {
 	} else {
 		$query .= $table;
 	}
-	$query .= " WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
-	my @args;
+	my $done_where = 0;
+	if(($self->{'type'} eq 'CSV') && !$self->{no_entry}) {
+		$query .= " WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+		$done_where = 1;
+	}
+	my @query_args;
 	foreach my $c1(sort keys(%params)) {	# sort so that the key is always the same
-		$query .= " AND $c1 LIKE ?";
-		push @args, $params{$c1};
+		if(my $arg = $params{$c1}) {
+			if($done_where) {
+				if($arg =~ /\@/) {
+					$query .= " AND $c1 LIKE ?";
+				} else {
+					$query .= " AND $c1 = ?";
+				}
+			} else {
+				if($arg =~ /\@/) {
+					$query .= " WHERE $c1 LIKE ?";
+				} else {
+					$query .= " WHERE $c1 = ?";
+				}
+				$done_where = 1;
+			}
+			push @query_args, $arg;
+		}
 	}
 	# $query .= ' ORDER BY entry LIMIT 1';
 	$query .= ' LIMIT 1';
 	if($self->{'logger'}) {
-		if(defined($args[0])) {
-			$self->{'logger'}->debug("fetchrow_hashref $query: " . join(', ', @args));
+		if(defined($query_args[0])) {
+			my @call_details = caller(0);
+			$self->{'logger'}->debug("fetchrow_hashref $query: ", join(', ', @query_args),
+				' called from ', $call_details[2] . ' of ' . $call_details[1]);
 		} else {
 			$self->{'logger'}->debug("fetchrow_hashref $query");
 		}
 	}
-	my $key = "fetchrow $query " . join(', ', @args);
+	my $key;
+	if(defined($query_args[0])) {
+		$key = "fetchrow $query " . join(', ', @query_args);
+	} else {
+		$key = "fetchrow $query";
+	}
 	my $c;
 	if($c = $self->{cache}) {
 		if(my $rc = $c->get($key)) {
@@ -360,7 +469,7 @@ sub fetchrow_hashref {
 		}
 	}
 	my $sth = $self->{$table}->prepare($query) or die $self->{$table}->errstr();
-	$sth->execute(@args) || throw Error::Simple("$query: @args");
+	$sth->execute(@query_args) || throw Error::Simple("$query: @query_args");
 	if($c) {
 		my $rc = $sth->fetchrow_hashref();
 		$c->set($key, $rc, '1 hour');
@@ -370,7 +479,8 @@ sub fetchrow_hashref {
 }
 
 # Execute the given SQL on the data
-# In an array context, returns an array of hash refs, in a scalar context returns a hash of the first row
+# In an array context, returns an array of hash refs,
+#	in a scalar context returns a hash of the first row
 sub execute {
 	my $self = shift;
 	my %args;
@@ -384,6 +494,8 @@ sub execute {
 	} else {
 		$args{'query'} = shift;
 	}
+
+	Carp::croak('Usage: execute(query => $query)') unless(defined($args{'query'}));
 
 	my $table = $self->{table} || ref($self);
 	$table =~ s/.*:://;
@@ -402,7 +514,7 @@ sub execute {
 		push @rc, $href;
 	}
 
-	return \@rc;
+	return @rc;
 }
 
 # Time that the database was last updated
@@ -436,19 +548,37 @@ sub AUTOLOAD {
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $query;
+	my $done_where = 0;
 	if(wantarray && !delete($params{'distinct'})) {
-		$query = "SELECT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+		if(($self->{'type'} eq 'CSV') && !$self->{no_entry}) {
+			$query = "SELECT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+			$done_where = 1;
+		} else {
+			$query = "SELECT $column FROM $table";
+		}
 	} else {
-		$query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+		if(($self->{'type'} eq 'CSV') && !$self->{no_entry}) {
+			$query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
+			$done_where = 1;
+		} else {
+			$query = "SELECT DISTINCT $column FROM $table";
+		}
 	}
 	my @args;
-	foreach my $c1(keys(%params)) {
-		if(!defined($params{$c1})) {
-			$self->{'logger'}->debug("AUTOLOAD params $c1 isn't defined");
+	while(my ($key, $value) = each %params) {
+		if(defined($value)) {
+			if($done_where) {
+				$query .= " AND $key = ?";
+			} else {
+				$query .= " WHERE $key = ?";
+				$done_where = 1;
+			}
+			push @args, $value;
+		} else {
+			if($self->{'logger'}) {
+				$self->{'logger'}->debug("AUTOLOAD params $key isn't defined");
+			}
 		}
-		# $query .= " AND $c1 LIKE ?";
-		$query .= " AND $c1 = ?";
-		push @args, $params{$c1};
 	}
 	$query .= " ORDER BY $column";
 	if(!wantarray) {
@@ -456,7 +586,7 @@ sub AUTOLOAD {
 	}
 	if($self->{'logger'}) {
 		if(scalar(@args) && $args[0]) {
-			$self->{'logger'}->debug("AUTOLOAD $query: " . join(', ', @args));
+			$self->{'logger'}->debug("AUTOLOAD $query: ", join(', ', @args));
 		} else {
 			$self->{'logger'}->debug("AUTOLOAD $query");
 		}
