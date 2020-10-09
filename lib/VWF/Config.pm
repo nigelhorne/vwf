@@ -116,7 +116,7 @@ sub new {
 		}
 	};
 	if($@ || !defined($config)) {
-		throw Error::Simple("Configuration error: $@" . $config_file);
+		throw Error::Simple("$config_file: configuration error: $@");
 	}
 
 	# The values in config are defaults which can be overriden by
