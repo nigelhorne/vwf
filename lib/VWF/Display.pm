@@ -12,6 +12,8 @@ use Template::Filters;
 use Template::Plugin::EnvHash;
 use HTML::SocialMedia;
 use VWF::Utils;
+use Error;
+use Fatal qw(:void open);
 
 my %blacklist = (
 	'MD' => 1,
@@ -158,7 +160,7 @@ sub new {
 		_info => $info,
 		_lingua => $args{lingua},
 		_logger => $args{logger},
-		# _cachedir => $args{cachedir},
+		_cachedir => $args{cachedir},
 		# _page => $info->param('page'),
 	};
 
@@ -237,7 +239,7 @@ sub get_template_path {
 
 	my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
 	if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
-		die "Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir";
+		throw Error::Simple("Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir");
 	}
 	$self->_debug({ message => "using $filename" });
 	$self->{_filename} = $filename;
@@ -357,7 +359,7 @@ sub html {
 
 		$rc = join('', @lines);
 	} else {
-		warn "Unhandled file type $filename";
+		throw Error::Simple("Unhandled file type $filename");
 	}
 
 	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/)) {
