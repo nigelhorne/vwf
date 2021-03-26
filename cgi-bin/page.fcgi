@@ -231,8 +231,7 @@ sub doit
 		syslog => $syslog,
 	});
 
-	if($vwflog) {
-		open(my $fout, '>>', $vwflog);
+	if($vwflog && open(my $fout, '>>', $vwflog)) {
 		print $fout
 			'"', $info->domain_name(), '",',
 			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
