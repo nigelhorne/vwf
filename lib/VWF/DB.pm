@@ -1,7 +1,7 @@
 package VWF::DB;
 
 # Author Nigel Horne: njh@bandsman.co.uk
-# Copyright (C) 2015-2020, Nigel Horne
+# Copyright (C) 2015-2021, Nigel Horne
 
 # Usage is subject to licence terms.
 # The licence terms of this software are as follows:
@@ -39,7 +39,7 @@ package VWF::DB;
 # reasons it's enabled by default
 # TODO: Switch that to off by default, and enable by passing 'entry'
 
-# TODO: support a directory hierachy of databases
+# TODO: support a directory hierarchy of databases
 # TODO: consider returning an object or array of objects, rather than hashes
 # TODO:	Add redis database - could be of use for Geo::Coder::Free
 #	use select() to select a database - use the table arg
