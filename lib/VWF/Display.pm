@@ -465,7 +465,7 @@ sub _debug {
 }
 
 sub obfuscate {
-	map { '&#' . ord($_) . ';' } split(//, shift);
+	return map { '&#' . ord($_) . ';' } split(//, shift);
 }
 
 sub _append_browser_type {
