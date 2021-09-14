@@ -583,6 +583,12 @@ sub AUTOLOAD {
 			if($self->{'logger'}) {
 				$self->{'logger'}->debug("AUTOLOAD params $key isn't defined");
 			}
+			if($done_where) {
+				$query .= " AND $key IS NULL";
+			} else {
+				$query .= " WHERE $key IS NULL";
+				$done_where = 1;
+			}
 		}
 	}
 	$query .= " ORDER BY $column";
