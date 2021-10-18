@@ -7,6 +7,7 @@ use strict;
 use warnings;
 
 use CHI;
+use Data::Dumper;
 use DBI;
 use Error;
 use Log::Any::Adapter;
@@ -28,6 +29,7 @@ sub create_disc_cache {
 		throw Error::Simple('root_dir is not optional') unless($root_dir);
 
 		if($logger) {
+			$logger->warn(Data::Dumper->new([$config])->Dump());
 			$logger->warn('disc_cache not defined in ', $config->{'config_path'}, ' falling back to BerkeleyDB');
 		}
 		return CHI->new(driver => 'BerkeleyDB', root_dir => $root_dir, namespace => $args{'namespace'});
