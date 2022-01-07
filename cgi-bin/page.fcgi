@@ -61,9 +61,11 @@ my $config;
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 
-# open STDERR, ">&STDOUT";
-close STDERR;
-open(STDERR, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"));
+if($ENV{'HTTP_USER_AGENT'}) {
+	# open STDERR, ">&STDOUT";
+	close STDERR;
+	open(STDERR, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"));
+}
 
 my $vwflog = File::Spec->catfile($info->logdir(), 'vwf.log');
 
