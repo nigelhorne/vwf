@@ -312,8 +312,6 @@ sub doit
 		} elsif($page eq 'editor') {
 			$display = VWF::Display::editor->new($args);
 		} elsif($page eq 'meta-data') {
-			# return TEXT/PLAIN of the status of the server
-			#	and VWF system
 			$display = BBPortal::Display::meta_data->new($args);
 		} else {
 			$logger->info("Unknown page $page");
