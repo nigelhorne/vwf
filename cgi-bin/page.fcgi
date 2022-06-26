@@ -10,9 +10,6 @@
 # To turn off linting of HTML on a search-engine landing page
 #	rootdir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
-# TODO: Intercept /meta-data and return TEXT/PLAIN of the status of the server
-#	and VWF system
-
 use strict;
 use warnings;
 # use diagnostics;
@@ -82,6 +79,7 @@ Log::WarnDie->dispatcher($logger);
 use VWF::Display::index;
 use VWF::Display::upload;
 use VWF::Display::editor;
+use VWF::Display::meta_data;
 
 use VWF::DB::index;
 
@@ -313,6 +311,10 @@ sub doit
 			$display = VWF::Display::upload->new($args);
 		} elsif($page eq 'editor') {
 			$display = VWF::Display::editor->new($args);
+		} elsif($page eq 'meta-data') {
+			# return TEXT/PLAIN of the status of the server
+			#	and VWF system
+			$display = BBPortal::Display::meta_data->new($args);
 		} else {
 			$logger->info("Unknown page $page");
 			$invalidpage = 1;
@@ -391,7 +393,8 @@ sub choose
 	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 		print "/cgi-bin/page.fcgi?page=index\n",
 			"/cgi-bin/page.fcgi?page=upload\n",
-			"/cgi-bin/page.fcgi?page=editor\n";
+			"/cgi-bin/page.fcgi?page=editor\n",
+			"/cgi-bin/page.fcgi?page=meta-data\n";
 	}
 }
 
