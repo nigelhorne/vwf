@@ -312,7 +312,7 @@ sub doit
 		} elsif($page eq 'editor') {
 			$display = VWF::Display::editor->new($args);
 		} elsif($page eq 'meta-data') {
-			$display = BBPortal::Display::meta_data->new($args);
+			$display = VWF::Display::meta_data->new($args);
 		} else {
 			$logger->info("Unknown page $page");
 			$invalidpage = 1;
