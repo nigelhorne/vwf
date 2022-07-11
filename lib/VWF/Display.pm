@@ -193,6 +193,7 @@ sub get_template_path {
 	my $dir = $self->{_config}->{rootdir} || $self->{_info}->rootdir();
 	if($self->{_logger}) {
 		$self->{_logger}->debug("Rootdir: $dir");
+		$self->{_logger}->debug(Data::Dumper->new([$self->{_config}])->Dump());
 	}
 	$dir .= '/templates';
 
