@@ -221,6 +221,12 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
+	if(!defined($info->param('page'))) {
+		$logger->info('No page given in ', $info->as_string());
+		choose();
+		return;
+	}
+
 	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 	my $lingua = CGI::Lingua->new({
 		supported => [ 'en-gb' ],
@@ -239,12 +245,6 @@ sub doit
 			'"', $lingua->language(), '",',
 			'"', $info->as_string(), "\"\n";
 		close($fout);
-	}
-
-	if(!defined($info->param('page'))) {
-		$logger->info('No page given in ', $info->as_string());
-		choose();
-		return;
 	}
 
 	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
