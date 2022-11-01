@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use Config::Auto;
 use CGI::Info;
+use Data::Dumper;
 use File::Spec;
 use Template::Filters;
 use Template::Plugin::EnvHash;
