@@ -207,6 +207,7 @@ sub get_template_path {
 
 		$self->_debug({ message => 'Requested language: ' . $lingua->requested_language() });
 
+		# FIXME: look for lower priority languages if the highest isn't found
 		my $candidate;
 		if($lingua->sublanguage_code_alpha2()) {
 			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
