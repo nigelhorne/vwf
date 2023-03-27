@@ -89,6 +89,7 @@ VWF::DB::init({ directory => $database_dir, logger => $logger });
 my $index = VWF::DB::index->new();
 if($@) {
 	$logger->error($@);
+	Log::WarnDie->dispatcher(undef);
 	die $@;
 }
 
