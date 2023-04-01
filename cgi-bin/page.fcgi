@@ -123,7 +123,7 @@ $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
 $Error::Debug = 1;
 
-$SIG{__WARN__} = sub { die @_ };
+$SIG{__WARN__} = sub { Log::WarnDie->dispatcher(undef); die @_ };
 
 my $request = FCGI::Request();
 
