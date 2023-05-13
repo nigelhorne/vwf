@@ -12,7 +12,7 @@ sub html {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $info = $self->{_info};
-	my $allowed = {
+	my $allow = {
 		'page' => 'upload',
 		'action' => 'publish',	# TODO: regex of allowable name formats
 		'title' => undef,
@@ -20,7 +20,7 @@ sub html {
 		'lang' => qr/^[A-Z][A-Z]/i,
 		'lint_content' => qr/^\d$/,
 	};
-	my %params = %{$info->params({ allow => $allowed })};
+	my %params = %{$info->params({ allow => $allow })};
 
 	delete $params{'page'};
 	delete $params{'lang'};

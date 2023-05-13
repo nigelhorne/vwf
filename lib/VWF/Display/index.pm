@@ -17,7 +17,7 @@ sub html {
 	my $info = $self->{_info};
 	die unless($info);
 
-	my $allowed = {
+	my $allow = {
 		'person' => undef,
 		'action' => 'login',
 		'name' => undef,
@@ -25,7 +25,7 @@ sub html {
 		'lang' => qr/^[A-Z][A-Z]/i,
 		'lint_content' => qr/^\d$/,
 	};
-	my $params = $info->params({ allowed => $allowed });
+	my $params = $info->params({ allow => $allow });
 	my $config = $args{'config'};
 	my $logger = $args{'logger'};
 
