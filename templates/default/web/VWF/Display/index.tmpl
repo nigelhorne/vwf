@@ -1,14 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+	<head>
+		[% IF action == 'sent' %]
+			<title>Your e-mail was sent</title>
+		[% END %]
+	</head>
 	<body>
 		[% IF action == 'sent' %]
 			Your e-mail was sent
 		[% END %]
-	<body>
 		<P>
 			Sorry, for now this page is only available in English.
 			If you would like to volunteer to help to
 			translate some of it to [% lingua.requested_language() %], please
 			<A HREF="?page=mailto&recipient=webmaster">contact the Webmaster</A>.
+			<A HREF="[% env.SCRIPT_URI %]?page=[% page %]&lang=en">
+				Reshow the page in English
+			</a>
 		</p>
 	</body>
 </html>
