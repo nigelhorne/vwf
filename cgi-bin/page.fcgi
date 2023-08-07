@@ -374,6 +374,8 @@ sub doit
 
 sub choose
 {
+	$logger->info('Called with no page to display');
+
 	my $status = $info->status();
 
 	if($status != 200) {
@@ -385,7 +387,6 @@ sub choose
 			"\n\n";
 		return;
 	}
-
 
 	print "Status: 300 Multiple Choices\n",
 		"Content-type: text/plain\n";
