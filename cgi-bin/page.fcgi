@@ -374,9 +374,18 @@ sub doit
 
 sub choose
 {
-	$logger->info('Called with no page to display');
+	my $status = $info->status();
 
-	return unless($info->status() == 200);
+	if($status != 200) {
+		require HTTP::Status;
+		HTTP::Status->import();
+
+		print "Status: $status ",
+			HTTP::Status::status_message($status),
+			"\n\n";
+		return;
+	}
+
 
 	print "Status: 300 Multiple Choices\n",
 		"Content-type: text/plain\n";
