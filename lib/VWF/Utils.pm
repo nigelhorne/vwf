@@ -6,7 +6,7 @@ package main;
 use strict;
 use warnings;
 
-use CHI::Driver::SharedMem;
+use CHI;
 use Data::Dumper;
 use DBI;
 use Error;
@@ -143,7 +143,12 @@ sub create_memory_cache {
 			}
 		}
 		$chi_args{'servers'} = \@servers;
-	} elsif($driver ne 'Null') {
+	} elsif($driver eq 'SharedMem') {
+		$chi_args{'shmkey'} = $args{'shmkey'} || $config->{memory_cache}->{shmkey};
+		if(my $size = $args{'size'} || $config->{'memory_cache'}->{'shmkey'}) {
+			$chi_args{'size'} = $size;
+		}
+	} elsif(($driver ne 'Null') && ($driver ne 'Memory') && ($driver ne 'SharedMem')) {
 		$chi_args{'root_dir'} = $args{'root_dir'} || $config->{memory_cache}->{root_dir};
 		throw Error::Simple('root_dir is not optional') unless($chi_args{'root_dir'});
 		if($logger) {
