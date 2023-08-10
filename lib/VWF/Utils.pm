@@ -145,7 +145,7 @@ sub create_memory_cache {
 		$chi_args{'servers'} = \@servers;
 	} elsif($driver eq 'SharedMem') {
 		$chi_args{'shmkey'} = $args{'shmkey'} || $config->{memory_cache}->{shmkey};
-		if(my $size = $args{'size'} || $config->{'memory_cache'}->{'shmkey'}) {
+		if(my $size = $args{'size'} || $config->{'memory_cache'}->{'size'}) {
 			$chi_args{'size'} = $size;
 		}
 	} elsif(($driver ne 'Null') && ($driver ne 'Memory') && ($driver ne 'SharedMem')) {
