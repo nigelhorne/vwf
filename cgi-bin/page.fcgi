@@ -173,10 +173,10 @@ while($handling_request = ($request->Accept() >= 0)) {
 	} catch Error with {
 		my $msg = shift;
 		$logger->error("$msg: ", $msg->stacktrace());
-		# if($buffercache) {
-			# $buffercache->clear();
-			# $buffercache = undef;
-		# }
+		if($buffercache) {
+			$buffercache->clear();
+			$buffercache = undef;
+		}
 	};
 
 	$request->Finish();
