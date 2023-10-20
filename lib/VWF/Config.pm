@@ -1,4 +1,4 @@
-package VWF::Config;
+package NJH::Config;
 
 # VWF is licensed under GPL2.0 for personal use only
 # njh@bandsman.co.uk
@@ -8,7 +8,7 @@ package VWF::Config;
 #	info (CGI::Info object)
 #	logger
 #	default_config_directory - used when the configuration directory can't be worked out
-#	config (ref to hash to of values to override in the config file
+#	config (ref to hash of values to override in the config file
 # Values in the file are overridden by what's in the environment
 
 use warnings;
