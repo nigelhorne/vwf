@@ -1,4 +1,4 @@
-package NJH::Config;
+package VWF::Config;
 
 # VWF is licensed under GPL2.0 for personal use only
 # njh@bandsman.co.uk
