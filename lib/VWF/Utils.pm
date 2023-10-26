@@ -67,19 +67,6 @@ sub create_disc_cache {
 			}
 		}
 		$chi_args{'servers'} = \@servers;
-	} elsif(($driver ne 'DBI') && ($driver ne 'Null')) {
-		$chi_args{'root_dir'} = $args{'root_dir'} || $config->{disc_cache}->{root_dir};
-		throw Error::Simple('root_dir is not optional') unless($chi_args{'root_dir'});
-		if($logger) {
-			$logger->debug("root_dir: $chi_args{root_dir}");
-		}
-	}
-	if($driver eq 'Redis') {
-		my %redis_options = (
-			reconnect => 60,
-			every => 1_000_000
-		);
-		$chi_args{'redis_options'} = \%redis_options;
 	} elsif($driver eq 'DBI') {
 		# Use the cache connection details in the configuration file
                 $chi_args{'dbh'} = DBI->connect($config->{disc_cache}->{connect});
@@ -90,6 +77,18 @@ sub create_disc_cache {
                         throw Error::Simple($DBI::errstr);
                 }
 		$chi_args{'create_table'} = 1;
+	} elsif($driver eq 'Redis') {
+		my %redis_options = (
+			reconnect => 60,
+			every => 1_000_000
+		);
+		$chi_args{'redis_options'} = \%redis_options;
+	} elsif($driver ne 'Null') {
+		$chi_args{'root_dir'} = $args{'root_dir'} || $config->{disc_cache}->{root_dir};
+		throw Error::Simple('root_dir is not optional') unless($chi_args{'root_dir'});
+		if($logger) {
+			$logger->debug("root_dir: $chi_args{root_dir}");
+		}
 	}
 	return CHI->new(%chi_args);
 }
@@ -151,14 +150,13 @@ sub create_memory_cache {
 		if(my $max_size = ($args{'max_size'} || $config->{'memory_cache'}->{'max_size'})) {
 			$chi_args{'max_size'} = $max_size;
 		}
-	} elsif(($driver ne 'Null') && ($driver ne 'Memory') && ($driver ne 'SharedMem')) {
+	} elsif(($driver ne 'Null') && ($driver ne 'Memory')) {
 		$chi_args{'root_dir'} = $args{'root_dir'} || $config->{memory_cache}->{root_dir};
 		throw Error::Simple('root_dir is not optional') unless($chi_args{'root_dir'});
 		if($logger) {
 			$logger->debug("root_dir: $chi_args{root_dir}");
 		}
-	}
-	if($driver eq 'Redis') {
+	} elsif($driver eq 'Redis') {
 		my %redis_options = (
 			reconnect => 60,
 			every => 1_000_000
