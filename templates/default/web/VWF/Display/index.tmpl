@@ -4,6 +4,8 @@
 	<head>
 		[% IF action == 'sent' %]
 			<title>Your e-mail was sent</title>
+		[% ELSE %]
+			<title>Send an e-mail</title>
 		[% END %]
 	</head>
 	<body>
@@ -14,8 +16,8 @@
 			Sorry, for now this page is only available in English.
 			If you would like to volunteer to help to
 			translate some of it to [% lingua.requested_language() %], please
-			<A HREF="?page=mailto&recipient=webmaster">contact the Webmaster</A>.
-			<A HREF="[% env.SCRIPT_URI %]?page=[% page %]&lang=en">
+			<A HREF="?page=mailto&amp;recipient=webmaster">contact the Webmaster</A>.
+			<A HREF="[% env.SCRIPT_URI %]?page=[% page %]&amp;lang=en">
 				Reshow the page in English
 			</a>
 		</p>
