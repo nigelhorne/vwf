@@ -3,4 +3,5 @@
 	<memory_cache>
 		<driver>Null</driver>
 	</memory_cache>
+	<SiteTitle>Sample VWF site</SiteTitle>
 </config>

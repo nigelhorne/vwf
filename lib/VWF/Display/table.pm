@@ -18,6 +18,7 @@ sub new {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $class = ref($proto) || $proto;
+	my $path;
 
 	if($ENV{'DOCUMENT_ROOT'}) {
 		$path = File::Spec->catdir(
