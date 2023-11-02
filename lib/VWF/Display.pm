@@ -15,6 +15,7 @@ use HTML::SocialMedia;
 use VWF::Utils;
 use Error;
 use Fatal qw(:void open);
+use File::pfopen;
 
 my %blacklist = (
 	'MD' => 1,
@@ -282,7 +283,7 @@ sub get_template_path {
 	$modulepath =~ s/::/\//g;
 
 	# my $filename = $self->_pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
-	my ($fh, $filename) = pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
+	my ($fh, $filename) = File::pfopen::pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
 	# if((!defined($filename)) || (!-f $filename) || (!-r $filename)) {
 	if((!defined($filename)) || (!defined($fh))) {
 		throw Error::Simple("Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir");
@@ -434,7 +435,7 @@ sub html {
 		# $candidate = "$prefix;$path;$suffixes";
 	# } else {
 		# $candidate = "$prefix;$path";
-	}
+	# }
 	# if($savedpaths->{$candidate}) {
 		# $self->_debug({ message => "remembered $savedpaths->{$candidate}" });
 		# return $savedpaths->{$candidate};
