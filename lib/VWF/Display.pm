@@ -288,6 +288,7 @@ sub get_template_path {
 	if((!defined($filename)) || (!defined($fh))) {
 		throw Error::Simple("Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir");
 	}
+	close($fh);
 	$self->_debug({ message => "using $filename" });
 	$self->{_filename} = $filename;
 	return $filename;
