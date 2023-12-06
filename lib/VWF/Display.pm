@@ -160,12 +160,16 @@ sub new {
 	my $self = {
 		_config => $config,
 		_info => $info,
-		_lingua => $args{lingua},
 		_logger => $args{logger},
 		_cachedir => $args{cachedir},
 		%args,
 		_page => $info->param('page'),
 	};
+
+	# Lingua is optional
+	if(my $lingua = $args{'lingua'}) {
+		$self->{'_lingua'} = $lingua;
+	}
 
 	if(my $key = $info->param('key')) {
 		$self->{'_key'} = $key;
