@@ -290,6 +290,13 @@ sub get_template_path {
 	my $modulepath = $args{'modulepath'} || ref($self);
 	$modulepath =~ s/::/\//g;
 
+        if($prefix =~ /\.\.\//) {
+                throw Error::Simple("Prefix must not contain ../ ($prefix)");
+        }
+
+        # Untaint the prefix value which may have been read in from a configuration file
+	($prefix) = ($prefix =~ m/^([A-Z0-9_\.\-\/:]+)$/ig);
+
 	my ($fh, $filename) = File::pfopen::pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
 	if((!defined($filename)) || (!defined($fh))) {
 		throw Error::Simple("Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir");
