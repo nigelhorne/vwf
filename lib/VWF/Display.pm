@@ -163,17 +163,17 @@ sub new {
 		_logger => $args{logger},
 		_cachedir => $args{cachedir},
 		%args,
-		_page => $info->param('page'),
 	};
 
-	# Lingua is optional
 	if(my $lingua = $args{'lingua'}) {
 		$self->{'_lingua'} = $lingua;
 	}
-
 	if(my $key = $info->param('key')) {
 		$self->{'_key'} = $key;
 	}
+        if(my $page = $info->param('page')) {
+                $self->{'_page'} = $page;
+        }
 
 	if(my $twitter = $config->{'twitter'}) {
 		$smcache ||= ::create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
