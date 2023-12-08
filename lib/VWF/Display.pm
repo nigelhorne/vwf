@@ -307,13 +307,15 @@ sub get_template_path {
 	return $filename;
 }
 
-sub set_cookie {
+sub set_cookie
+{
 	my $self = shift;
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	foreach my $key(keys(%params)) {
 		$self->{_cookies}->{$key} = $params{$key};
 	}
+	return $self;
 }
 
 sub http {
@@ -414,7 +416,7 @@ sub html {
                         throw Error::Simple("Unknown error in template: $filename");
                 }
 	} elsif($filename =~ /\.(html?|txt)$/) {
-		open(my $fin, '<', $filename) || die "$filename: $!";
+		open(my $fin, '<', $filename) || throw Error::Simple("$filename: $!");
 
 		my @lines = <$fin>;
 
@@ -425,16 +427,15 @@ sub html {
 		throw Error::Simple("Unhandled file type $filename");
 	}
 
-	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/)) {
-		unless($1 =~ /^&/) {
-			$self->_debug({ message => "Found mailto link $1, you should remove it or use " . obfuscate($1) . ' instead' });
-		}
+	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/) && ($1 !~ /^&/)) {
+		$self->_debug({ message => "Found mailto link $1, you should remove it or use " . obfuscate($1) . ' instead' });
 	}
 
 	return $rc;
 }
 
-sub _debug {
+sub _debug
+{
 	my $self = shift;
 
 	if($self->{_logger}) {
@@ -445,6 +446,7 @@ sub _debug {
 			$self->{_logger}->debug($params{'message'});
 		}
 	}
+	return $self;
 }
 
 sub obfuscate {
