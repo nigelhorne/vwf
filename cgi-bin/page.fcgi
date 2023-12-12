@@ -16,6 +16,7 @@ use warnings;
 
 no lib '.';
 
+use Log::WarnDie 0.09;
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
@@ -29,7 +30,6 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
 use CGI::ACL;
-use Log::WarnDie 0.09;
 use HTTP::Date;
 # FIXME: File::pfopen doesn't play well in taint mode
 # use Taint::Runtime qw($TAINT taint_env);
@@ -48,22 +48,20 @@ use VWF::Config;
 # $TAINT = 1;
 # taint_env();
 
-Log::WarnDie->filter(\&filter);
-
 my $info = CGI::Info->new();
-my $tmpdir = $info->tmpdir();
-
 my $script_dir = $info->script_dir();
 my $config;
-
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
+my $tmpdir = $info->tmpdir();
 
 if($ENV{'HTTP_USER_AGENT'}) {
 	# open STDERR, ">&STDOUT";
 	close STDERR;
 	open(STDERR, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"));
 }
+
+Log::WarnDie->filter(\&filter);
 
 my $vwflog = File::Spec->catfile($info->logdir(), 'vwf.log');
 

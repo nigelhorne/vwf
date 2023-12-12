@@ -123,9 +123,10 @@ The file layout is:
     /home/njh/bandsman.mooo.com/templates/VWF/index.html
     /home/njh/bandsman.mooo.com/databases/index.db
 
-VWF is smart enough that you can debug from the command line before you deploy.  Interesting possiblilties
-include
+VWF is smart enough that you can debug from the command line before you deploy.
+Interesting possiblilties include:
 
+    perl -c -Ilib cgi-bin/page.fcgi
     cgi-bin/index.fcgi --mobile
     cgi-bin/index.fcgi lang=fr
     cgi-bin/index.fcgi key=value
