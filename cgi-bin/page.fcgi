@@ -32,8 +32,8 @@ use File::Spec;
 use CGI::ACL;
 use HTTP::Date;
 use POSIX qw(strftime);
-# FIXME: File::pfopen doesn't play well in taint mode - Display.pm now fixed
-use Taint::Runtime qw($TAINT taint_env);
+# FIXME: Gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
+# use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
 # use File::HomeDir;
@@ -46,8 +46,8 @@ use lib '../lib';
 
 use VWF::Config;
 
-$TAINT = 1;
-taint_env();
+# $TAINT = 1;
+# taint_env();
 
 my $info = CGI::Info->new();
 my $script_dir = $info->script_dir();
