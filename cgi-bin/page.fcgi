@@ -46,8 +46,8 @@ use lib '../lib';
 
 use VWF::Config;
 
-# $TAINT = 1;
-# taint_env();
+$TAINT = 1;
+taint_env();
 
 my $info = CGI::Info->new();
 my $script_dir = $info->script_dir();
@@ -286,7 +286,7 @@ sub doit
 		$fb->init(
 			cache => $buffercache,
 			# generate_304 => 0,
-			cache_age => '1 day',
+			cache_duration => '1 day',
 		);
 		if($fb->is_cached()) {
 			return;
