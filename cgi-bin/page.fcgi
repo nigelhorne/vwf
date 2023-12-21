@@ -241,8 +241,8 @@ sub doit
 
 	if($vwflog && open(my $fout, '>>', $vwflog)) {
 		print $fout
-			'"', strftime('%F %T', localtime), '",',
 			'"', $info->domain_name(), '",',
+			'"', strftime('%F %T', localtime), '",',
 			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
 			'"', $info->browser_type(), '",',
 			'"', $lingua->language(), '",',
@@ -258,7 +258,7 @@ sub doit
 		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 			print "Access Denied\n";
 		}
-		$logger->warn($ENV{'REMOTE_ADDR'}, ': access denied');
+		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
 		return;
 	}
 
