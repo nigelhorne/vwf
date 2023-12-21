@@ -32,7 +32,7 @@ use File::Spec;
 use CGI::ACL;
 use HTTP::Date;
 use POSIX qw(strftime);
-# FIXME: File::pfopen doesn't play well in taint mode
+# FIXME: File::pfopen doesn't play well in taint mode - Display.pm now fixed
 use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
