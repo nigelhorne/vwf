@@ -84,7 +84,12 @@ use VWF::Display::meta_data;
 use VWF::DB::index;
 
 my $database_dir = "$script_dir/../databases";
-VWF::DB::init({ directory => $database_dir, logger => $logger });
+VWF::DB::init({
+	cache => CHI->new(driver => 'Memory', datastore => {}),
+	cache_duration => '1 day',
+	directory => $database_dir,
+	logger => $logger
+});
 
 my $index = VWF::DB::index->new();
 if($@) {
