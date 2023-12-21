@@ -31,8 +31,9 @@ use Error qw(:try);
 use File::Spec;
 use CGI::ACL;
 use HTTP::Date;
+use POSIX qw(strftime);
 # FIXME: File::pfopen doesn't play well in taint mode
-# use Taint::Runtime qw($TAINT taint_env);
+use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
 # use File::HomeDir;
@@ -240,6 +241,7 @@ sub doit
 
 	if($vwflog && open(my $fout, '>>', $vwflog)) {
 		print $fout
+			'"', strftime('%F %T', localtime), '",',
 			'"', $info->domain_name(), '",',
 			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
 			'"', $info->browser_type(), '",',
