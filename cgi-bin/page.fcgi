@@ -285,7 +285,8 @@ sub doit
 
 	my $fb = FCGI::Buffer->new()->init($args);
 
-	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || "$tmpdir/cache";
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
+
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
