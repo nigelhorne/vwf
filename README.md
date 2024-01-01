@@ -85,12 +85,12 @@ conf directory in a place such as /usr/lib/conf if the libaries went into
 
 The configuration file takes the form of:
 
-    rootdir: /full/path/to/template directory
+    root_dir /full/path/to/template directory
     memory_cache: where short-term volatile information is stored, such as the country of origin of the client.
     disc_cache: where long-term information is stored, such as copies of output to see is HTTP 304 can be returned. 
 
 For example, if your index.tmpl file lives in /usr/lib/example.com/templates/VWF/web/index.tmpl,
-then you would add 'rootdir: /usr/lib/example.com'.
+then you would add 'root_dir /usr/lib/example.com'.
 
 The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.com.
 
@@ -130,7 +130,7 @@ Interesting possiblilties include:
     cgi-bin/index.fcgi --mobile
     cgi-bin/index.fcgi lang=fr
     cgi-bin/index.fcgi key=value
-    rootdir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
+    root_dir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
 
 Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
 cached copies of pages that will be inconsistent with the new site.
