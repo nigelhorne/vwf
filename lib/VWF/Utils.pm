@@ -45,10 +45,11 @@ sub create_disc_cache {
 		namespace => $args{'namespace'}
 	);
 
-	if($logger) {
-		$chi_args{'on_set_error'} = 'log';
-		$chi_args{'on_get_error'} = 'log';
-	}
+	# Don't do this because it takes a lot of complex configuration
+	# if($logger) {
+		# $chi_args{'on_set_error'} = 'log';
+		# $chi_args{'on_get_error'} = 'log';
+	# }
 
 	if($config->{disc_cache}->{server}) {
 		my @servers;
