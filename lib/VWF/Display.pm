@@ -241,7 +241,7 @@ sub get_template_path {
 		return $self->{_filename};
 	}
 
-	my $dir = $self->{_config}->{root_dir} || $self->{_info}->root_dir();
+	my $dir = $self->{_config}->{root_dir} || $self->{_info}->rootdir();
 	if($self->{_logger}) {
 		$self->{_logger}->debug(__PACKAGE__, ': ', __LINE__, ": root_dir $dir");
 		$self->{_logger}->debug(Data::Dumper->new([$self->{_config}])->Dump());
