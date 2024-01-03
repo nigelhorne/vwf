@@ -132,8 +132,8 @@ sub new {
 		}
 
 		if(!-d $path) {
-			if($args{default_config_directory}) {
-				$path = $args{default_config_directory};
+			if($args{config_directory}) {
+				$path = $args{config_directory};
 			} elsif($args{logger}) {
 				while(my ($key,$value) = each %ENV) {
 					$args{logger}->debug("$key=$value");
