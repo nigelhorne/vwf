@@ -30,8 +30,9 @@ use File::Spec;
 #	info (CGI::Info object)
 #	logger
 #	config_directory - used when the configuration directory can't be worked out
-#	config (ref to hash of values to override in the config file
 #	config_file - name of the configuration file - otherwise determined dynamically
+#	config (ref to hash of values to override in the config file
+
 # Values in the file are overridden by what's in the environment
 
 =cut
