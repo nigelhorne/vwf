@@ -468,8 +468,8 @@ sub _append_browser_type {
 	if($self->{_logger}) {
 		$self->{_logger}->debug("_append_browser_type: directory = $directory");
 	}
-	my $rc;
 
+	my $rc;
 	if(-d $directory) {
 		if($self->{_info}->is_search_engine()) {
 			$rc = "$directory/search:$directory/robot:";
