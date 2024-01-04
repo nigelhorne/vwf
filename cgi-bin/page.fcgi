@@ -6,7 +6,7 @@
 # Can be tested at the command line, e.g.:
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
-#	root_dir=$(pwd)/.. ./page.fcgi mobile=1 page=index lang=fr
+#	root_dir=$(pwd)/.. ./page.fcgi --mobile page=index lang=fr
 # To turn off linting of HTML on a search-engine landing page
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
