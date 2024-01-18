@@ -225,9 +225,13 @@ sub _open {
 		if(defined($slurp_file) && (-r $slurp_file)) {
 			close($fin);
 			my $sep_char = $args{'sep_char'};
+			if($self->{'logger'}) {
+				$self->{'logger'}->debug(__LINE__, ' of ', __PACKAGE__, ": slurp_file = $slurp_file, sep_char = $sep_char");
+			}
 			if($args{'column_names'}) {
-				$dbh = DBI->connect("dbi:CSV:csv_sep_char=$sep_char", undef, undef,
+				$dbh = DBI->connect("dbi:CSV:db_name=$slurp_file", undef, undef,
 					{
+						csv_sep_char => $sep_char,
 						csv_tables => {
 							$table => {
 								col_names => $args{'column_names'},
@@ -236,7 +240,7 @@ sub _open {
 					}
 				);
 			} else {
-				$dbh = DBI->connect("dbi:CSV:csv_sep_char=$sep_char");
+				$dbh = DBI->connect("dbi:CSV:db_name=$slurp_file", undef, undef, { csv_sep_char => $sep_char});
 			}
 			$dbh->{'RaiseError'} = 1;
 
@@ -289,6 +293,7 @@ sub _open {
 			# Text::CSV::Slurp->import();
 			# $self->{'data'} = Text::CSV::Slurp->load(file => $slurp_file, %options);
 
+			# FIXME: Text::xSV::Slurp can't cope well with quotes in field contents
 			require Text::xSV::Slurp;
 			Text::xSV::Slurp->import();
 
@@ -622,6 +627,19 @@ sub AUTOLOAD {
 			$query = "SELECT $column FROM $table";
 		}
 	} else {
+		if($self->{'data'}) {
+			if(my $data = $self->{'data'}) {
+				foreach my $row(@{$data}) {
+					if(my $rc = $row->{$column}) {
+						if($self->{'logger'}) {
+							$self->{'logger'}->trace("AUTOLOAD return '$rc' from slurped data");
+						}
+							
+						return $rc;
+					}
+				}
+			}
+		}
 		if(($self->{'type'} eq 'CSV') && !$self->{no_entry}) {
 			$query = "SELECT DISTINCT $column FROM $table WHERE entry IS NOT NULL AND entry NOT LIKE '#%'";
 			$done_where = 1;
@@ -651,8 +669,9 @@ sub AUTOLOAD {
 			}
 		}
 	}
-	$query .= " ORDER BY $column";
-	if(!wantarray) {
+	if(wantarray) {
+		$query .= " ORDER BY $column";
+	} else {
 		$query .= ' LIMIT 1';
 	}
 	if($self->{'logger'}) {
