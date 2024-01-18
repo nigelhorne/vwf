@@ -161,6 +161,8 @@ sub set_logger
 
 # Open the database.
 
+# FIXME: The default separator character is (for my historical reasons) '!' not ','
+
 sub _open {
 	my $self = shift;
 	my %args = (
