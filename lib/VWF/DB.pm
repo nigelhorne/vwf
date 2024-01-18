@@ -599,6 +599,9 @@ sub updated {
 # Returns an array of the matches, or just the first entry when called in
 #	scalar context
 
+# If the first column if the database is "entry" you can do a quick lookup with
+#	my $value = $table->column($key);	# where column is the value you're after
+
 # Set distinct to 1 if you're after a unique list
 sub AUTOLOAD {
 	our $AUTOLOAD;
@@ -615,7 +618,13 @@ sub AUTOLOAD {
 
 	$self->_open() if(!$self->{$table});
 
-	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	# my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my %params;
+	if((scalar(@_) == 1) && !$self->{'no_entry'}) {
+		$params{'entry'} = $_[0];
+	} else {
+		%params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	}
 
 	my $query;
 	my $done_where = 0;
@@ -627,14 +636,16 @@ sub AUTOLOAD {
 			$query = "SELECT $column FROM $table";
 		}
 	} else {
-		if($self->{'data'}) {
+		if($self->{'data'} && ((scalar keys %params) == 1)) {
+			# The data has been read in using Text::xSV::Slurp, and it's a simple query
+			#	so no need to do any SQL
+			my ($key, $value) = %params;
 			if(my $data = $self->{'data'}) {
 				foreach my $row(@{$data}) {
-					if(my $rc = $row->{$column}) {
+					if(($row->{$key} eq $value) && (my $rc = $row->{$column})) {
 						if($self->{'logger'}) {
 							$self->{'logger'}->trace("AUTOLOAD return '$rc' from slurped data");
 						}
-							
 						return $rc;
 					}
 				}
