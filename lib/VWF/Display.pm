@@ -171,9 +171,9 @@ sub new {
 	if(my $key = $info->param('key')) {
 		$self->{'_key'} = $key;
 	}
-        if(my $page = $info->param('page')) {
-                $self->{'_page'} = $page;
-        }
+	if(my $page = $info->param('page')) {
+		$self->{'_page'} = $page;
+	}
 
 	if(my $twitter = $config->{'twitter'}) {
 		$smcache ||= ::create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
@@ -290,11 +290,11 @@ sub get_template_path {
 	my $modulepath = $args{'modulepath'} || ref($self);
 	$modulepath =~ s/::/\//g;
 
-        if($prefix =~ /\.\.\//) {
-                throw Error::Simple("Prefix must not contain ../ ($prefix)");
-        }
+	if($prefix =~ /\.\.\//) {
+		throw Error::Simple("Prefix must not contain ../ ($prefix)");
+	}
 
-        # Untaint the prefix value which may have been read in from a configuration file
+	# Untaint the prefix value which may have been read in from a configuration file
 	($prefix) = ($prefix =~ m/^([A-Z0-9_\.\-\/:]+)$/ig);
 
 	my ($fh, $filename) = File::pfopen::pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
@@ -411,10 +411,10 @@ sub html {
 
 		if(!$template->process($filename, $vals, \$rc)) {
 			if(my $err = $template->error()) {
-                                throw Error::Simple($err);
-                        }
-                        throw Error::Simple("Unknown error in template: $filename");
-                }
+				throw Error::Simple($err);
+			}
+			throw Error::Simple("Unknown error in template: $filename");
+		}
 	} elsif($filename =~ /\.(html?|txt)$/) {
 		open(my $fin, '<', $filename) || throw Error::Simple("$filename: $!");
 
