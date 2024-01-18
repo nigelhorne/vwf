@@ -105,11 +105,23 @@ If the arguments are not set, tries to take from class level defaults
 
 sub new {
 	my $proto = shift;
-	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+        my %args;
+
+        if(ref($_[0]) eq 'HASH') {
+                %args = %{$_[0]};
+        } elsif(scalar(@_) % 2 == 0) {
+                %args = @_;
+        } elsif(scalar(@_) == 1) {
+                $args{'directory'} = shift;
+        }
 
 	my $class = ref($proto) || $proto;
 
-	if($class eq __PACKAGE__) {
+	if(!defined($class)) {
+		# Using VWF::DB->new(), not VWF::DB::new()
+		carp(__PACKAGE__, ' use ->new() not ::new() to instantiate');
+		return;
+	} elsif($class eq __PACKAGE__) {
 		croak("$class: abstract class");
 	}
 
