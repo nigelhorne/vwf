@@ -618,7 +618,6 @@ sub AUTOLOAD {
 
 	$self->_open() if(!$self->{$table});
 
-	# my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 	my %params;
 	if((scalar(@_) == 1) && !$self->{'no_entry'}) {
 		$params{'entry'} = $_[0];
