@@ -619,11 +619,13 @@ sub AUTOLOAD {
 	$self->_open() if(!$self->{$table});
 
 	my %params;
-	if((scalar(@_) == 1) && !$self->{'no_entry'}) {
-		$params{'entry'} = $_[0];
-	} else {
-		%params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
-	}
+        if(ref($_[0]) eq 'HASH') {
+                %params = %{$_[0]};
+        } elsif((scalar(@_) % 2) == 0) {
+                %params = @_;
+        } elsif(scalar(@_) == 1) {
+                $params{'entry'} = shift;
+        }
 
 	my $query;
 	my $done_where = 0;
@@ -659,6 +661,9 @@ sub AUTOLOAD {
 	}
 	my @args;
 	while(my ($key, $value) = each %params) {
+		if($self->{'logger'}) {
+			$self->{'logger'}->debug(__PACKAGE__, ": AUTOLOAD adding $key=>$value");
+		}
 		if(defined($value)) {
 			if($done_where) {
 				$query .= " AND $key = ?";
