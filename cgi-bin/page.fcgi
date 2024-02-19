@@ -81,17 +81,14 @@ use VWF::Display::upload;
 use VWF::Display::editor;
 use VWF::Display::meta_data;
 
-use VWF::DB::index;
+use VWF::data::index;
 
-my $database_dir = "$script_dir/../databases";
-VWF::DB::init({
+my $index = VWF::data::index->new({
 	cache => CHI->new(driver => 'Memory', datastore => {}),
 	cache_duration => '1 day',
-	directory => $database_dir,
+	directory => "$script_dir/../data",
 	logger => $logger
 });
-
-my $index = VWF::DB::index->new();
 if($@) {
 	$logger->error($@);
 	Log::WarnDie->dispatcher(undef);
