@@ -45,7 +45,7 @@ sub new {
 
 	my $info = $args{info} || CGI::Info->new();
 
-        if($args{'logger'}) {
+	if($args{'logger'}) {
 		$args{'logger'}->debug(__PACKAGE__, '->new()');
 	}
 
