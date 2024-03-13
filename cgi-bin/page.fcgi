@@ -123,8 +123,6 @@ $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
-$Error::Debug = 1;
-
 $SIG{__WARN__} = sub { Log::WarnDie->dispatcher(undef); die @_ };
 
 my $request = FCGI::Request();
@@ -147,6 +145,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		Log::WarnDie->dispatcher($logger);
 		$index->set_logger($logger);
 		$info->set_logger($logger);
+		$Error::Debug = 1;
 		# CHI->stats->enable();
 		try {
 			doit(debug => 1);
