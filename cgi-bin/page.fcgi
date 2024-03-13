@@ -50,7 +50,6 @@ use VWF::Config;
 # taint_env();
 
 my $info = CGI::Info->new();
-my $script_dir = $info->script_dir();
 my $config;
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
@@ -70,6 +69,7 @@ my $infocache;
 my $linguacache;
 my $buffercache;
 
+my $script_dir = $info->script_dir();
 Log::Log4perl::init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 Log::WarnDie->dispatcher($logger);
