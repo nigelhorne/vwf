@@ -125,6 +125,16 @@ $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
 $SIG{__WARN__} = sub { Log::WarnDie->dispatcher(undef); die @_ };
 
+# my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
+my $err_handler = sub {
+	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
+		print $fout @_;
+	# } else {
+		# print $stderr @_;
+	}
+};
+
+
 my $request = FCGI::Request();
 
 # It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
@@ -156,6 +166,9 @@ while($handling_request = ($request->Accept() >= 0)) {
 		};
 		last;
 	}
+
+	# https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
+	$SIG{__WARN__} = $SIG{__DIE__} = $err_handler;
 
 	$requestcount++;
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
