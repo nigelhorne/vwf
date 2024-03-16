@@ -347,8 +347,8 @@ sub doit
 	if(defined($display)) {
 		# Pass in handles to the databases
 		print $display->as_string({
-			index => $index,
 			cachedir => $cachedir
+			index => $index,
 		});
 	} elsif($invalidpage) {
 		choose();
