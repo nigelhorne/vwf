@@ -33,8 +33,9 @@ jobs:
         run: |
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
           cpanm -iqfn CGI::IDS Data::Throttler CGI::ACL
-          cpanm --skip-satisfied -q -n Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer
-          cpanm --skip-satisfied -q -n LWP::UserAgent::Cached Data::Serializer CGI::Carp
+          cpanm --skip-satisfied -qn Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer
+          cpanm --skip-satisfied -qn LWP::UserAgent::Cached Data::Serializer CGI::Carp B::Lint FCGI
+          cpanm --skip-satisfied -qn warnings::unused
         env:
           AUTHOR_TESTING: 1
       - name: Run Tests
