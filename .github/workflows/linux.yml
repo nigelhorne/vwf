@@ -34,7 +34,7 @@ jobs:
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
           cpanm -iqfn CGI::IDS Data::Throttler CGI::ACL
           cpanm --skip-satisfied -q -n Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer
-          cpanm --skip-satisfied -q -n LWP::UserAgent::Cached Data::Serializer
+          cpanm --skip-satisfied -q -n LWP::UserAgent::Cached Data::Serializer CGI::Carp
         env:
           AUTHOR_TESTING: 1
       - name: Run Tests
