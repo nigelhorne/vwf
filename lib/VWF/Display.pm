@@ -11,6 +11,7 @@ use Data::Dumper;
 use File::Spec;
 use Template::Filters;
 use Template::Plugin::EnvHash;
+use Template::Plugin::Math;
 use HTML::SocialMedia;
 use VWF::Utils;
 use Error;
