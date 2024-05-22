@@ -437,8 +437,8 @@ sub html {
 		throw Error::Simple("Unhandled file type $filename");
 	}
 
-	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/) && ($1 !~ /^&/)) {
-		$self->_debug({ message => "Found mailto link $1, you should remove it or use " . obfuscate($1) . ' instead' });
+	if(($filename !~ /.txt$/) && ($rc =~ /\smailto:(.+?)>/) && ($1 !~ /^&/) && $self->{_logger}) {
+		$self->{_logger}->warn({ message => "Found mailto link $1, you should remove it or use " . obfuscate($1) . ' instead' });
 	}
 
 	return $rc;
