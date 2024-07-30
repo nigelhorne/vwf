@@ -134,7 +134,7 @@ my $err_handler = sub {
 	}
 };
 
-
+# my $request = FCGI::Request($stdin, $stdout, $stderr);
 my $request = FCGI::Request();
 
 # It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
