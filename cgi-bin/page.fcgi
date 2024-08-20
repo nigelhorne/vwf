@@ -124,7 +124,13 @@ $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
-$SIG{__WARN__} = sub { Log::WarnDie->dispatcher(undef); die @_ };
+$SIG{__WARN__} = sub {
+	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
+		print $fout @_;
+	}
+	Log::WarnDie->dispatcher(undef);
+	CORE::die @_
+};
 
 # my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
 my $err_handler = sub {
@@ -169,7 +175,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 	}
 
 	# https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
-	$SIG{__WARN__} = $SIG{__DIE__} = $err_handler;
+	$SIG{__DIE__} = $err_handler;
 
 	$requestcount++;
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
