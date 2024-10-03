@@ -22,7 +22,7 @@ use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
 use CGI::Lingua;
 use File::Basename;
-# use CGI::Alert 'you@example.com';
+# use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
