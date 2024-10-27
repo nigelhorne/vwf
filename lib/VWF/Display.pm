@@ -207,8 +207,7 @@ sub as_string {
 	# TODO: Get all cookies and send them to the template.
 	# 'cart' is an example
 	unless($args && $args->{cart}) {
-		my $purchases = $self->{_info}->get_cookie(cookie_name => 'cart');
-		if($purchases) {
+		if(my $purchases = $self->{_info}->get_cookie(cookie_name => 'cart')) {
 			my %cart = split(/:/, $purchases);
 			$args->{cart} = \%cart;
 		}
@@ -232,11 +231,10 @@ sub as_string {
 		# return;
 	# }
 	# return $self->http() . $html;
+
+	# Build the HTTP response
 	my $rc = $self->http();
-	if($rc =~ /^Location:\s/ms) {
-		return $rc;
-	}
-	return $rc . $self->html($args);
+	return $rc =~ /^Location:\s/ms ? $rc : $rc . $self->html($args);
 }
 
 sub get_template_path {
