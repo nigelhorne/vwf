@@ -342,7 +342,8 @@ sub http
 	}
 
 	# Determine language, defaulting to English
-	my $language = $self->{_lingua} ? $self->{_lingua}->language() : 'English';
+	# TODO: Change the headers, e.g. character set, based on the langauge
+	# my $language = $self->{_lingua} ? $self->{_lingua}->language() : 'English';
 
 	# Determine content type
 	my $filename = $self->get_template_path();
