@@ -327,20 +327,16 @@ sub doit
 		config => $config,
 	};
 
+	# Display the requested page
 	eval {
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
-		# $display = VWF::Display::$page->new($args);
 
-		if($page eq 'index') {
-			$display = VWF::Display::index->new($args);
-		} elsif($page eq 'upload') {
-			$display = VWF::Display::upload->new($args);
-		} elsif($page eq 'editor') {
-			$display = VWF::Display::editor->new($args);
-		} elsif($page eq 'meta-data') {
-			$display = VWF::Display::meta_data->new($args);
-		} else {
+		$display = do {
+			my $class = "VWF::Display::$page";
+			eval { $class->new($args) };
+		};
+		if(!defined($display)) {
 			$logger->info("Unknown page $page");
 			$invalidpage = 1;
 		}
