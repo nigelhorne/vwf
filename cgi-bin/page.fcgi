@@ -18,9 +18,11 @@ no lib '.';
 
 use Log::WarnDie 0.09;
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
+use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
 use CGI::Lingua;
+use Class::Simple;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
 use FCGI;
@@ -29,7 +31,6 @@ use File::HomeDir;
 use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
-use CGI::ACL;
 use POSIX qw(strftime);
 use Time::HiRes;
 # FIXME: Gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
@@ -260,18 +261,6 @@ sub doit
 	});
 
 	$vwflog ||= ($config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log'));
-	if($vwflog && open(my $fout, '>>', $vwflog)) {
-		print $fout
-			'"', $info->domain_name(), '",',
-			'"', strftime('%F %T', localtime), '",',
-			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-			'"', $lingua->country(), '",',
-			'"', $info->browser_type(), '",',
-			'"', $lingua->language(), '",',
-			'"', $info->as_string(), "\"\n";
-		close($fout);
-	}
-
 	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
 		print "Status: 403 Forbidden\n",
 			"Content-type: text/plain\n",
@@ -281,6 +270,20 @@ sub doit
 			print "Access Denied\n";
 		}
 		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
+		$info->status(403);
+		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			print $fout
+				'"', $info->domain_name(), '",',
+				'"', strftime('%F %T', localtime), '",',
+				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+				'"', $lingua->country(), '",',
+				'"', $info->browser_type(), '",',
+				'"', $lingua->language(), '",',
+				'403,',
+				'""',
+				'"', $info->as_string(), "\"\n";
+			close($fout);
+		}
 		return;
 	}
 
@@ -318,12 +321,15 @@ sub doit
 
 	my $display;
 	my $invalidpage;
+	my $log = Class::Simple->new();
+
 	$args = {
 		cachedir => $cachedir,
 		info => $info,
 		logger => $logger,
 		lingua => $lingua,
 		config => $config,
+		log => $log,
 	};
 
 	# Display the requested page
@@ -353,8 +359,34 @@ sub doit
 			cachedir => $cachedir,
 			index => $index,
 		});
+		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			print $fout
+				'"', $info->domain_name(), '",',
+				'"', strftime('%F %T', localtime), '",',
+				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+				'"', $lingua->country(), '",',
+				'"', $info->browser_type(), '",',
+				'"', $lingua->language(), '",',
+				$info->status(), ',',
+				'"', $log->template(), '",',
+				'"', $info->as_string(), "\"\n";
+			close($fout);
+		}
 	} elsif($invalidpage) {
 		choose();
+		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			print $fout
+				'"', $info->domain_name(), '",',
+				'"', strftime('%F %T', localtime), '",',
+				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+				'"', $lingua->country(), '",',
+				'"', $info->browser_type(), '",',
+				'"', $lingua->language(), '",',
+				$info->status(), ',',
+				'""',
+				'"', $info->as_string(), "\"\n";
+			close($fout);
+		}
 		return;
 	} else {
 		$logger->debug('disabling cache');
@@ -369,6 +401,8 @@ sub doit
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "I don't know what you want me to display.\n";
 			}
+			$info->status(400);
+			$log->status(400);
 		} elsif($error =~ /Can\'t locate .* in \@INC/) {
 			$logger->error($error);
 			print "Status: 500 Internal Server Error\n",
@@ -379,6 +413,8 @@ sub doit
 				print "Software error - contact the webmaster\n",
 					"$error\n";
 			}
+			$info->status(500);
+			$log->status(500);
 		} else {
 			# No permission to show this page
 			print "Status: 403 Forbidden\n",
@@ -388,6 +424,8 @@ sub doit
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "Access Denied\n";
 			}
+			$info->status(403);
+			$log->status(403);
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
@@ -411,6 +449,8 @@ sub choose
 
 	print "Status: 300 Multiple Choices\n",
 		"Content-type: text/plain\n";
+
+	$info->status(300);
 
 	# Print last modified date if path is defined
 	if(my $path = $info->script_path()) {
