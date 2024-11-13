@@ -329,7 +329,7 @@ sub doit
 		logger => $logger,
 		lingua => $lingua,
 		config => $config,
-		log => $log,
+		log => $log
 	};
 
 	# Display the requested page
@@ -426,6 +426,19 @@ sub doit
 			}
 			$info->status(403);
 			$log->status(403);
+		}
+		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			print $fout
+				'"', $info->domain_name(), '",',
+				'"', strftime('%F %T', localtime), '",',
+				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+				'"', $lingua->country(), '",',
+				'"', $info->browser_type(), '",',
+				'"', $lingua->language(), '",',
+				$info->status(), ',',
+				'""',
+				'"', $info->as_string(), "\"\n";
+			close($fout);
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
