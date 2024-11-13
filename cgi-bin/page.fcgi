@@ -186,6 +186,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 
 	my $start = [Time::HiRes::gettimeofday()];
 
+	# TODO:  Make this neater
+	# Tries again without the database if it can't be opened
 	try {
 		doit(debug => 0);
 		my $timetaken = Time::HiRes::tv_interval($start);
@@ -251,6 +253,7 @@ sub doit
 	}
 
 	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
+
 	my $lingua = CGI::Lingua->new({
 		supported => [ 'en-gb' ],
 		cache => $linguacache,
@@ -295,7 +298,9 @@ sub doit
 		lingua => $lingua
 	};
 
-	if(!$info->is_search_engine() && $config->root_dir() && ((!defined($info->param('action'))) || ($info->param('action') ne 'send'))) {
+	if((!$info->is_search_engine()) && $config->root_dir() &&
+	   ($info->param('page') ne 'home') &&
+	   ((!defined($info->param('action'))) || ($info->param('action') ne 'send'))) {
 		$args->{'save_to'} = {
 			directory => File::Spec->catfile($config->root_dir(), 'save_to'),
 			ttl => 3600 * 24,
