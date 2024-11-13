@@ -373,7 +373,7 @@ sub doit
 				'"', $info->browser_type(), '",',
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
-				'"', $log->template(), '",',
+				'"', ($log->template() ? $log->template() : ''), '",',
 				'"', $info->as_string(), "\"\n";
 			close($fout);
 		}
