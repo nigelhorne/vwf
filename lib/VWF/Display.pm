@@ -17,6 +17,7 @@ use VWF::Utils;
 use Error;
 use Fatal qw(:void open);
 use File::pfopen;
+use Scalar::Util;
 
 my %blacklist = (
 	'MD' => 1,
@@ -40,10 +41,22 @@ our $sm;
 our $smcache;
 
 sub new {
-	my $proto = shift;
+	my $class = shift;
+
+	# Handle hash or hashref arguments
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	my $class = ref($proto) || $proto;
+	if(!defined($class)) {
+		# Using VWF::Display->new(), not VWF::Display::new()
+		# carp(__PACKAGE__, ' use ->new() not ::new() to instantiate');
+		# return;
+
+		# FIXME: this only works when no arguments are given
+		$class = __PACKAGE__;
+	} elsif(Scalar::Util::blessed($class)) {
+		# If $class is an object, clone it with new arguments
+		return bless { %{$class}, %args }, ref($class);
+	}
 
 	if(defined($ENV{'HTTP_REFERER'})) {
 		# Protect against Shellshocker
@@ -72,7 +85,7 @@ sub new {
 		Data::Throttler->import();
 
 		# Handle YAML Errors
-		my $db_file = $info->tmpdir() . '/throttle';
+		my $db_file = File::Spec->catdir($info->tmpdir(), 'throttle');
 		eval {
 			my $throttler = Data::Throttler->new(
 				max_items => 30,
@@ -196,6 +209,7 @@ sub new {
 	$self->{'_social_media'}->{'facebook_share_button'} = $sm->as_string(facebook_share_button => 1);
 	# $self->{'_social_media'}->{'google_plusone'} = $sm->as_string(google_plusone => 1);
 
+	# Return the blessed object
 	return bless $self, $class;
 }
 
