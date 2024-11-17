@@ -15,23 +15,44 @@ sub html {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $info = $self->{_info};
-	die unless($info);
+	die 'Missing _info in object' unless $info;
 
+	# Define allowed parameters (use state to avoid redeclaring in subsequent calls)
+	# state $allowed = {
 	my $allow = {
 		'person' => undef,
 		'action' => 'login',
 		'name' => undef,
 		'password' => undef,
-		'lang' => qr/^[A-Z][A-Z]/i,
+		lang => qr/^[A-Z]{2}$/i,
 		'lint_content' => qr/^\d$/,
 	};
-	my $params = $info->params({ allow => $allow });
+
 	my $config = $args{'config'};
 	my $logger = $args{'logger'};
+	my $params = $info->params({ allow => $allow });
 
 	if(!defined($params)) {
-		# Display the main index page
+		# No parameters to process: display the main index page
 		return $self->SUPER::html();
+	}
+
+	# Parameters to exclude from further processing
+	# my @exclude_keys = qw(page lint_content lang fbclid gclid);
+	# delete @params{@exclude_keys};
+	delete $params->{'page'};
+	delete $params->{'lint_content'};
+	delete $params->{'lang'};
+	delete $params->{'fbclid'};
+	delete $params->{'gclid'};
+
+	# Database handle
+	my $index = $args{'index'};
+	die "Missing 'index' handle" unless($index);
+
+	if(scalar(keys %{$params}) == 0) {
+		# No parameters to process: display the main index page
+		return $self->SUPER::html(updated => $index->updated());
 	}
 
 	my $cache;
@@ -72,8 +93,6 @@ sub html {
 		return $self->SUPER::html({ error => 'Who do you want to contact?' });
 	}
 
-	my $index = $args{'index'};	# Handle into the database
-
 	# Look in the index.db for the name given as the CGI argument and
 	# find their e-mail address
 	my $to = ($index->email({ entry => $info->person() }))[0];
@@ -83,6 +102,7 @@ sub html {
 		die 'No email entry assigned to ', $info->person();
 	}
 
+	# Send the email
 	if(open(my $fout, '|-', '/usr/sbin/sendmail -t')) {
 		print $fout "To: $to\n",
 			"From: webmaster\n",
@@ -95,6 +115,7 @@ sub html {
 			$self->{_logger}->trace("E-mail sent to $to");
 		}
 
+		# Render the response that the email has been sent
 		return $self->SUPER::html({ action => 'sent', updated => $index->updated() });
 	}
 	return $self->SUPER::html({ error => "Can't find /usr/sbin/sendmail", updated => $index->updated() });
