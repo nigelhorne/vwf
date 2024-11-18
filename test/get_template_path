@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+
+# Test VWF::Display::get_template_path
+# Must be run from within the '.../vwf/test' directory
+
+use strict;
+use warnings;
+
+use Cwd;
+use Test::More tests => 1;
+
+use lib '../lib';
+
+use VWF::Display;
+
+{
+	package MockLogger;
+	sub new { bless {}, shift }
+	# sub trace { print "TRACE: @_ \n" }
+	# sub debug { print "DEBUG: @_ \n" }
+	sub trace { }
+	sub debug { }
+}
+
+{
+	package MockLingua;
+	sub new { bless { }, shift }
+	sub requested_language { 'en-US' }
+	sub code_alpha2 { 'en' }
+	sub language_code_alpha2 { 'en' }
+	sub sublanguage_code_alpha2 { 'US' }
+	sub locale { }
+}
+
+{
+	package MockInfo;
+	sub new { bless { }, shift }
+	sub root_dir { Cwd::abs_path(File::Spec->catdir(Cwd::getcwd(), File::Spec->updir())) }
+	sub params { }
+	sub param { }
+	sub is_search_engine { 0 }
+	sub is_mobile { 0 }
+	sub is_robot { 0 }
+	sub script_dir { Cwd::getcwd() }
+	sub domain_name { 'example.com' }
+}
+
+# $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1';
+# $ENV{'REQUEST_METHOD'} = 'GET';
+# $ENV{'QUERY_STRING'} = '';
+
+{
+	package VWF::Display::index;
+	our @ISA = ('VWF::Display');
+}
+
+my $self = VWF::Display::index->new(info => MockInfo->new(), lingua => MockLingua->new(), logger => MockLogger->new());
+
+# Run the function and catch results
+eval {
+	my $template_path = $self->get_template_path();
+	like($template_path, qr/vwf\/templates\/en\/web\/VWF\/Display\/index.tmpl$/, "Template path found: $template_path");
+};
+
+if ($@) {
+	fail("get_template_path failed with error: $@");
+}
+
+# Add more tests for various configurations and edge cases
+

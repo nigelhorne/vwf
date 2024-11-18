@@ -253,6 +253,7 @@ sub as_string {
 	return $rc =~ /^Location:\s/ms ? $rc : $rc . $self->html($args);
 }
 
+# Determine the path to the correct template file based on various criteria such as language settings, browser type, and module path
 sub get_template_path
 {
 	my $self = shift;
