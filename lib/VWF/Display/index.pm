@@ -24,7 +24,7 @@ sub html {
 		'action' => 'login',
 		'name' => undef,
 		'password' => undef,
-		lang => qr/^[A-Z]{2}$/i,
+		'lang' => qr/^[A-Z]{2}$/i,
 		'lint_content' => qr/^\d$/,
 	};
 
