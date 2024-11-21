@@ -174,15 +174,15 @@ sub new {
 	return bless $config, $class;
 }
 
-sub AUTOLOAD {
+sub AUTOLOAD
+{
 	our $AUTOLOAD;
 	my $self = shift;
 
+	return undef unless($self);
+
 	# Extract the method name from the AUTOLOAD variable
 	(my $key = $AUTOLOAD) =~ s/.*:://;
-
-	# Return undef if $self is not a hash reference
-	return undef unless(ref($self) eq 'HASH');
 
 	# Return the value of the corresponding hash key
 	return $self->{$key};
