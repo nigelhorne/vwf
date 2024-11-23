@@ -7,12 +7,13 @@
 
 use strict;
 use warnings;
-use diagnostics;
+use autodie;
+# use diagnostics;
 
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::Carp qw(fatalsToBrowser);
-use CGI::Buffer { optimise_content => 1 };
-use CHI;
+use CGI::Buffer { optimise_content => 1 }; # Output optimization
+# use CHI;
 use CGI::Info;
 use CGI::Lingua;
 use File::Basename;
@@ -26,20 +27,21 @@ use lib './lib';
 # use File::HomeDir;
 # use lib File::HomeDir->my_home() . '/lib/perl5';
 
-
+# Initialization
 # my $cachedir = CGI::Info->tmpdir() . '/cache';
 # my $info = CGI::Info->new({
 	# cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Info')
 # });
 my $info = CGI::Info->new();
-
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
-
 my $script_dir = $info->script_dir();
+
+# Logging configuration
 Log::Log4perl->init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 
+# CGI::Buffer configuration
 if(CGI::Buffer::can_cache()) {
 	CGI::Buffer::set_options(
 		# cache => CHI->new(driver => 'File', root_dir => $cachedir, namespace => $script_name),
@@ -48,12 +50,13 @@ if(CGI::Buffer::can_cache()) {
 		# generate_304 => 0,
 	);
 	if(CGI::Buffer::is_cached()) {
-		exit;
+		exit; # Exit if content is cached
 	}
 } else {
 	CGI::Buffer::set_options(info => $info, logger => $logger);
 }
 
+# Language configuration
 my $lingua = CGI::Lingua->new({
         supported => [ 'en-gb' ],
 	# cache => CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => 'CGI::Lingua'),
@@ -61,6 +64,7 @@ my $lingua = CGI::Lingua->new({
 	logger => $logger,
 });
 
+# Load display module dynamically
 my $pagename = "VWF::Display::$script_name";
 eval "require $pagename";
 
@@ -69,13 +73,16 @@ if($@) {
 	die $@;
 }
 
+# Generate display
 my $display;
 eval {
-	$display = VWF::Display::index->new({
-		info => $info,
-		lingua => $lingua,
-		logger => $logger,
-	});
+	$display = do {
+		$pagename->new({
+			info => $info,
+			lingua => $lingua,
+			logger => $logger,
+		});
+	}
 };
 
 my $error = $@;
@@ -84,9 +91,11 @@ if(defined($display)) {
 	print $display->as_string();
 } else {
 	# No permission to show this page
-	print "Status: 403 Forbidden\n";
-	print "Content-type: text/plain\n";
-	print "Pragma: no-cache\n\n";
+	$logger->debug("Display undefined ($error), sending 403 response");
+
+	print "Status: 403 Forbidden\n",
+		"Content-type: text/plain\n",
+		"Pragma: no-cache\n\n";
 
 	warn $error if $error;
 
