@@ -263,7 +263,7 @@ sub doit
 		syslog => $syslog,
 	});
 
-	$vwflog ||= ($config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log'));
+	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
 		print "Status: 403 Forbidden\n",
 			"Content-type: text/plain\n",
@@ -275,6 +275,8 @@ sub doit
 		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
 		$info->status(403);
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			my @warnings = $info->warnings();
+			@warnings = map { $_->{'warning'} } @warnings;
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -284,7 +286,9 @@ sub doit
 				'"', $lingua->language(), '",',
 				'403,',
 				'"",',
-				'"', $info->as_string(), "\"\n";
+				'"', $info->as_string(), '",',
+				join(';', @warnings),
+				"\n";
 			close($fout);
 		}
 		return;
@@ -365,6 +369,8 @@ sub doit
 			index => $index,
 		});
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			my @warnings = $info->warnings();
+			@warnings = map { $_->{'warning'} } @warnings;
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -374,12 +380,17 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"', ($log->template() ? $log->template() : ''), '",',
-				'"', $info->as_string(), "\"\n";
+				'"",',
+				'"', $info->as_string(), '",',
+				join(';', @warnings),
+				"\n";
 			close($fout);
 		}
 	} elsif($invalidpage) {
 		choose();
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			my @warnings = $info->warnings();
+			@warnings = map { $_->{'warning'} } @warnings;
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -389,7 +400,9 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"",',
-				'"', $info->as_string(), "\"\n";
+				'"', $info->as_string(), '",',
+				join(';', @warnings),
+				"\n";
 			close($fout);
 		}
 		return;
@@ -433,6 +446,8 @@ sub doit
 			$log->status(403);
 		}
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			my @warnings = $info->warnings();
+			@warnings = map { $_->{'warning'} } @warnings;
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -442,7 +457,9 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"",',
-				'"', $info->as_string(), "\"\n";
+				'"', $info->as_string(), '",',
+				join(';', @warnings),
+				"\n";
 			close($fout);
 		}
 		throw Error::Simple($error ? $error : $info->as_string());
