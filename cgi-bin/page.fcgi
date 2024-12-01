@@ -264,6 +264,13 @@ sub doit
 	});
 
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
+
+	my $warnings = '';
+	if(my $w = $info->warnings()) {
+		my @warnings = map { $_->{'warning'} } @{$w};
+		$warnings = join(';', @warnings);
+	}
+
 	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
 		print "Status: 403 Forbidden\n",
 			"Content-type: text/plain\n",
@@ -275,10 +282,6 @@ sub doit
 		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
 		$info->status(403);
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = ();
-			if(my $w = $info->warnings()) {
-				@warnings = map { $_->{'warning'} } @{$w};
-			}
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -289,7 +292,7 @@ sub doit
 				'403,',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', join(';', @warnings), '"',
+				'"', $warnings, '"',
 				"\n";
 			close($fout);
 		}
@@ -382,7 +385,7 @@ sub doit
 				'"', ($log->template() ? $log->template() : ''), '",',
 				'"",',
 				'"', $info->as_string(), '",',
-				'""',
+				'"', $warnings, '"',
 				"\n";
 			close($fout);
 		}
@@ -403,7 +406,7 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', join(';', @warnings), '"',
+				'"', $warnings, '"',
 				"\n";
 			close($fout);
 		}
@@ -462,7 +465,7 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', join(';', @warnings), '"',
+				'"', $warnings, '"',
 				"\n";
 			close($fout);
 		}
