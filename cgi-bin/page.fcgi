@@ -275,8 +275,7 @@ sub doit
 		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
 		$info->status(403);
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = $info->warnings();
-			@warnings = map { $_->{'warning'} } @warnings;
+			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -287,7 +286,7 @@ sub doit
 				'403,',
 				'"",',
 				'"', $info->as_string(), '",',
-				join(';', @warnings),
+				'"', join(';', @warnings), '"',
 				"\n";
 			close($fout);
 		}
@@ -369,8 +368,6 @@ sub doit
 			index => $index,
 		});
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = $info->warnings();
-			@warnings = map { $_->{'warning'} } @warnings;
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -382,15 +379,14 @@ sub doit
 				'"', ($log->template() ? $log->template() : ''), '",',
 				'"",',
 				'"', $info->as_string(), '",',
-				join(';', @warnings),
+				'""',
 				"\n";
 			close($fout);
 		}
 	} elsif($invalidpage) {
 		choose();
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = $info->warnings();
-			@warnings = map { $_->{'warning'} } @warnings;
+			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -401,7 +397,7 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				join(';', @warnings),
+				'"', join(';', @warnings), '"',
 				"\n";
 			close($fout);
 		}
@@ -446,8 +442,7 @@ sub doit
 			$log->status(403);
 		}
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = $info->warnings();
-			@warnings = map { $_->{'warning'} } @warnings;
+			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -458,7 +453,7 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				join(';', @warnings),
+				'"', join(';', @warnings), '"',
 				"\n";
 			close($fout);
 		}
