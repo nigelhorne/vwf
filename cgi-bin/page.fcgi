@@ -386,7 +386,12 @@ sub doit
 	} elsif($invalidpage) {
 		choose();
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
+			my @warnings;
+			if(my $w = $info->warnings()) {
+				@warnings = map { $_->{'warning'} } @{$w};
+			} else {
+				@warnings = ();
+			}
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
