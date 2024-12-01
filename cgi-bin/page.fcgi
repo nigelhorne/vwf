@@ -275,7 +275,10 @@ sub doit
 		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
 		$info->status(403);
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
+			my @warnings = ();
+			if(my $w = $info->warnings()) {
+				@warnings = map { $_->{'warning'} } @{$w};
+			}
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
@@ -386,11 +389,9 @@ sub doit
 	} elsif($invalidpage) {
 		choose();
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings;
+			my @warnings = ();
 			if(my $w = $info->warnings()) {
 				@warnings = map { $_->{'warning'} } @{$w};
-			} else {
-				@warnings = ();
 			}
 			print $fout
 				'"', $info->domain_name(), '",',
@@ -447,7 +448,10 @@ sub doit
 			$log->status(403);
 		}
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			my @warnings = map { $_->{'warning'} } @{$info->warnings()};
+			my @warnings = ();
+			if(my $w = $info->warnings()) {
+				@warnings = map { $_->{'warning'} } @{$w};
+			}
 			print $fout
 				'"', $info->domain_name(), '",',
 				'"', strftime('%F %T', localtime), '",',
