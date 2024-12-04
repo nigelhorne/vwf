@@ -43,7 +43,7 @@ use autodie qw(:all);
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
-use lib '../lib';
+use lib CGI::Info::script_dir() . '/../lib';
 
 use VWF::Config;
 
