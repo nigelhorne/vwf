@@ -124,21 +124,16 @@ $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
-$SIG{__WARN__} = sub {
-	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
-		print $fout @_;
-	}
-	Log::WarnDie->dispatcher(undef);
-	CORE::die @_
-};
-
 # my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
-my $err_handler = sub {
+# https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
+$SIG{__DIE__} = $SIG{__WARN__} = sub {
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
 		print $fout @_;
 	# } else {
 		# print $stderr @_;
 	}
+	Log::WarnDie->dispatcher(undef);
+	CORE::die @_
 };
 
 # my $request = FCGI::Request($stdin, $stdout, $stderr);
@@ -173,9 +168,6 @@ while($handling_request = ($request->Accept() >= 0)) {
 		};
 		last;
 	}
-
-	# https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
-	$SIG{__DIE__} = $err_handler;
 
 	$requestcount++;
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
@@ -383,7 +375,6 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"', ($log->template() ? $log->template() : ''), '",',
-				'"",',
 				'"', $info->as_string(), '",',
 				'"', $warnings, '"',
 				"\n";
