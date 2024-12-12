@@ -209,6 +209,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 	}
 }
 
+# Clean up resources before shutdown
 $logger->info("Shutting down");
 if($buffercache) {
 	$buffercache->purge();
@@ -249,6 +250,7 @@ sub doit
 
 	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 
+	# Language negotiation
 	my $lingua = CGI::Lingua->new({
 		supported => [ 'en-gb' ],
 		cache => $linguacache,
@@ -266,6 +268,7 @@ sub doit
 		$warnings = join(';', @warnings);
 	}
 
+	# Access control checks
 	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
 		print "Status: 403 Forbidden\n",
 			"Content-type: text/plain\n",
