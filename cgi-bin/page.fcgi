@@ -122,6 +122,9 @@ sub sig_handler {
 $SIG{USR1} = \&sig_handler;
 $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
+
+# Sanitize environment variables
+delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 $ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 
 # my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
