@@ -19,6 +19,7 @@ use Fatal qw(:void open);
 use File::pfopen;
 use Scalar::Util;
 
+# TODO: read this from the config file
 my %blacklist = (
 	'MD' => 1,
 	'RU' => 1,
@@ -109,52 +110,7 @@ sub new {
 			}
 		}
 	}
-	my $config_dir;
-	if($ENV{'CONFIG_DIR'}) {
-		$config_dir = $ENV{'CONFIG_DIR'};
-	} else {
-		$config_dir = File::Spec->catdir(
-				$info->script_dir(),
-				File::Spec->updir(),
-				File::Spec->updir(),
-				'conf'
-			);
-
-		if(!-d $config_dir) {
-			$config_dir = File::Spec->catdir(
-					$info->script_dir(),
-					File::Spec->updir(),
-					'conf'
-				);
-		}
-
-		if(!-d $config_dir) {
-			if($ENV{'DOCUMENT_ROOT'}) {
-				$config_dir = File::Spec->catdir(
-					$ENV{'DOCUMENT_ROOT'},
-					File::Spec->updir(),
-					'lib',
-					'conf'
-				);
-			} else {
-				$config_dir = File::Spec->catdir(
-					$ENV{'HOME'},
-					'lib',
-					'conf'
-				);
-			}
-		}
-
-		if(!-d $config_dir) {
-			if($args{config_directory}) {
-				$config_dir = $args{config_directory};
-			} elsif($args{logger}) {
-				while(my ($k, $v) = each %ENV) {
-					$args{logger}->debug("$k=$v");
-				}
-			}
-		}
-	}
+	my $config_dir = _find_config_dir(\%args, $info);
 	if($args{'logger'}) {
 		$args{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " path = $config_dir");
 	}
@@ -211,6 +167,62 @@ sub new {
 
 	# Return the blessed object
 	return bless $self, $class;
+}
+
+# Determine the configuratin directory
+sub _find_config_dir
+{
+	my($args, $info) = @_;
+
+	if($ENV{'CONFIG_DIR'}) {
+		return $ENV{'CONFIG_DIR'};
+	}
+
+	my $config_dir = File::Spec->catdir(
+			$info->script_dir(),
+			File::Spec->updir(),
+			File::Spec->updir(),
+			'conf'
+		);
+
+	if(!-d $config_dir) {
+		$config_dir = File::Spec->catdir(
+				$info->script_dir(),
+				File::Spec->updir(),
+				'conf'
+			);
+	}
+
+	if(!-d $config_dir) {
+		if($ENV{'DOCUMENT_ROOT'}) {
+			$config_dir = File::Spec->catdir(
+				# $ENV{'DOCUMENT_ROOT'},
+				$info->rootdir(),
+				File::Spec->updir(),
+				'lib',
+				'conf'
+			);
+		} else {
+			$config_dir = File::Spec->catdir(
+				$ENV{'HOME'},
+				'lib',
+				'conf'
+			);
+		}
+	}
+
+	if(!-d $config_dir) {
+		if($args->{config_directory}) {
+			return $args->{config_directory};
+		}
+		if($args->{logger}) {
+			while(my ($k, $v) = each %ENV) {
+				$args->{logger}->debug("$k=$v");
+			}
+		}
+	}
+
+	return $config_dir;
 }
 
 # Call this to display the page
@@ -380,6 +392,8 @@ sub http
 	# Security headers
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
 	# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+
+	# TODO: investigate Content-Security-Policy
 	return $rc . "X-Frame-Options: SAMEORIGIN\n"
 		. "X-Content-Type-Options: nosniff\n"
 		. "Referrer-Policy: strict-origin-when-cross-origin\n\n";
@@ -459,12 +473,12 @@ sub _debug
 {
 	my $self = shift;
 
-	if($self->{_logger}) {
+	if(my $logger = $self->{_logger}) {
 		my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
-		if($ENV{'REMOTE_ADDR'}) {
-			$self->{_logger}->debug("$ENV{'REMOTE_ADDR'}: $params{'message'}");
+		if(defined($ENV{'REMOTE_ADDR'})) {
+			$logger->debug("$ENV{'REMOTE_ADDR'}: $params{'message'}");
 		} else {
-			$self->{_logger}->debug($params{'message'});
+			$logger->debug($params{'message'});
 		}
 	}
 	return $self;
