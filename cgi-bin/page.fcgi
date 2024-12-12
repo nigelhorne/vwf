@@ -16,6 +16,12 @@ use warnings;
 
 no lib '.';
 
+BEGIN {
+	# Sanitize environment variables
+	delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+	$ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
+}
+
 use Log::WarnDie 0.09;
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use CGI::ACL;
@@ -43,6 +49,8 @@ use autodie qw(:all);
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
+
+# Where to find the VWF modules
 use lib CGI::Info::script_dir() . '/../lib';
 
 use VWF::Config;
@@ -123,10 +131,6 @@ $SIG{USR1} = \&sig_handler;
 $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 
-# Sanitize environment variables
-delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
-$ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
-
 # my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
 # https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
 $SIG{__DIE__} = $SIG{__WARN__} = sub {
@@ -145,6 +149,7 @@ my $request = FCGI::Request();
 # It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
 # But I don't think that's possible with the FCGI module
 
+# Main request loop
 while($handling_request = ($request->Accept() >= 0)) {
 	unless($ENV{'REMOTE_ADDR'}) {
 		# debugging from the command line
@@ -218,6 +223,7 @@ CHI->stats->flush();
 Log::WarnDie->dispatcher(undef);
 exit(0);
 
+# Create and send response to the client for each request
 sub doit
 {
 	CGI::Info->reset();
@@ -409,6 +415,7 @@ sub doit
 		$fb->init(
 			cache => undef,
 		);
+		# Handle errors gracefully
 		if($error eq 'Unknown page to display') {
 			print "Status: 400 Bad Request\n",
 				"Content-type: text/plain\n",
