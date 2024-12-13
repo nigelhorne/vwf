@@ -135,7 +135,7 @@ $SIG{PIPE} = 'IGNORE';
 # https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
 $SIG{__DIE__} = $SIG{__WARN__} = sub {
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
-		print $fout @_;
+		print $fout $info->domain_name(), ": @_";
 	# } else {
 		# print $stderr @_;
 	}
