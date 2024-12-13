@@ -359,13 +359,12 @@ sub doit
 			my $class = "VWF::Display::$page";
 			eval { $class->new($args) };
 		};
-		if($display->can('as_string')) {
-			$logger->warn("Problem understanding $page");
-			undef $display;
-		}
 		if(!defined($display)) {
 			$logger->info("Unknown page $page");
 			$invalidpage = 1;
+		} elsif(!$display->can('as_string')) {
+			$logger->warn("Problem understanding $page");
+			undef $display;
 		}
 	};
 
