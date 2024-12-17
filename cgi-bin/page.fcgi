@@ -165,6 +165,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 		Log::WarnDie->dispatcher($logger);
 		$index->set_logger($logger);
 		$info->set_logger($logger);
+		# $Config::Auto::Debug = 1;
+
 		$Error::Debug = 1;
 		# CHI->stats->enable();
 		try {
@@ -510,7 +512,7 @@ sub choose
 		print "/cgi-bin/page.fcgi?page=index\n",
 			"/cgi-bin/page.fcgi?page=upload\n",
 			"/cgi-bin/page.fcgi?page=editor\n",
-			"/cgi-bin/page.fcgi?page=meta-data\n";
+			"/cgi-bin/page.fcgi?page=meta_data\n";
 	}
 }
 
