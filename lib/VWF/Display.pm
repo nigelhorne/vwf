@@ -169,7 +169,7 @@ sub new {
 	return bless $self, $class;
 }
 
-# Determine the configuratin directory
+# Determine the configuration directory
 sub _find_config_dir
 {
 	my($args, $info) = @_;
@@ -376,7 +376,7 @@ sub http
 	}
 
 	# Determine language, defaulting to English
-	# TODO: Change the headers, e.g. character set, based on the langauge
+	# TODO: Change the headers, e.g. character set, based on the language
 	# my $language = $self->{_lingua} ? $self->{_lingua}->language() : 'English';
 
 	# Determine content type

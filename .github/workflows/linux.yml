@@ -29,6 +29,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: perl -V
         run: perl -V
+      - name: Update
+        run: |
+          apt update
+          apt upgrade
+          apt dist-upgrade
       - name: Install Dependencies
         run: |
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
