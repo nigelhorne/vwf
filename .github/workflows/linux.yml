@@ -33,18 +33,16 @@ jobs:
         run: |
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
           cpanm -iqfn CGI::IDS Data::Throttler CGI::ACL
-          cpanm --skip-satisfied -qn Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer
+          cpanm --skip-satisfied -qn Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer || cat /github/home/.cpanm/work/*/build.log
           cpanm --skip-satisfied -qn String::Random Log::Dispatch::File Class::Simple
           cpanm --skip-satisfied -qn LWP::UserAgent::Cached Data::Serializer CGI::Carp B::Lint FCGI Template::Plugin::EnvHash HTML::SocialMedia Error IPC::System::Simple
           cpanm --skip-satisfied -qn Log::Any::Adapter::Log4perl XML::Simple CHI
           cpanm --skip-satisfied -qn warnings::unused File::HomeDir Config::Auto Template::Filters
-        env:
-          AUTHOR_TESTING: 1
       - name: Run Tests
         run: |
           cd cgi-bin && mkdir -p ../data && perl -c -MO=Lint ./page.fcgi '' && perl -c -Mwarnings::unused ./page.fcgi ''
           rootdir=$(pwd)/../.. perl page.fcgi page=index
-          rootdir=$(pwd)/../.. perl page.fcgi page=meta-data
+          rootdir=$(pwd)/../.. perl page.fcgi page=meta_data
           rootdir=$(pwd)/../.. perl page.fcgi page=upload publish='Stock%20or%20(1,2\)=(select*from(select%20name_const(CHAR(111,108,111,108,111,115,104,101,114\),1\),name_const(CHAR( <-- HERE 111,108,111,108,111,115,104,101,114\),1\)\)a\)%20--%20and%201%3D1'
           cd ../tests && prove get_params && prove get_template_path
           cat /tmp/vwf.log
