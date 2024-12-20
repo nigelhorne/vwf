@@ -5,6 +5,7 @@ package VWF::Display;
 
 use strict;
 use warnings;
+
 use Config::Auto;
 use CGI::Info;
 use Data::Dumper;
@@ -297,8 +298,8 @@ sub get_template_path
 
 		# FIXME: look for lower priority languages if the highest isn't found
 		my $candidate;
-		if($lingua->sublanguage_code_alpha2()) {
-			$candidate = "$dir/" . $lingua->code_alpha2() . '/' . $lingua->sublanguage_code_alpha2();
+		if(my $sl = $lingua->sublanguage_code_alpha2()) {
+			$candidate = "$dir/" . $lingua->code_alpha2() . "/$sl";
 			$self->_debug({ message => "check for directory $candidate" });
 			if(!-d $candidate) {
 				$candidate = undef;
