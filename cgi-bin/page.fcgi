@@ -357,23 +357,22 @@ sub doit
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
 		if($page =~ /\//) {
-			# Block "page=/etc/password" and "page=http://www.google.com"
+			# Block "page=/etc/passwd" and "page=http://www.google.com"
 			$logger->info("Blocking '/' in $page");
 			$info->status(403);
 			$log->status(403);
-			die "Illegal character in $page";
-		}
-
-		$display = do {
-			my $class = "VWF::Display::$page";
-			eval { $class->new($args) };
-		};
-		if(!defined($display)) {
-			$logger->info("Unknown page $page");
-			$invalidpage = 1;
-		} elsif(!$display->can('as_string')) {
-			$logger->warn("Problem understanding $page");
-			undef $display;
+		} else {
+			$display = do {
+				my $class = "VWF::Display::$page";
+				eval { $class->new($args) };
+			};
+			if(!defined($display)) {
+				$logger->info("Unknown page $page");
+				$invalidpage = 1;
+			} elsif(!$display->can('as_string')) {
+				$logger->warn("Problem understanding $page");
+				undef $display;
+			}
 		}
 	};
 
