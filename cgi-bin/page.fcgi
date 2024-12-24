@@ -356,6 +356,10 @@ sub doit
 	eval {
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
+		if($page =~ /\//) {
+			$logger->info("Blocking '/' in $page");
+			die "Illegal character in $page";
+		}
 
 		$display = do {
 			my $class = "VWF::Display::$page";
