@@ -357,7 +357,10 @@ sub doit
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
 		if($page =~ /\//) {
+			# Block "page=/etc/password" and "page=http://www.google.com"
 			$logger->info("Blocking '/' in $page");
+			$info->status(403);
+			$log->status(403);
 			die "Illegal character in $page";
 		}
 
