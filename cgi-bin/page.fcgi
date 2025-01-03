@@ -374,6 +374,9 @@ sub doit
 			if(!defined($display)) {
 				$logger->info("Unknown page $page");
 				$invalidpage = 1;
+				if($info->status() == 200) {
+					$info->status(404);
+				}
 			} elsif(!$display->can('as_string')) {
 				$logger->warn("Problem understanding $page");
 				undef $display;
