@@ -366,6 +366,7 @@ sub doit
 			$logger->info("Blocking '/' in $page");
 			$info->status(403);
 			$log->status(403);
+			$invalidpage = 1;
 		} else {
 			$display = do {
 				my $class = "VWF::Display::$page";
