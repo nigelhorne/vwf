@@ -92,12 +92,15 @@ use VWF::Display::meta_data;
 
 use VWF::data::index;
 
-my $index = VWF::data::index->new({
+my $database_dir = "$script_dir/../data";
+Database::Abstraction::init({
 	cache => CHI->new(driver => 'Memory', datastore => {}),
 	cache_duration => '1 day',
-	directory => "$script_dir/../data",
+	directory => $database_dir,
 	logger => $logger
 });
+
+my $index = VWF::data::index->new();
 if($@) {
 	$logger->error($@);
 	Log::WarnDie->dispatcher(undef);
@@ -395,6 +398,7 @@ sub doit
 		# Pass in handles to the databases
 		print $display->as_string({
 			cachedir => $cachedir,
+			database_dir => $database_dir,
 			index => $index,
 		});
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
