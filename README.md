@@ -138,7 +138,7 @@ The file layout is:
     /home/njh/bandsman.mooo.com/templates/VWF/index.html
     /home/njh/bandsman.mooo.com/databases/index.db
 
-## Caveats
+# Caveats
 Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
 cached copies of pages that will be inconsistent with the new site.
 

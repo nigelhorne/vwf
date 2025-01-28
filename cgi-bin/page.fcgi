@@ -41,8 +41,9 @@ use File::Spec;
 use POSIX qw(strftime);
 use Time::HiRes;
 
-# FIXME: Gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
-# use Taint::Runtime qw($TAINT taint_env);
+# FIXME: Sometimes gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
+# Re-enabled for testing
+use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
 # use File::HomeDir;
@@ -58,8 +59,8 @@ use lib CGI::Info::script_dir() . '/../lib';
 use VWF::Config;
 use VWF::Utils;
 
-# $TAINT = 1;
-# taint_env();
+$TAINT = 1;
+taint_env();
 
 my $info = CGI::Info->new();
 my $config;
@@ -376,6 +377,8 @@ sub doit
 			$log->status(403);
 			$invalidpage = 1;
 		} else {
+			# Remove all non alphanumeric characters in the name of the page to be loaded
+			$page =~ s/\W//;
 			my $display_module = "VWF::Display::$page";
 			eval "require $display_module";
 			if($@) {
