@@ -31,8 +31,8 @@ jobs:
         run: perl -V
       - name: Update
         run: |
-          apt update
-          apt upgrade
+          apt update -q -y
+          apt upgrade -y
           apt dist-upgrade
       - name: Install Dependencies
         run: |
