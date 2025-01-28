@@ -125,9 +125,10 @@ my $exit_requested = 0;
 
 # CHI->stats->enable();
 
-my $rate_limit_cache;
+my $rate_limit_cache;	# Rate limit clients by IP address
+Readonly my @rate_limit_trusted_ips => ('127.0.0.1', '192.168.1.1');
 
-my @blacklist_country_list = (
+Readonly my @blacklist_country_list => (
 	'BY', 'MD', 'RU', 'CN', 'BR', 'UY', 'TR', 'MA', 'VE', 'SA', 'CY',
 	'CO', 'MX', 'IN', 'RS', 'PK', 'UA', 'XH'
 );
@@ -294,32 +295,36 @@ sub doit
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
 
-	if ($request_count >= $MAX_REQUESTS) {
-		# Block request: Too many requests
-		print "Status: 429 Too Many Requests\n",
-			"Content-type: text/plain\n",
-			"Pragma: no-cache\n\n";
+	# Rate limit by IP
+	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
+		if($request_count >= $MAX_REQUESTS) {
+			# Block request: Too many requests
+			print "Status: 429 Too Many Requests\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
 
-		$logger->warn("Too many requests from $client_ip");
-		$info->status(429);
+			$logger->warn("Too many requests from $client_ip");
+			# TODO: Work out how to add the "Retry-After" header, setting to $TIME_WINDOW
+			$info->status(429);
 
-		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			print $fout
-				'"', $info->domain_name(), '",',
-				'"', strftime('%F %T', localtime), '",',
-				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-				'"', $lingua->country(), '",',
-				'"', $info->browser_type(), '",',
-				'"', $lingua->language(), '",',
-				'429,',
-				'"",',
-				'"', $info->as_string(), '",',
-				'"",',
-				'""',
-				"\n";
-			close($fout);
+			if($vwflog && open(my $fout, '>>', $vwflog)) {
+				print $fout
+					'"', $info->domain_name(), '",',
+					'"', strftime('%F %T', localtime), '",',
+					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+					'"', $lingua->country(), '",',
+					'"', $info->browser_type(), '",',
+					'"', $lingua->language(), '",',
+					'429,',
+					'"",',
+					'"', $info->as_string(), '",',
+					'"",',
+					'""',
+					"\n";
+				close($fout);
+			}
+			return;
 		}
-		return;
 	}
 	# Increment request count
 	$rate_limit_cache->set($client_ip, $request_count + 1, $TIME_WINDOW);
