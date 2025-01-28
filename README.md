@@ -12,7 +12,7 @@ VWF is a web application framework to easily display web pages tailored to the
 wishes of the browser, e.g. language to use and mobile/web content.
 It supports Template Toolkit (http://template-toolkit.org/),
 text and HTML files.
-The framework handles web requests using FastCGI and offers dynamic page rendering, access control, and caching.
+The framework handles web requests using FastCGI and offers dynamic page rendering, access control (including rate limiting), and caching.
 
 The idea is to create index.fcgi which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language

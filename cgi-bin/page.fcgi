@@ -39,6 +39,7 @@ use Log::Any::Adapter;
 use Error qw(:try);
 use File::Spec;
 use POSIX qw(strftime);
+use Readonly;
 use Time::HiRes;
 
 # FIXME: Sometimes gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
@@ -61,6 +62,10 @@ use VWF::Utils;
 
 $TAINT = 1;
 taint_env();
+
+# Set rate limit parameters
+Readonly my $MAX_REQUESTS => 100;	# Max requests allowed
+Readonly my $TIME_WINDOW => 10 * 60;	# Time window in seconds (10 minutes)
 
 my $info = CGI::Info->new();
 my $config;
@@ -119,6 +124,8 @@ my $handling_request = 0;
 my $exit_requested = 0;
 
 # CHI->stats->enable();
+
+my $rate_limit_cache;
 
 my @blacklist_country_list = (
 	'BY', 'MD', 'RU', 'CN', 'BR', 'UY', 'TR', 'MA', 'VE', 'SA', 'CY',
@@ -247,7 +254,9 @@ sub doit
 	$logger->debug('In doit - domain is ', $info->domain_name());
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+
 	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
+	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 	$infocache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {
@@ -264,12 +273,6 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
-	if(!defined($info->param('page'))) {
-		$logger->info('No page given in ', $info->as_string());
-		choose();
-		return;
-	}
-
 	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 
 	# Language negotiation
@@ -282,7 +285,50 @@ sub doit
 		syslog => $syslog,
 	});
 
-	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
+	# Configure cache for rate limiting (change to create_disc_cache for persistence)
+	$rate_limit_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'rate_limit');
+
+	# Get client IP
+	my $client_ip = $ENV{'REMOTE_ADDR'} || 'unknown';
+
+	# Check and increment request count
+	my $request_count = $rate_limit_cache->get($client_ip) || 0;
+
+	if ($request_count >= $MAX_REQUESTS) {
+		# Block request: Too many requests
+		print "Status: 429 Too Many Requests\n",
+			"Content-type: text/plain\n",
+			"Pragma: no-cache\n\n";
+
+		$logger->warn("Too many requests from $client_ip");
+		$info->status(429);
+
+		if($vwflog && open(my $fout, '>>', $vwflog)) {
+			print $fout
+				'"', $info->domain_name(), '",',
+				'"', strftime('%F %T', localtime), '",',
+				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+				'"', $lingua->country(), '",',
+				'"', $info->browser_type(), '",',
+				'"', $lingua->language(), '",',
+				'429,',
+				'"",',
+				'"', $info->as_string(), '",',
+				'"",',
+				'""',
+				"\n";
+			close($fout);
+		}
+		return;
+	}
+	# Increment request count
+	$rate_limit_cache->set($client_ip, $request_count + 1, $TIME_WINDOW);
+
+	if(!defined($info->param('page'))) {
+		$logger->info('No page given in ', $info->as_string());
+		choose();
+		return;
+	}
 
 	my $warnings = '';
 	if(my $w = $info->warnings()) {
