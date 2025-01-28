@@ -122,6 +122,7 @@ if($@) {
 my $requestcount = 0;
 my $handling_request = 0;
 my $exit_requested = 0;
+my %blacklisted_ip;
 
 # CHI->stats->enable();
 
@@ -342,33 +343,63 @@ sub doit
 	}
 
 	# Access control checks
-	if($ENV{'REMOTE_ADDR'} && $acl->all_denied(lingua => $lingua)) {
-		print "Status: 403 Forbidden\n",
-			"Content-type: text/plain\n",
-			"Pragma: no-cache\n\n";
+	if($ENV{'REMOTE_ADDR'}) {
+		if($acl->all_denied(lingua => $lingua)) {
+			print "Status: 403 Forbidden\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
 
-		unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-			print "Access Denied\n";
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "Access Denied\n";
+			}
+			$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
+			$info->status(403);
+			if($vwflog && open(my $fout, '>>', $vwflog)) {
+				print $fout
+					'"', $info->domain_name(), '",',
+					'"', strftime('%F %T', localtime), '",',
+					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+					'"', $lingua->country(), '",',
+					'"', $info->browser_type(), '",',
+					'"', $lingua->language(), '",',
+					'403,',
+					'"",',
+					'"', $info->as_string(), '",',
+					'"', $warnings, '",',
+					'"Denied by CGI::ACL"',
+					"\n";
+				close($fout);
+			}
+			return;
 		}
-		$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
-		$info->status(403);
-		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			print $fout
-				'"', $info->domain_name(), '",',
-				'"', strftime('%F %T', localtime), '",',
-				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-				'"', $lingua->country(), '",',
-				'"', $info->browser_type(), '",',
-				'"', $lingua->language(), '",',
-				'403,',
-				'"",',
-				'"', $info->as_string(), '",',
-				'"', $warnings, '",',
-				'""',
-				"\n";
-			close($fout);
+		if($blacklisted_ip{$ENV{'REMOTE_ADDR'}}) {
+			print "Status: 403 Forbidden\n",
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
+
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "Access Denied\n";
+			}
+			$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
+			$info->status(403);
+			if($vwflog && open(my $fout, '>>', $vwflog)) {
+				print $fout
+					'"', $info->domain_name(), '",',
+					'"', strftime('%F %T', localtime), '",',
+					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+					'"', $lingua->country(), '",',
+					'"', $info->browser_type(), '",',
+					'"', $lingua->language(), '",',
+					'403,',
+					'"",',
+					'"', $info->as_string(), '",',
+					'"', $warnings, '",',
+					'"Blacklisted for attempting to break in"',
+					"\n";
+				close($fout);
+			}
+			return;
 		}
-		return;
 	}
 
 	my $args = {
@@ -608,6 +639,21 @@ sub choose
 			"/cgi-bin/page.fcgi?page=editor\n",
 			"/cgi-bin/page.fcgi?page=meta_data\n";
 	}
+}
+
+sub blacklisted
+{
+	if(my $remote = $ENV{'REMOTE_ADDR'}) {
+		my $info = shift;
+		if(my $string = $info->as_string()) {
+			if(($string =~ /SELECT.+AND.+/) || ($string =~ /ORDER BY /) || ($string =~ / OR NOT /) || ($string =~ / AND \d+=\d+/) || ($string =~ /THEN.+ELSE.+END/) || ($string =~ /.+AND.+SELECT.+/) || ($string =~ /\sAND\s.+\sAND\s/) || ($string =~ /AND\sCASE\sWHEN/)) {
+				$blacklisted_ip{$remote} = 1;
+				$info->status(301);
+				return 1;
+			}
+		}
+	}
+	return 0;
 }
 
 # False positives we don't need in the logs
