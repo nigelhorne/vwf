@@ -442,9 +442,10 @@ sub doit
 			my $display_module = "VWF::Display::$page";
 
 			# TODO: consider creating a whitelist of valid modules
+			$logger->debug("doit(): Loading module $display_module from @INC");
 			eval "require $display_module";
 			if($@) {
-				# $logger->error("Failed to load module $display_module: $@");
+				$logger->debug("Failed to load module $display_module: $@");
 				$logger->info("Unknown page $page");
 				$invalidpage = 1;
 				if($info->status() == 200) {
