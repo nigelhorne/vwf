@@ -312,7 +312,8 @@ sub doit
 				'403,',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', $warnings, '"',
+				'"', $warnings, '",',
+				'""',
 				"\n";
 			close($fout);
 		}
@@ -380,6 +381,8 @@ sub doit
 			# Remove all non alphanumeric characters in the name of the page to be loaded
 			$page =~ s/\W//;
 			my $display_module = "VWF::Display::$page";
+
+			# TODO: consider creating a whitelist of valid modules
 			eval "require $display_module";
 			if($@) {
 				# $logger->error("Failed to load module $display_module: $@");
@@ -431,7 +434,8 @@ sub doit
 				$info->status(), ',',
 				'"', ($log->template() ? $log->template() : ''), '",',
 				'"', $info->as_string(), '",',
-				'"', $warnings, '"',
+				'"', $warnings, '",',
+				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
 		}
@@ -448,7 +452,8 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', $warnings, '"',
+				'"', $warnings, '",',
+				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
 		}
@@ -476,8 +481,7 @@ sub doit
 				"Pragma: no-cache\n\n";
 
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-				print "Software error - contact the webmaster\n",
-					"$error\n";
+				print "Software error - contact the webmaster\n";
 			}
 			$info->status(500);
 			$log->status(500);
@@ -504,7 +508,8 @@ sub doit
 				$info->status(), ',',
 				'"",',
 				'"', $info->as_string(), '",',
-				'"', $warnings, '"',
+				'"', $warnings, '",',
+				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
 		}
