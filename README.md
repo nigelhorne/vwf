@@ -6,13 +6,13 @@ that supports different languages, databases and client platforms.
 
 Licenced under GPL2.0 for personal use only.
 
-What This Does
---------------
+# What This Does
 
 VWF is a web application framework to easily display web pages tailored to the
 wishes of the browser, e.g. language to use and mobile/web content.
 It supports Template Toolkit (http://template-toolkit.org/),
 text and HTML files.
+The framework handles web requests using FastCGI and offers dynamic page rendering, access control, and caching.
 
 The idea is to create index.fcgi which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language
@@ -47,9 +47,14 @@ Data stored in the files .../databases/ is be made available to
 the display packages and hence to the templates. CSV, XML and SQLite format
 files are supported.
 
-How To Install and Use
-----------------------
+# How To Install and Use
 
+## Overview
+1. Install dependencies: `cpanm -i lazy && perl -Mlazy cgi-bin/page.fcgi ''`
+2. Run the script: `./page.fcgi`
+3. Test from the command line: `LANG=en_GB root_dir=$(pwd) cgi-bin/page.fcgi page=meta_data`
+
+## Installation
 Firstly you'll need to ensure that your index page points to the VWF delivery
 page for example by adding these to your .htaccess file:
 
@@ -99,7 +104,17 @@ Finally change conf/index.l4pconf to the logging mechanism of your choice.
 The database system is yet to be documented, but essentially it provides
 a simple way to include dynamic data in your templates.
 
-Worked example:
+## Usage
+VWF is smart enough that you can debug from the command line before you deploy.
+Interesting possiblilties include:
+
+    perl -c -Ilib cgi-bin/page.fcgi
+    cgi-bin/index.fcgi --mobile
+    cgi-bin/index.fcgi lang=fr
+    cgi-bin/index.fcgi key=value
+    root_dir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
+
+## Worked Example
 
 I set up http://bandsman.mooo.com/~njh to print a simple Hello, World.
 
@@ -123,23 +138,13 @@ The file layout is:
     /home/njh/bandsman.mooo.com/templates/VWF/index.html
     /home/njh/bandsman.mooo.com/databases/index.db
 
-VWF is smart enough that you can debug from the command line before you deploy.
-Interesting possiblilties include:
-
-    perl -c -Ilib cgi-bin/page.fcgi
-    cgi-bin/index.fcgi --mobile
-    cgi-bin/index.fcgi lang=fr
-    cgi-bin/index.fcgi key=value
-    root_dir=$(pwd) cgi-bin/page.fcgi --search-engine page=index lint_content=0
-
+## Caveats
 Every time you upload a new site ensure that you remove the "save_to" directory, since that contains
 cached copies of pages that will be inconsistent with the new site.
 
 FIXME: Configuration files should be in .../conf, not .../lib/conf
 
-Updates
--------
-
+# Updates
 git clone https://github.com/nigelhorne/vwf.git
 
 Nigel Horne, `<njh at bandsman.co.uk>`

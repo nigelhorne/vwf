@@ -7,7 +7,7 @@
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
 #	root_dir=$(pwd)/.. ./page.fcgi --mobile page=index lang=fr
-# To turn off linting of HTML on a search-engine landing page
+# To turn off the linting of HTML on a search-engine landing page
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
 use strict;
@@ -28,6 +28,7 @@ use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
 use CGI::Lingua;
+use CHI;
 use Class::Simple;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
@@ -39,6 +40,7 @@ use Error qw(:try);
 use File::Spec;
 use POSIX qw(strftime);
 use Time::HiRes;
+
 # FIXME: Gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
 # use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
@@ -54,6 +56,7 @@ use autodie qw(:all);
 use lib CGI::Info::script_dir() . '/../lib';
 
 use VWF::Config;
+use VWF::Utils;
 
 # $TAINT = 1;
 # taint_env();
@@ -85,10 +88,12 @@ Log::WarnDie->dispatcher($logger);
 
 # my $pagename = "VWF::Display::$script_name";
 # eval "require $pagename";
-use VWF::Display::index;
-use VWF::Display::upload;
-use VWF::Display::editor;
-use VWF::Display::meta_data;
+
+# Loaded later, only when needed
+# use VWF::Display::index;
+# use VWF::Display::upload;
+# use VWF::Display::editor;
+# use VWF::Display::meta_data;
 
 use VWF::data::index;
 
@@ -371,19 +376,30 @@ sub doit
 			$log->status(403);
 			$invalidpage = 1;
 		} else {
-			$display = do {
-				my $class = "VWF::Display::$page";
-				eval { $class->new($args) };
-			};
-			if(!defined($display)) {
+			my $display_module = "VWF::Display::$page";
+			eval "require $display_module";
+			if($@) {
+				# $logger->error("Failed to load module $display_module: $@");
 				$logger->info("Unknown page $page");
 				$invalidpage = 1;
 				if($info->status() == 200) {
 					$info->status(404);
 				}
-			} elsif(!$display->can('as_string')) {
-				$logger->warn("Problem understanding $page");
-				undef $display;
+			} else {
+				$display = do {
+					my $class = "VWF::Display::$page";
+					eval { $class->new($args) };
+				};
+				if(!defined($display)) {
+					$logger->info("Unknown page $page");
+					$invalidpage = 1;
+					if($info->status() == 200) {
+						$info->status(404);
+					}
+				} elsif(!$display->can('as_string')) {
+					$logger->warn("Problem understanding $page");
+					undef $display;
+				}
 			}
 		}
 	};

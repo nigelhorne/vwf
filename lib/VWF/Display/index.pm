@@ -23,6 +23,7 @@ sub html {
 		'person' => undef,
 		'action' => 'login',
 		'name' => undef,
+		'page' => 'index',
 		'password' => undef,
 		'lang' => qr/^[A-Z]{2}$/i,
 		'lint_content' => qr/^\d$/,
