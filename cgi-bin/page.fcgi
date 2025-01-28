@@ -14,16 +14,16 @@ use strict;
 use warnings;
 # use diagnostics;
 
-no lib '.';
-
 BEGIN {
 	# Sanitize environment variables
 	delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 	$ENV{'PATH'} = '/usr/local/bin:/bin:/usr/bin';	# For insecurity
 }
 
-use Log::WarnDie 0.09;
+no lib '.';
+
 use Log::Log4perl qw(:levels);	# Put first to cleanup last
+use Log::WarnDie 0.09;
 use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
@@ -43,25 +43,23 @@ use Readonly;
 use Time::HiRes;
 
 # FIXME: Sometimes gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
-# Re-enabled for testing
-use Taint::Runtime qw($TAINT taint_env);
+# use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
-
-# use File::HomeDir;
-# use lib File::HomeDir->my_home() . '/lib/perl5';
 
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
+# use lib '../lib';
 
 # Where to find the VWF modules
 use lib CGI::Info::script_dir() . '/../lib';
+use lib File::HomeDir->my_home() . '/lib/perl5';
 
 use VWF::Config;
 use VWF::Utils;
 
-$TAINT = 1;
-taint_env();
+# $TAINT = 1;
+# taint_env();
 
 # Set rate limit parameters
 Readonly my $MAX_REQUESTS => 100;	# Max requests allowed
@@ -134,7 +132,7 @@ Readonly my @blacklist_country_list => (
 	'CO', 'MX', 'IN', 'RS', 'PK', 'UA', 'XH'
 );
 
-my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('131.161.0.0/16')->allow_ip('127.0.0.1');
+my $acl = CGI::ACL->new()->deny_country(country => \@blacklist_country_list)->allow_ip('108.44.193.70')->allow_ip('127.0.0.1');
 
 sub sig_handler {
 	$exit_requested = 1;
@@ -240,7 +238,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 }
 
 # Clean up resources before shutdown
-$logger->info("Shutting down");
+$logger->info('Shutting down');
 if($buffercache) {
 	$buffercache->purge();
 }
