@@ -343,36 +343,15 @@ sub doit
 	}
 
 	# Access control checks
-	if($ENV{'REMOTE_ADDR'}) {
+	if(my $remote_addr = $ENV{'REMOTE_ADDR'}) {
+		my $reason;
 		if($acl->all_denied(lingua => $lingua)) {
-			print "Status: 403 Forbidden\n",
-				"Content-type: text/plain\n",
-				"Pragma: no-cache\n\n";
-
-			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
-				print "Access Denied\n";
-			}
-			$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
-			$info->status(403);
-			if($vwflog && open(my $fout, '>>', $vwflog)) {
-				print $fout
-					'"', $info->domain_name(), '",',
-					'"', strftime('%F %T', localtime), '",',
-					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-					'"', $lingua->country(), '",',
-					'"', $info->browser_type(), '",',
-					'"', $lingua->language(), '",',
-					'403,',
-					'"",',
-					'"', $info->as_string(), '",',
-					'"', $warnings, '",',
-					'"Denied by CGI::ACL"',
-					"\n";
-				close($fout);
-			}
-			return;
+			$reason = 'Denied by CGI::ACL';
+		} elsif($blacklisted_ip{$remote_addr}) {
+			$reason = 'Blacklisted for attempting to break in';
 		}
-		if($blacklisted_ip{$ENV{'REMOTE_ADDR'}}) {
+		if($reason) {
+			# Client has been blocked
 			print "Status: 403 Forbidden\n",
 				"Content-type: text/plain\n",
 				"Pragma: no-cache\n\n";
@@ -380,13 +359,13 @@ sub doit
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "Access Denied\n";
 			}
-			$logger->info($ENV{'REMOTE_ADDR'}, ': access denied');
+			$logger->info("$remote_addr: access denied: $reason");
 			$info->status(403);
 			if($vwflog && open(my $fout, '>>', $vwflog)) {
 				print $fout
 					'"', $info->domain_name(), '",',
 					'"', strftime('%F %T', localtime), '",',
-					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+					'"', $remote_addr, '",',
 					'"', $lingua->country(), '",',
 					'"', $info->browser_type(), '",',
 					'"', $lingua->language(), '",',
@@ -394,7 +373,7 @@ sub doit
 					'"",',
 					'"', $info->as_string(), '",',
 					'"', $warnings, '",',
-					'"Blacklisted for attempting to break in"',
+					'"', $reason, '"',
 					"\n";
 				close($fout);
 			}
