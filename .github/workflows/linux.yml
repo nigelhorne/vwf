@@ -39,7 +39,7 @@ jobs:
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
           cpanm -iqfn CGI::IDS Data::Throttler CGI::ACL
           cpanm --skip-satisfied -qn Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer || cat /github/home/.cpanm/work/*/build.log
-          cpanm --skip-satisfied -qn String::Random Log::Dispatch::File Class::Simple Taint::Runttime
+          cpanm --skip-satisfied -qn String::Random Log::Dispatch::File Class::Simple Taint::Runtime
           cpanm --skip-satisfied -qn LWP::UserAgent::Cached Data::Serializer CGI::Carp B::Lint FCGI Template::Plugin::EnvHash HTML::SocialMedia Error IPC::System::Simple
           cpanm --skip-satisfied -qn Log::Any::Adapter::Log4perl XML::Simple CHI
           cpanm --skip-satisfied -qn warnings::unused File::HomeDir Config::Auto Template::Filters
