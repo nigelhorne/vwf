@@ -341,7 +341,7 @@ sub doit
 		my $reason;
 		if($acl->all_denied(lingua => $lingua)) {
 			$reason = 'Denied by CGI::ACL';
-		} elsif($blacklisted_ip{$remote_addr}) {
+		} elsif(blacklist($info)) {
 			$reason = 'Blacklisted for attempting to break in';
 		}
 		if($reason) {
@@ -622,9 +622,15 @@ sub choose
 	}
 }
 
-sub blacklisted
+# Is this client trying to attack us?
+sub blacklist
 {
 	if(my $remote = $ENV{'REMOTE_ADDR'}) {
+		if($blacklisted_ip{$remote}) {
+			$info->status(301);
+			return 1;
+		}
+
 		my $info = shift;
 		if(my $string = $info->as_string()) {
 			if(($string =~ /SELECT.+AND.+/) || ($string =~ /ORDER BY /) || ($string =~ / OR NOT /) || ($string =~ / AND \d+=\d+/) || ($string =~ /THEN.+ELSE.+END/) || ($string =~ /.+AND.+SELECT.+/) || ($string =~ /\sAND\s.+\sAND\s/) || ($string =~ /AND\sCASE\sWHEN/)) {
