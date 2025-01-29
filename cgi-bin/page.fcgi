@@ -46,12 +46,11 @@ use Time::HiRes;
 # use Taint::Runtime qw($TAINT taint_env);
 use autodie qw(:all);
 
+# Where to find the VWF modules
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e. the contents of the lib directory in the
 			# distribution
 # use lib '../lib';
-
-# Where to find the VWF modules
 use lib CGI::Info::script_dir() . '/../lib';
 use lib File::HomeDir->my_home() . '/lib/perl5';
 
@@ -166,9 +165,6 @@ $SIG{__DIE__} = $SIG{__WARN__} = sub {
 
 # my $request = FCGI::Request($stdin, $stdout, $stderr);
 my $request = FCGI::Request();
-
-# It would be really good to send 429 to search engines when there are more than, say, 5 requests being handled.
-# But I don't think that's possible with the FCGI module
 
 # Main request loop
 while($handling_request = ($request->Accept() >= 0)) {
@@ -380,6 +376,10 @@ sub doit
 	}
 
 	my $args = {
+		generate_etag => 1,
+		generate_last_modified => 1,
+		compress_content => 1,
+		generate_304 => 1,
 		info => $info,
 		optimise_content => 1,
 		logger => $logger,
