@@ -453,6 +453,9 @@ sub doit
 				}
 			} else {
 				$display_module->import();
+				# use Class::Inspector;
+				# my $methods = Class::Inspector->methods($display_module);
+				# print "$display_module exports ", join(', ', @{$methods}), "\n";
 				$display = do {
 					eval { $display_module->new($args) };
 				};
