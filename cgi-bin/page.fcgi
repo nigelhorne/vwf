@@ -452,11 +452,14 @@ sub doit
 					$info->status(404);
 				}
 			} else {
+				$display_module->import();
 				$display = do {
-					my $class = "VWF::Display::$page";
-					eval { $class->new($args) };
+					eval { $display_module->new($args) };
 				};
 				if(!defined($display)) {
+					if($@) {
+						$logger->warn("$display_module->new(): $@");
+					}
 					$logger->info("Unknown page $page");
 					$invalidpage = 1;
 					if($info->status() == 200) {
