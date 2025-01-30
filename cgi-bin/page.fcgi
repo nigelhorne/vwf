@@ -27,7 +27,7 @@ use Log::WarnDie 0.09;
 use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info;
-use CGI::Lingua;
+use CGI::Lingua 0.61;
 use CHI;
 use Class::Simple;
 use File::Basename;
@@ -206,7 +206,6 @@ while($handling_request = ($request->Accept() >= 0)) {
 	my $start = [Time::HiRes::gettimeofday()];
 
 	# TODO:  Make this neater
-	# Tries again without the database if it can't be opened
 	try {
 		doit(debug => 0);
 		my $timetaken = Time::HiRes::tv_interval($start);
@@ -321,6 +320,7 @@ sub doit
 			return;
 		}
 	}
+
 	# Increment request count
 	$rate_limit_cache->set($client_ip, $request_count + 1, $TIME_WINDOW);
 
@@ -486,6 +486,7 @@ sub doit
 		# Pass in handles to the databases
 		print $display->as_string({
 			cachedir => $cachedir,
+			databasedir => $database_dir,
 			database_dir => $database_dir,
 			index => $index,
 		});
