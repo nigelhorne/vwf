@@ -103,6 +103,15 @@ sub html {
 		die 'No email entry assigned to ', $info->person();
 	}
 
+	# Rate limit for sending e-mails
+        if(my $remote_addr = $ENV{'REMOTE_ADDR'}) {
+                if($self->{'mailfrom'}->{$remote_addr} >= 2) {
+                        $self->{_logger}->info("E-mail blocked to $to");
+                        return $self->SUPER::html({ error => 'You have reached your limit for sendmail e-mails' });
+                }
+                $self->{'mailfrom'}->{$remote_addr}++;
+        }
+
 	# Send the email
 	if(open(my $fout, '|-', '/usr/sbin/sendmail -t')) {
 		print $fout "To: $to\n",
