@@ -138,21 +138,29 @@ sub new {
 
 	Template::Filters->use_html_entities();
 
+	# _ names included for legacy reasons, they will go away
 	my $self = {
-		_config => $config,
-		_info => $info,
-		_logger => $args{logger},
+		cachedir => $args{cachedir},
 		_cachedir => $args{cachedir},
+		config => $config,
+		_config => $config,
+		info => $info,
+		_info => $info,
+		logger => $args{logger},
+		_logger => $args{logger},
 		%args,
 	};
 
 	if(my $lingua = $args{'lingua'}) {
+		$self->{'lingua'} = $lingua;
 		$self->{'_lingua'} = $lingua;
 	}
 	if(my $key = $info->param('key')) {
+		$self->{'key'} = $key;
 		$self->{'_key'} = $key;
 	}
 	if(my $page = $info->param('page')) {
+		$self->{'page'} = $page;
 		$self->{'_page'} = $page;
 	}
 
@@ -438,6 +446,8 @@ sub html {
 			POST_CHOMP => 1,
 			ABSOLUTE => 1,
 		});
+
+		$self->_debug({ message => __PACKAGE__ . ': ' . __LINE__ . ': Passing these to the template: ' . join(', ', keys %{$vals}) });
 
 		# Process the template
 		if(!$template->process($filename, $vals, \$rc)) {
