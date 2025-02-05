@@ -98,7 +98,8 @@ Log::WarnDie->dispatcher($logger);
 # use VWF::Display::editor;
 # use VWF::Display::meta_data;
 
-use VWF::data::index;
+use VWF::Data::index;
+use VWF::Data::vwf_log;
 
 my $database_dir = "$script_dir/../data";
 Database::Abstraction::init({
@@ -108,12 +109,15 @@ Database::Abstraction::init({
 	logger => $logger
 });
 
-my $index = VWF::data::index->new();
+my $index = VWF::Data::index->new();
 if($@) {
 	$logger->error($@);
 	Log::WarnDie->dispatcher(undef);
 	die $@;
 }
+
+# FIXME - support $config->vwflog();
+my $vwf_log = VWF::Data::vwf_log->new({ directory => $info->logdir(), filename => 'vwf.log', no_entry => 1 });
 
 # http://www.fastcgi.com/docs/faq.html#PerlSignals
 my $requestcount = 0;
@@ -182,6 +186,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		Log::WarnDie->dispatcher($logger);
 		$index->set_logger($logger);
 		$info->set_logger($logger);
+		$vwf_log->set_logger($logger);
 		# $Config::Auto::Debug = 1;
 
 		$Error::Debug = 1;
@@ -489,6 +494,7 @@ sub doit
 			databasedir => $database_dir,
 			database_dir => $database_dir,
 			index => $index,
+			vwf_log => $vwf_log,
 		});
 		if($vwflog && open(my $fout, '>>', $vwflog)) {
 			print $fout
