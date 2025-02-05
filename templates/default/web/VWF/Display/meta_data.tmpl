@@ -11,7 +11,7 @@
 		<meta name="owner" content="Nigel Horne">
 		<meta name="Author" content="Nigel Horne">
 		<meta name="Copyright" content="Copyright (C) 2025 NJH Music, all rights reserved">
-		<title>[% SiteTitle.English %]: Meta Data</title>
+		<title>[% SiteTitle %]: Meta Data</title>
 		[% IF keywords %]
 			<meta name="keywords" content="[% keywords %]" />
 		[% END %]
@@ -115,7 +115,7 @@
 	<body>
 		<div class="box-wrapper">
 			<div id="box1">
-				<h1>[% SiteTitle.English %]: Meta Data</h1>
+				<h1>[% SiteTitle %]: Meta Data</h1>
 			</div>
 			<!--
 				<div id="box2">
@@ -124,12 +124,12 @@
 			<div id="box3">
 				<div id="box4">
 					[% IF info %]
-						<H1>Info</H1>
+						<h2>Info</h2>
 						domain_name: [% info.domain_name() %]<br>
 						browser_type: [% info.browser_type() %]
 					[% END %]
 					[% IF lingua %]
-						<H1>Lingua</H1>
+						<h2>Lingua</h2>
 						country: [% lingua.country() %]<br>
 						requested_language: [% lingua.requested_language() %]<br>
 						language_code_alpha2: [% lingua.language_code_alpha2() %]
