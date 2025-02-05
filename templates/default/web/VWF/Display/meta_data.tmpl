@@ -10,12 +10,81 @@
 		<meta name="object" content="Index">
 		<meta name="owner" content="Nigel Horne">
 		<meta name="Author" content="Nigel Horne">
-		<meta name="Copyright" content="Copyright (C) 2025 Nigel Hornne, all rights reserved">
-		<title>[% SiteTitle %]: Meta Data</title>
+		<meta name="Copyright" content="Copyright (C) 2025 NJH Music, all rights reserved">
+		<title>[% SiteTitle.English %]: Meta Data</title>
 		[% IF keywords %]
 			<meta name="keywords" content="[% keywords %]" />
 		[% END %]
 		<link rel="stylesheet" type="text/css" href="/css/style.css" />
+		<!-- https://www.geeksforgeeks.org/how-to-create-three-boxes-in-the-same-div-using-html-and-css/ -->
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 2%;
+				// justify-content: center;
+				overflow: hidden;
+			}
+
+			.box-wrapper {
+				height: 95vh;
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				// text-align: center;
+			}
+
+			#box1 {
+				padding: 10px;
+				justify-content: center;
+				// border: solid 1px green
+			}
+
+			#box2 {
+				padding: 8px;
+				// border: solid 1px blue
+			}
+
+			#box3 {
+				padding: 10px;
+				flex-grow: 1;
+				display: flex;
+				flex-direction: row;
+				// border: solid 1px green
+			}
+
+			#box4 {
+				// flex-grow: 2;
+				flex-grow: 1;
+				// border: solid 1px orange
+			}
+
+			.middle-column {
+				// flex-grow: 1;
+				flex-grow: 2;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.middle-column div {
+				flex-grow: 1;
+				margin: 0 8px;
+				// border: solid 1px red;
+			}
+
+			.middle-column div+div {
+				margin-top: 8px
+			}
+
+			#box8 {
+				flex-grow: 1;
+				// border: solid 1px black
+			}
+		</style>
 		[% IF datapoints %]
 			<script>
 			window.onload = function() {
@@ -44,23 +113,37 @@
 	</head>
 
 	<body>
-		<!-- Show basic information about this site -->
-		[% IF info %]
-			<H1>Info</H1>
-			domain_name: [% info.domain_name() %]<br>
-			browser_type: [% info.browser_type() %]
-		[% END %]
-		[% IF lingua %]
-			<H1>Lingua</H1>
-			country: [% lingua.country() %]<br>
-			requested_language: [% lingua.requested_language() %]<br>
-			language_code_alpha2: [% lingua.language_code_alpha2() %]
-		[% END %]
-		<!-- Show information about visitors to the site -->
-		<!-- Browser type -->
-		[% IF datapoints %]
-			<div id="chartContainer" style="height: 370px; width: 100%;"></div>
-			<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
-		[% END %]
+		<div class="box-wrapper">
+			<div id="box1">
+				<h1>[% SiteTitle.English %]: Meta Data</h1>
+			</div>
+			<!--
+				<div id="box2">
+				</div>
+			-->
+			<div id="box3">
+				<div id="box4">
+					[% IF info %]
+						<H1>Info</H1>
+						domain_name: [% info.domain_name() %]<br>
+						browser_type: [% info.browser_type() %]
+					[% END %]
+					[% IF lingua %]
+						<H1>Lingua</H1>
+						country: [% lingua.country() %]<br>
+						requested_language: [% lingua.requested_language() %]<br>
+						language_code_alpha2: [% lingua.language_code_alpha2() %]
+					[% END %]
+				</div>
+				<div class="middle-column">
+					<div id="box5">
+						[% IF datapoints %]
+							<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+							<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+						[% END %]
+					</div>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
