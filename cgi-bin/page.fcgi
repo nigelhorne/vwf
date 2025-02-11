@@ -294,12 +294,6 @@ sub doit
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
 
-	my $warnings = '';
-	if(my $w = $info->warnings()) {
-		my @warnings = map { $_->{'warning'} } @{$w};
-		$warnings = join(';', @warnings);
-	}
-
 	if(!-r $vwflog) {
 		# First run - put in the heading row
 		open(my $log, '>', $vwflog);
@@ -330,8 +324,8 @@ sub doit
 					'"', $lingua->language(), '",',
 					'429,',
 					'"",',
-					'"', $info->as_string(), '",',
-					'"', $warnings, '",',
+					'"', $info->as_string(raw => 1), '",',
+					'"', $info->warnings_as_string(), '",',
 					'""',
 					"\n";
 				close($fout);
@@ -378,8 +372,8 @@ sub doit
 					'"', $lingua->language(), '",',
 					'403,',
 					'"",',
-					'"', $info->as_string(), '",',
-					'"', $warnings, '",',
+					'"', $info->as_string(raw => 1), '",',
+					'"', $info->warnings_as_string(), '",',
 					'"', $reason, '"',
 					"\n";
 				close($fout);
@@ -514,8 +508,8 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"', ($log->template() ? $log->template() : ''), '",',
-				'"', $info->as_string(), '",',
-				'"', $warnings, '",',
+				'"', $info->as_string(raw => 1), '",',
+				'"', $info->warnings_as_string(), '",',
 				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
@@ -532,8 +526,8 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"",',
-				'"', $info->as_string(), '",',
-				'"', $warnings, '",',
+				'"', $info->as_string(raw => 1), '",',
+				'"', $info->warnings_as_string(), '",',
 				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
@@ -588,8 +582,8 @@ sub doit
 				'"', $lingua->language(), '",',
 				$info->status(), ',',
 				'"",',
-				'"', $info->as_string(), '",',
-				'"', $warnings, '",',
+				'"', $info->as_string(raw => 1), '",',
+				'"', $info->warnings_as_string(), '",',
 				'"', $error ? $error : '', '"',
 				"\n";
 			close($fout);
