@@ -1,4 +1,5 @@
 @charset "UTF-8";
+
 /*
  * jQuery File Upload Plugin CSS Example
  * https://github.com/blueimp/jQuery-File-Upload
@@ -10,6 +11,399 @@
  * https://opensource.org/licenses/MIT
  */
 
-body {
-  padding-top: 60px;
+/* 2C4EAC was 386bb2 */
+a.menu {
+	background:black repeat scroll
 }
+
+a.menu,a.title:hover,a.menu:hover,a.title {
+	color:white
+}
+
+a.menu,a.title,a.black,.main .orange_buttons a:hover
+.main .orange_buttons a:visited,.main .orange_buttons a,.myform.myButton,.myButton {
+	text-decoration:none
+}
+
+tr.small,td.small,p.small,span.c1,#nav,#copyright {
+	font-size:80%
+}
+
+p.nobr {
+	white-space:nowrap
+}
+
+p.c3,h1.c2 {
+	font-style:italic
+}
+
+h1.c2,h1.bold {
+	font-family:Verdana,sans-serif
+}
+
+h1.c2,h2.c2,h1.bold,#copyright,#header,#footer {
+	text-align:center
+}
+
+h2.c2 {
+	font-family:Comic Sans MS,sans-serif
+}
+
+h1.bold,a.black,#stylized h1,#stylized label {
+	font-weight:bold
+}
+
+ul.notes {
+	list-style-image:url(https://www.bandsman.co.uk/images/sound2.gif)
+}
+
+body {
+	padding-top:60px;
+	font:16px times,"times new roman",georgia,serif;
+	background:white
+}
+
+a.black {
+	color:black;
+	font-size:10pt
+}
+
+a.black:hover,a:hover,.myform.myButton:hover,.myButton:hover {
+	color:red
+}
+
+#left,#right,#nav,#contents,#copyright,#footer,.myButton:active {
+	position:relative
+}
+
+#left {
+	width:20%;
+	float:left
+}
+
+#right {
+	width:20%;
+	float:right
+}
+
+#nav {
+	width:204px
+}
+
+#nav,#columnone,#stylized label,#stylized input {
+	float:left
+}
+
+#contents {
+	margin-left:204px;
+	padding-left:10px
+}
+
+#container,#header {
+	width:100%
+}
+
+#header,#columnone,#columntwo {
+	padding:1%
+}
+
+#columns {
+	width:90%
+}
+
+#columnone,#columntwo {
+	width:45%
+}
+
+#columntwo,.orange_buttons {
+	float:right
+}
+
+#footer {
+	/* padding: 5em 0 4em 0;
+	 * bottom: 0;
+	 * position: relative; */
+	clear:both;
+	font-size:80%;
+}
+
+.orange_buttons {
+	margin:0 0 4px 4px
+}
+
+.main .orange_buttons a:hover
+.main .orange_buttons a:visited,.main .orange_buttons a {
+	border:1px solid;
+	border-color:#FC9 #630 #330 #F96;
+	padding:0 3px;
+	font:bold 10px verdana,sans-serif;
+	color:#FFF;
+	background:#F60;
+	margin:0 0 0 2px
+}
+
+.myform {
+	margin:0 auto;
+	width:400px;
+	padding:14px
+}
+
+#stylized {
+	border:solid 2px #b7ddf2;
+	background:#ebf4fb
+}
+
+#stylized h1 {
+	font-size:14px;
+	margin-bottom:8px
+}
+
+#stylized p,#stylized .small {
+	font-size:11px;
+	color:#666
+}
+
+#stylized p {
+	margin-bottom:20px;
+	border-bottom:solid 1px #b7ddf2;
+	padding-bottom:10px
+}
+
+#stylized label,#stylized .small {
+	display:block;
+	text-align:right;
+	width:140px
+}
+
+#stylized .small {
+	font-weight:normal
+}
+
+#stylized input {
+	font-size:12px;
+	padding:4px 2px;
+	border:solid 1px #aacfe4;
+	width:200px;
+	margin:2px 0 20px 10px
+}
+
+.myform.myButton,.myButton {
+	font:15px arial bold;
+	background:#2c4eac;
+	-moz-box-shadow:inset 0 1px 0 0 #bbdaf7;
+	-webkit-box-shadow:inset 0 1px 0 0 #bbdaf7;
+	box-shadow:inset 0 1px 0 0 #bbdaf7;
+	background:-webkit-gradient( linear,left top,left bottom,color-stop(0.05,#2c4eac),color-stop(1,#378de5) );
+	background:-moz-linear-gradient( center top,#2c4eac 5%,#378de5 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#2c4eac',endColorstr='#378de5');
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	color:#fff;
+	padding:6px 24px;
+	text-shadow:1px 1px 0 #528ecc
+}
+
+.myform.myButton:hover,.myButton:hover {
+	background:#378de5;
+	background:-webkit-gradient( linear,left top,left bottom,color-stop(0.05,#378de5),color-stop(1,#2c4eac) );
+	background:-moz-linear-gradient( center top,#378de5 5%,#2c4eac 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#378de5',endColorstr='#2c4eac')
+}
+
+myButton:active {
+	top:1px
+}
+
+/* http://css-tricks.com/examples/ButtonMaker/# */
+.shopButton {
+	border-top: 1px solid #96d1f8;
+	background: #65a9d7;
+	background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));
+	background: -webkit-linear-gradient(top, #3e779d, #65a9d7);
+	background: -moz-linear-gradient(top, #3e779d, #65a9d7);
+	background: -ms-linear-gradient(top, #3e779d, #65a9d7);
+	background: -o-linear-gradient(top, #3e779d, #65a9d7);
+	padding: 7.5px 15px;
+	-webkit-border-radius: 40px;
+	-moz-border-radius: 40px;
+	border-radius: 40px;
+	-webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+	-moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+	box-shadow: rgba(0,0,0,1) 0 1px 0;
+	text-shadow: rgba(0,0,0,.4) 0 1px 0;
+	color: white;
+	font-size: 24px;
+	font-family: 'Lucida Grande', Helvetica, Arial, Sans-Serif;
+	text-decoration: none;
+	vertical-align: middle;
+	width: 80%
+}
+.shopButton:hover {
+	border-top-color: #28597a;
+	background: #28597a;
+	color: #ccc;
+	width: 80%
+}
+.shopButton:active {
+	border-top-color: #1b435e;
+	background: #1b435e;
+	width: 80%
+}
+
+/* http://accessify.com/tools-and-wizards/developer-tools/list-o-matic/ */
+ul#shop-body-nav {
+	color:#2c4eac;
+	font-family:helvetica,arial,sans-serif;margin:0;padding:0;width:20em
+}
+ul#shop-body-nav li {
+	margin:0;padding:0;list-style:none;margin:0 0 0.3em 0;color:#2c4eac;
+}
+ul#shop-body-nav li a {
+	color:#2c4eac;
+	text-decoration:none;display:block;padding:0.3em 0.5em;border:1px solid silver;background:#fff
+}
+ul#shop-body-nav li a:hover {
+	/*border:1px solid gray;color:#000;background:#efefef*/
+	border:1px solid gray;color:#2c4eac;background:#efefef
+}
+
+.shop-wrapper {
+	color:#2C4EAC;
+	margin: 0 auto;
+}
+
+.shop-top {
+	/* position: relative;
+	   top:1px; */
+	height: 6em;
+}
+
+.shop-top-left {
+	/* position: relative; */
+	width: 20%;
+	float: left;
+}
+
+.shop-top-right {
+	/* position: relative; */
+	float: right;
+	width: 20%;
+}
+
+.shop-top-center {
+	/* position: relative;
+	   top:3em;
+	   border: 2px solid #2c4eac; */
+	width: 45%;
+	margin: auto;
+	color:#2C4EAC;
+	height: 10em;
+}
+
+.shop-body {
+	/* position: absolute; */
+	width: 85%;
+	margin: auto;
+	color:#2C4EAC;
+}
+
+.shop-body-nav {
+	width: 40%;
+	float: left;
+}
+
+.shop-body-info {
+	/* position: absolute; */
+	top: 5em;
+	width: 60%;
+	/* right: 10% */
+	left: 25em;
+	float: right;
+}
+
+.shop-body-bottom-right {
+	/* position: absolute; */
+	float: right;
+	width: 25%;
+	bottom: 5em
+}
+
+.shop-body-bottom-left {
+	/* position: absolute; */
+	width: 25%;
+	bottom: 5em
+}
+
+.shop-body-image {
+	/* position: absolute; */
+	top: 5em;
+	width: 40%;
+	left: 0
+}
+
+.shop-footer {
+	clear: both;
+	padding-top: 2em;
+	width: 100%;
+	text-height: 80%;
+	text-align: center;
+}
+
+div#shop-footer p {
+	text-align: center;
+}
+
+.separator {
+	height: 1px;
+	backgroupd:white;
+}
+
+/* www.blended-html.com */
+/*body{
+background-image : url(' bi-background-plum.png ');
+background-attachment : fixed;
+background-size : 100% auto;
+}
+.blended_grid{
+display : block;
+width : 960px;
+overflow : auto;
+margin : 60px auto 0 auto;
+}
+.leftColumn{
+	float : left;
+	clear : none;
+	width : 300px;
+}*/
+#topBanner,#bottomBanner{
+	float : left;
+	clear : none;
+	width : 100%;
+}
+#leftContent,#rightContent{
+	text-align : center;
+	float : left;
+	clear : none;
+	width : 45%;
+	padding:1%;
+}
+/*.footer{
+	clear : none;
+	float : left;
+	position : relative;
+	width : 50px;
+}*/
+
+/* Rounded corner box */
+#rcorners {
+	border-radius: 25px;
+	border: 2px solid #2c4eac;
+	padding: 20px;
+	width: 25%;
+	height: 3em;
+}
+
+img { border: 0; }
