@@ -300,6 +300,14 @@ sub doit
 		$warnings = join(';', @warnings);
 	}
 
+	if(!-r $vwflog) {
+		# First run - put in the heading row
+		open(my $log, '>', $vwflog);
+		print $log '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
+			"\n";
+		close $log;
+	}
+
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
 		if($request_count >= $MAX_REQUESTS) {
