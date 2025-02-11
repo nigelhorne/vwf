@@ -294,6 +294,12 @@ sub doit
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
 
+	my $warnings = '';
+	if(my $w = $info->warnings()) {
+		my @warnings = map { $_->{'warning'} } @{$w};
+		$warnings = join(';', @warnings);
+	}
+
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
 		if($request_count >= $MAX_REQUESTS) {
@@ -317,7 +323,7 @@ sub doit
 					'429,',
 					'"",',
 					'"', $info->as_string(), '",',
-					'"",',
+					'"', $warnings, '",',
 					'""',
 					"\n";
 				close($fout);
@@ -333,12 +339,6 @@ sub doit
 		$logger->info('No page given in ', $info->as_string());
 		choose();
 		return;
-	}
-
-	my $warnings = '';
-	if(my $w = $info->warnings()) {
-		my @warnings = map { $_->{'warning'} } @{$w};
-		$warnings = join(';', @warnings);
 	}
 
 	# Access control checks
