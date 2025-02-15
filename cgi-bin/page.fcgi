@@ -80,8 +80,8 @@ Log::WarnDie->filter(\&filter);
 
 my $vwflog;	# Location of the vwf.log file, read in from the config file - default = logdir/vwf.log
 
-my $infocache;
-my $linguacache;
+my $info_cache;
+my $lingua_cache;
 my $buffercache;
 
 my $script_dir = $info->script_dir();
@@ -242,6 +242,15 @@ $logger->info('Shutting down');
 if($buffercache) {
 	$buffercache->purge();
 }
+if($rate_limit_cache) {
+	$rate_limit_cache->purge();
+}
+if($info_cache) {
+	$info_cache->purge();
+}
+if($lingua_cache) {
+	$lingua_cache->purge();
+}
 CHI->stats->flush();
 Log::WarnDie->dispatcher(undef);
 exit(0);
@@ -257,10 +266,10 @@ sub doit
 
 	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
-	$infocache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
+	$info_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {
-		cache => $infocache,
+		cache => $info_cache,
 		logger => $logger
 	};
 
@@ -273,12 +282,12 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
-	$linguacache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
+	$lingua_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 
 	# Language negotiation
 	my $lingua = CGI::Lingua->new({
 		supported => [ 'en-gb' ],
-		cache => $linguacache,
+		cache => $lingua_cache,
 		info => $info,
 		logger => $logger,
 		debug => $params{'debug'},
