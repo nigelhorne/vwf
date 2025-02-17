@@ -446,6 +446,7 @@ sub doit
 	eval {
 		my $page = $info->param('page');
 		$page =~ s/#.*$//;
+		$page =~ s/\\//g;	# I don't know what you're trying to escape or why, but I'm not going to let you
 		if($page =~ /\//) {
 			# Block "page=/etc/passwd" and "page=http://www.google.com"
 			$logger->info("Blocking '/' in $page");
