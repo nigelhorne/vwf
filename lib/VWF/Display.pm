@@ -3,6 +3,14 @@ package VWF::Display;
 # Display a page. Certain variables are available to all templates, such as
 # the stuff in the configuration file
 
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
 use strict;
 use warnings;
 
@@ -350,10 +358,15 @@ sub get_template_path
 	return $filename;
 }
 
-# Sets cookie values in the object.
-# Takes either a hash reference or a list of key-value pairs as input.
-# Iterates over the CGI parameters and stores them in the object's _cookies hash.
-# Returns the object itself, allowing for method chaining.
+=head2 set_cookie
+
+Sets cookie values in the object.
+Takes either a hash reference or a list of key-value pairs as input.
+Iterates over the CGI parameters and stores them in the object's _cookies hash.
+Returns the object itself, allowing for method chaining.
+
+=cut
+
 sub set_cookie
 {
 	my $self = shift;
@@ -365,7 +378,12 @@ sub set_cookie
 	return $self;
 }
 
-# Returns the HTTP header section, terminated by an empty line
+=head2 http
+
+Returns the HTTP header section, terminated by an empty line
+
+=cut
+
 sub http
 {
 	my $self = shift;
