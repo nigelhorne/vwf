@@ -184,6 +184,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		Log::Any::Adapter->set('Stdout', log_level => 'trace');
 		$logger = Log::Any->get_logger(category => $script_name);
 		Log::WarnDie->dispatcher($logger);
+		Database::Abstraction::init({ logger => $logger });
 		$index->set_logger($logger);
 		$info->set_logger($logger);
 		$vwf_log->set_logger($logger);
