@@ -185,8 +185,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$logger = Log::Any->get_logger(category => $script_name);
 		Log::WarnDie->dispatcher($logger);
 		Database::Abstraction::init({ logger => $logger });
-		$index->set_logger($logger);
 		$info->set_logger($logger);
+		$index->set_logger($logger);
 		$vwf_log->set_logger($logger);
 		# $Config::Auto::Debug = 1;
 
@@ -206,8 +206,9 @@ while($handling_request = ($request->Accept() >= 0)) {
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
 	$logger = Log::Any->get_logger(category => $script_name);
 	$logger->info("Request $requestcount: ", $ENV{'REMOTE_ADDR'});
-	$index->set_logger($logger);
 	$info->set_logger($logger);
+	$index->set_logger($logger);
+	$vwf_log->set_logger($logger);
 
 	my $start = [Time::HiRes::gettimeofday()];
 
