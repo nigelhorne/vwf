@@ -20,7 +20,7 @@ use warnings;
 
 use Exporter qw(import);
 
-our @EXPORT = qw(create_disc_cache create_memory_cache distance);
+our @EXPORT = qw(create_disc_cache create_memory_cache distance get_params);
 
 use CHI;
 use Data::Dumper;

@@ -304,6 +304,7 @@ sub doit
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
 
+	# TODO: update the vwf_log variable to point here
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 
 	# Rate limit by IP
@@ -620,11 +621,11 @@ sub vwflog
 			'"', $lingua->country(), '",',
 			'"', $info->browser_type(), '",',
 			'"', $lingua->language(), '",',
-			'429,',
-			'"",',
+			$info->status(), ',',
+			'"', $log->template() ? $log->template() : '', '",',
 			'"', $info->as_string(raw => 1), '",',
 			'"', $info->warnings_as_string(), '",',
-			'"$message"',
+			'"', $message, '"',
 			"\n";
 		close($log);
 	}
@@ -646,7 +647,7 @@ sub vwflog
 			$log->template() ? $log->template() : '',
 			$info->as_string(raw => 1),
 			$info->warnings_as_string(),
-			'"', $message, '"',
+			'"', $message, '"'
 		);
 		closelog();
 	}

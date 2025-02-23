@@ -2,10 +2,12 @@
 
 use strict;
 use warnings;
+
+use FindBin qw($Bin);
 use Test::Most tests => 7;
 use Error qw(:try);
 
-use lib '../lib';
+use lib "$Bin/../lib";
 
 use_ok('VWF::Utils');
 
