@@ -600,6 +600,28 @@ sub doit
 				"\n";
 			close($fout);
 		}
+		if($syslog) {
+			require Sys::Syslog;
+
+			Sys::Syslog->import();
+			if(ref($syslog) eq 'HASH') {
+				Sys::Syslog::setlogsock($syslog);
+			}
+			openlog($script_name, 'cons,pid', 'user');
+			syslog('info', '%s %s %s %s %s %d %s %s %s %s',
+				$info->domain_name(),
+				$ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : '',
+				$lingua->country(),
+				$info->browser_type(),
+				$lingua->language(),
+				$info->status(),
+				$log->template() ? $log->template() : '',
+				$info->as_string(raw => 1),
+				$info->warnings_as_string(),
+				$error ? $error : ''
+			);
+			closelog();
+		}
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
 }
