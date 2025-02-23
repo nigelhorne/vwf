@@ -305,14 +305,6 @@ sub doit
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
 
-	if(!-r $vwflog) {
-		# First run - put in the heading row
-		open(my $log, '>', $vwflog);
-		print $log '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
-			"\n";
-		close $log;
-	}
-
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
 		if($request_count >= $MAX_REQUESTS) {
@@ -325,22 +317,7 @@ sub doit
 			# TODO: Work out how to add the "Retry-After" header, setting to $TIME_WINDOW
 			$info->status(429);
 
-			if($vwflog && open(my $fout, '>>', $vwflog)) {
-				print $fout
-					'"', $info->domain_name(), '",',
-					'"', strftime('%F %T', localtime), '",',
-					'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-					'"', $lingua->country(), '",',
-					'"', $info->browser_type(), '",',
-					'"', $lingua->language(), '",',
-					'429,',
-					'"",',
-					'"', $info->as_string(raw => 1), '",',
-					'"', $info->warnings_as_string(), '",',
-					'""',
-					"\n";
-				close($fout);
-			}
+			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests');
 			return;
 		}
 	}
@@ -373,22 +350,7 @@ sub doit
 			}
 			$logger->info("$remote_addr: access denied: $reason");
 			$info->status(403);
-			if($vwflog && open(my $fout, '>>', $vwflog)) {
-				print $fout
-					'"', $info->domain_name(), '",',
-					'"', strftime('%F %T', localtime), '",',
-					'"', $remote_addr, '",',
-					'"', $lingua->country(), '",',
-					'"', $info->browser_type(), '",',
-					'"', $lingua->language(), '",',
-					'403,',
-					'"",',
-					'"', $info->as_string(raw => 1), '",',
-					'"', $info->warnings_as_string(), '",',
-					'"', $reason, '"',
-					"\n";
-				close($fout);
-			}
+			vwflog($vwflog, $info, $lingua, $syslog, $reason);
 			return;
 		}
 	}
@@ -510,40 +472,10 @@ sub doit
 			index => $index,
 			vwf_log => $vwf_log,
 		});
-		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			print $fout
-				'"', $info->domain_name(), '",',
-				'"', strftime('%F %T', localtime), '",',
-				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-				'"', $lingua->country(), '",',
-				'"', $info->browser_type(), '",',
-				'"', $lingua->language(), '",',
-				$info->status(), ',',
-				'"', ($log->template() ? $log->template() : ''), '",',
-				'"', $info->as_string(raw => 1), '",',
-				'"', $info->warnings_as_string(), '",',
-				'"', $error ? $error : '', '"',
-				"\n";
-			close($fout);
-		}
+		vwflog($vwflog, $info, $lingua, $syslog, '', $log);
 	} elsif($invalidpage) {
 		choose();
-		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			print $fout
-				'"', $info->domain_name(), '",',
-				'"', strftime('%F %T', localtime), '",',
-				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-				'"', $lingua->country(), '",',
-				'"', $info->browser_type(), '",',
-				'"', $lingua->language(), '",',
-				$info->status(), ',',
-				'"",',
-				'"', $info->as_string(raw => 1), '",',
-				'"', $info->warnings_as_string(), '",',
-				'"', $error ? $error : '', '"',
-				"\n";
-			close($fout);
-		}
+		vwflog($vwflog, $info, $lingua, $syslog, 'Unknown page', $log);
 		return;
 	} else {
 		$logger->debug('disabling cache');
@@ -584,44 +516,7 @@ sub doit
 			$info->status(403);
 			$log->status(403);
 		}
-		if($vwflog && open(my $fout, '>>', $vwflog)) {
-			print $fout
-				'"', $info->domain_name(), '",',
-				'"', strftime('%F %T', localtime), '",',
-				'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-				'"', $lingua->country(), '",',
-				'"', $info->browser_type(), '",',
-				'"', $lingua->language(), '",',
-				$info->status(), ',',
-				'"",',
-				'"', $info->as_string(raw => 1), '",',
-				'"', $info->warnings_as_string(), '",',
-				'"', $error ? $error : '', '"',
-				"\n";
-			close($fout);
-		}
-		if($syslog) {
-			require Sys::Syslog;
-
-			Sys::Syslog->import();
-			if(ref($syslog) eq 'HASH') {
-				Sys::Syslog::setlogsock($syslog);
-			}
-			openlog($script_name, 'cons,pid', 'user');
-			syslog('info', '%s %s %s %s %s %d %s %s %s %s',
-				$info->domain_name(),
-				$ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : '',
-				$lingua->country(),
-				$info->browser_type(),
-				$lingua->language(),
-				$info->status(),
-				$log->template() ? $log->template() : '',
-				$info->as_string(raw => 1),
-				$info->warnings_as_string(),
-				$error ? $error : ''
-			);
-			closelog();
-		}
+		vwflog($vwflog, $info, $lingua, $syslog, 'Access denied', $log);
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
 }
@@ -699,4 +594,59 @@ sub filter
 	return 0 if $_[0] =~ /Can't locate (Net\/OAuth\/V1_0A\/ProtectedResourceRequest\.pm|auto\/NetAddr\/IP\/InetBase\/AF_INET6\.al) in |
 		   S_IFFIFO is not a valid Fcntl macro at /x;
 	return 1;
+}
+
+# Put something to vwf.log
+sub vwflog
+{
+	my ($vwflog, $info, $lingua, $syslog, $message, $log) = @_;
+
+	$message ||= '';
+
+	if(!-r $vwflog) {
+		# First run - put in the heading row
+		open(my $log, '>', $vwflog);
+		print $log '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
+			"\n";
+		close $log;
+	}
+
+	if($vwflog && open(my $log, '>>', $vwflog)) {
+		print $log
+			'"', $info->domain_name(), '",',
+			'"', strftime('%F %T', localtime), '",',
+			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
+			'"', $lingua->country(), '",',
+			'"', $info->browser_type(), '",',
+			'"', $lingua->language(), '",',
+			'429,',
+			'"",',
+			'"', $info->as_string(raw => 1), '",',
+			'"', $info->warnings_as_string(), '",',
+			'"$message"',
+			"\n";
+		close($log);
+	}
+	if($syslog) {
+		require Sys::Syslog;
+
+		Sys::Syslog->import();
+		if(ref($syslog) eq 'HASH') {
+			Sys::Syslog::setlogsock($syslog);
+		}
+		openlog($script_name, 'cons,pid', 'user');
+		syslog('info', '%s %s %s %s %s %d %s %s %s %s',
+			$info->domain_name(),
+			$ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : '',
+			$lingua->country(),
+			$info->browser_type(),
+			$lingua->language(),
+			$info->status(),
+			$log->template() ? $log->template() : '',
+			$info->as_string(raw => 1),
+			$info->warnings_as_string(),
+			'"$message"',
+		);
+		closelog();
+	}
 }
