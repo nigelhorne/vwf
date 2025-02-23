@@ -605,6 +605,13 @@ sub vwflog($$$$$$)
 {
 	my ($vwflog, $info, $lingua, $syslog, $message, $log) = @_;
 
+	my $template;
+	if($log) {
+		$template = $log->template();
+	}
+	if(!defined($template)) {
+		$template = '';
+	}
 	$message ||= '';
 
 	if(!-r $vwflog) {
@@ -624,7 +631,7 @@ sub vwflog($$$$$$)
 			'"', $info->browser_type(), '",',
 			'"', $lingua->language(), '",',
 			$info->status(), ',',
-			'"', ($log->template() ? $log->template() : ''), '",',
+			'"', $template, '",',
 			'"', $info->as_string(raw => 1), '",',
 			'"', $info->warnings_as_string(), '",',
 			'"', $message, '"',
@@ -646,7 +653,7 @@ sub vwflog($$$$$$)
 			$info->browser_type(),
 			$lingua->language(),
 			$info->status(),
-			($log->template() ? $log->template() : ''),
+			$template,
 			$info->as_string(raw => 1),
 			$info->warnings_as_string(),
 			'"', $message, '"'
