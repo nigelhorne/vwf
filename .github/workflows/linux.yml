@@ -34,6 +34,7 @@ jobs:
           apt update -q -y
           apt upgrade -y
           apt dist-upgrade
+          apt install libdbd-csv-perl
       - name: Install Dependencies
         run: |
           cpanm -iqn File::Spec ExtUtils::MakeMaker XML::LibXML
