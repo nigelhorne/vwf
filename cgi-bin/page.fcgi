@@ -646,7 +646,7 @@ sub vwflog
 			$log->template() ? $log->template() : '',
 			$info->as_string(raw => 1),
 			$info->warnings_as_string(),
-			'"$message"',
+			'"', $message, '"',
 		);
 		closelog();
 	}
