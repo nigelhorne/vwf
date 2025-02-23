@@ -306,6 +306,7 @@ sub doit
 
 	# TODO: update the vwf_log variable to point here
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
+	my $log = Class::Simple->new();
 
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
@@ -319,7 +320,7 @@ sub doit
 			# TODO: Work out how to add the "Retry-After" header, setting to $TIME_WINDOW
 			$info->status(429);
 
-			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests');
+			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests', $log);
 			return;
 		}
 	}
@@ -352,7 +353,7 @@ sub doit
 			}
 			$logger->info("$remote_addr: access denied: $reason");
 			$info->status(403);
-			vwflog($vwflog, $info, $lingua, $syslog, $reason);
+			vwflog($vwflog, $info, $lingua, $syslog, $reason, $log);
 			return;
 		}
 	}
@@ -397,7 +398,6 @@ sub doit
 
 	my $display;
 	my $invalidpage;
-	my $log = Class::Simple->new();
 
 	$args = {
 		cachedir => $cachedir,
