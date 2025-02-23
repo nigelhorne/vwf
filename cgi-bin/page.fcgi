@@ -64,6 +64,8 @@ use VWF::Utils;
 Readonly my $MAX_REQUESTS => 100;	# Max requests allowed
 Readonly my $TIME_WINDOW => 10 * 60;	# Time window in seconds (10 minutes)
 
+sub vwflog($$$$$$);	# Ensure all arguments are given
+
 my $info = CGI::Info->new();
 my $config;
 my @suffixlist = ('.pl', '.fcgi');
@@ -599,7 +601,7 @@ sub filter
 }
 
 # Put something to vwf.log
-sub vwflog
+sub vwflog($$$$$$)
 {
 	my ($vwflog, $info, $lingua, $syslog, $message, $log) = @_;
 
@@ -607,14 +609,14 @@ sub vwflog
 
 	if(!-r $vwflog) {
 		# First run - put in the heading row
-		open(my $log, '>', $vwflog);
-		print $log '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
+		open(my $fout, '>', $vwflog);
+		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
 			"\n";
-		close $log;
+		close $fout;
 	}
 
-	if($vwflog && open(my $log, '>>', $vwflog)) {
-		print $log
+	if($vwflog && open(my $fout, '>>', $vwflog)) {
+		print $fout
 			'"', $info->domain_name(), '",',
 			'"', strftime('%F %T', localtime), '",',
 			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
@@ -622,7 +624,7 @@ sub vwflog
 			'"', $info->browser_type(), '",',
 			'"', $lingua->language(), '",',
 			$info->status(), ',',
-			'"', $log->template() ? $log->template() : '', '",',
+			'"', ($log->template() ? $log->template() : ''), '",',
 			'"', $info->as_string(raw => 1), '",',
 			'"', $info->warnings_as_string(), '",',
 			'"', $message, '"',
@@ -644,7 +646,7 @@ sub vwflog
 			$info->browser_type(),
 			$lingua->language(),
 			$info->status(),
-			$log->template() ? $log->template() : '',
+			($log->template() ? $log->template() : ''),
 			$info->as_string(raw => 1),
 			$info->warnings_as_string(),
 			'"', $message, '"'
