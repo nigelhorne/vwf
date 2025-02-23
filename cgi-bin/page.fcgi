@@ -267,7 +267,6 @@ sub doit
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
-	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 	$info_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {
@@ -304,6 +303,8 @@ sub doit
 
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get($client_ip) || 0;
+
+	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
