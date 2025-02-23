@@ -30,7 +30,6 @@ use CGI::Info;
 use CGI::Lingua 0.61;
 use CHI;
 use Class::Simple;
-use DBD::CSV;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
 use FCGI;
