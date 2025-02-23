@@ -622,7 +622,7 @@ sub vwflog($$$$$$)
 		close $fout;
 	}
 
-	if($vwflog && open(my $fout, '>>', $vwflog)) {
+	if(open(my $fout, '>>', $vwflog)) {
 		print $fout
 			'"', $info->domain_name(), '",',
 			'"', strftime('%F %T', localtime), '",',
@@ -638,6 +638,7 @@ sub vwflog($$$$$$)
 			"\n";
 		close($log);
 	}
+
 	if($syslog) {
 		require Sys::Syslog;
 
@@ -656,7 +657,7 @@ sub vwflog($$$$$$)
 			$template,
 			$info->as_string(raw => 1),
 			$info->warnings_as_string(),
-			'"', $message, '"'
+			$message
 		);
 		closelog();
 	}
