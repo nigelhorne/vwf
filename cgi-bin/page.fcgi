@@ -636,7 +636,7 @@ sub vwflog($$$$$$)
 			'"', $info->warnings_as_string(), '",',
 			'"', $message, '"',
 			"\n";
-		close($log);
+		close($fout);
 	}
 
 	if($syslog) {
