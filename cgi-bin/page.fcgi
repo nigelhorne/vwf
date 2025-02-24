@@ -647,7 +647,7 @@ sub vwflog($$$$$$)
 			Sys::Syslog::setlogsock($syslog);
 		}
 		openlog($script_name, 'cons,pid', 'user');
-		syslog('info', '%s %s %s %s %s %d %s %s %s %s',
+		syslog('info|local0', '%s %s %s %s %s %d %s %s %s %s',
 			$info->domain_name(),
 			$ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : '',
 			$lingua->country(),
