@@ -648,16 +648,16 @@ sub vwflog($$$$$$)
 		}
 		openlog($script_name, 'cons,pid', 'user');
 		syslog('info|local0', '%s %s %s %s %s %d %s %s %s %s',
-			$info->domain_name(),
-			$ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : '',
-			$lingua->country(),
-			$info->browser_type(),
-			$lingua->language(),
-			$info->status(),
-			$template,
-			$info->as_string(raw => 1),
-			$info->warnings_as_string(),
-			$message
+			$info->domain_name() || '',
+			$ENV{REMOTE_ADDR} || '',
+			$lingua->country() || '',
+			$info->browser_type() || '',
+			$lingua->language() || '',
+			$info->status() || '',
+			$template || '',
+			$info->as_string(raw => 1) || '',
+			$info->warnings_as_string() || '',
+			$message || ''
 		);
 		closelog();
 	}
