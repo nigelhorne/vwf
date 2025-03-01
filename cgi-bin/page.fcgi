@@ -26,7 +26,7 @@ use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use Log::WarnDie 0.09;
 use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
-use CGI::Info;
+use CGI::Info 0.94;	# Gets all messages
 use CGI::Lingua 0.61;
 use CHI;
 use Class::Simple;
@@ -617,10 +617,14 @@ sub vwflog($$$$$$)
 	if(!-r $vwflog) {
 		# First run - put in the heading row
 		open(my $fout, '>', $vwflog);
-		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","warnings","error"',
+		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","messages","error"',
 			"\n";
 		close $fout;
 	}
+
+	my $warnings = join('; ',
+		grep defined, map { (($_->{'level'} eq 'warn') || ($_->{'level'} eq 'notice')) ? $_->{'message'} : undef } @{$info->messages()}
+	);
 
 	if(open(my $fout, '>>', $vwflog)) {
 		print $fout
@@ -633,7 +637,7 @@ sub vwflog($$$$$$)
 			$info->status(), ',',
 			'"', $template, '",',
 			'"', $info->as_string(raw => 1), '",',
-			'"', $info->warnings_as_string(), '",',
+			'"', $warnings, '",',
 			'"', $message, '"',
 			"\n";
 		close($fout);
@@ -656,7 +660,7 @@ sub vwflog($$$$$$)
 			$info->status() || '',
 			$template || '',
 			$info->as_string(raw => 1) || '',
-			$info->warnings_as_string() || '',
+			'"', $warnings, '",',
 			$message || ''
 		);
 		closelog();
