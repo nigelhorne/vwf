@@ -661,8 +661,8 @@ sub vwflog($$$$$$)
 			$info->status() || '',
 			$template || '',
 			$info->as_string(raw => 1) || '',
-			'"', $warnings, '",',
-			$message || ''
+			$warnings,
+			$message
 		);
 		closelog();
 	}
