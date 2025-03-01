@@ -133,15 +133,16 @@ sub create_memory_cache {
 	throw Error::Simple('config is not optional') unless($config);
 
 	my $logger = $args->{'logger'};
-	my $driver = $config->{memory_cache}->{driver};
+	my $driver = $config->{'memory_cache'}->{driver};
 	unless(defined($driver)) {
 		if($logger) {
-			$logger->warn('memory_cache not defined in ', $config->{'config_path'}, ' falling back to sharedmem');
+			$logger->warn('memory_cache not defined in ', $config->{'config_path'}, ' falling back to memory');
 		}
 		# return CHI->new(driver => 'Memcached', servers => [ '127.0.0.1:11211' ], namespace => $args->{'namespace'});
 		# return CHI->new(driver => 'File', root_dir => '/tmp/cache', namespace => $args->{'namespace'});
-		return CHI->new(driver => 'SharedMem', max_size => 1024, shm_size => 16 * 1024, shm_key => 98766789, namespace => $args->{'namespace'});
-}
+		# return CHI->new(driver => 'SharedMem', max_size => 1024, shm_size => 16 * 1024, shm_key => 98766789, namespace => $args->{'namespace'});
+		return CHI->new(driver => 'Memory', datastore => {});
+	}
 	if($logger) {
 		$logger->debug('memory cache via ', $config->{memory_cache}->{driver}, ', namespace: ', $args->{'namespace'});
 	}
