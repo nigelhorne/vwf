@@ -341,7 +341,7 @@ sub doit
 		my $reason;
 		if($acl->all_denied(lingua => $lingua)) {
 			$reason = 'Denied by CGI::ACL';
-		} elsif(blacklist($info)) {
+		} elsif(blacklisted($info)) {
 			$reason = 'Blacklisted for attempting to break in';
 		}
 		if($reason) {
@@ -569,7 +569,7 @@ sub choose
 }
 
 # Is this client trying to attack us?
-sub blacklist
+sub blacklisted
 {
 	if(my $remote = $ENV{'REMOTE_ADDR'}) {
 		if($blacklisted_ip{$remote}) {
