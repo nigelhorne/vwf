@@ -304,7 +304,7 @@ sub doit
 	my $client_ip = $ENV{'REMOTE_ADDR'} || 'unknown';
 
 	# Check and increment request count
-	my $request_count = $rate_limit_cache->get($client_ip) || 0;
+	my $request_count = $rate_limit_cache->get($script_name . ':rate_limit:' . $client_ip) || 0;
 
 	# TODO: update the vwf_log variable to point here
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
@@ -328,7 +328,7 @@ sub doit
 	}
 
 	# Increment request count
-	$rate_limit_cache->set($client_ip, $request_count + 1, $TIME_WINDOW);
+	$rate_limit_cache->set($script_name . ':rate_limit:' . $client_ip, $request_count + 1, $TIME_WINDOW);
 
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
