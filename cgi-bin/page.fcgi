@@ -269,7 +269,8 @@ sub doit
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
-	$info_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
+	# Stores things for a day or longer
+	$info_cache ||= create_disc_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {
 		cache => $info_cache,
@@ -285,7 +286,8 @@ sub doit
 	}
 	$info = CGI::Info->new($options);
 
-	$lingua_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
+	# Stores things for a month or longer
+	$lingua_cache ||= create_disc_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 
 	# Language negotiation
 	my $lingua = CGI::Lingua->new({
@@ -304,7 +306,7 @@ sub doit
 	my $client_ip = $ENV{'REMOTE_ADDR'} || 'unknown';
 
 	# Check and increment request count
-	my $request_count = $rate_limit_cache->get($script_name . ':rate_limit:' . $client_ip) || 0;
+	my $request_count = $rate_limit_cache->get("$script_name:rate_limit:$client_ip") || 0;
 
 	# TODO: update the vwf_log variable to point here
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
@@ -328,7 +330,7 @@ sub doit
 	}
 
 	# Increment request count
-	$rate_limit_cache->set($script_name . ':rate_limit:' . $client_ip, $request_count + 1, $TIME_WINDOW);
+	$rate_limit_cache->set("$script_name:rate_limit:$client_ip", $request_count + 1, $TIME_WINDOW);
 
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
