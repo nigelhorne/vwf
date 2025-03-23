@@ -425,7 +425,8 @@ sub doit
 			$invalidpage = 1;
 		} else {
 			# Remove all non alphanumeric characters in the name of the page to be loaded
-			$page =~ s/\W//;
+			$page =~ s/\W//g;
+			$page =~ s/\s//g;
 			my $display_module = "VWF::Display::$page";
 
 			# TODO: consider creating a whitelist of valid modules
