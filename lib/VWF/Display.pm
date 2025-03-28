@@ -50,7 +50,10 @@ my %blacklist = (
 our $sm;
 our $smcache;
 
-sub new {
+# Main display handler for generating web pages using Template Toolkit
+# Handles security, throttling, localization, and template selection
+sub new
+{
 	my $class = shift;
 
 	# Handle hash or hashref arguments
@@ -74,13 +77,14 @@ sub new {
 		Data::Validate::URI->import();
 
 		unless(Data::Validate::URI->new()->is_uri($ENV{'HTTP_REFERER'})) {
-			return;
+			return;	# Block invalid referrers
 		}
 	}
 
 	my $info = $args{info} || CGI::Info->new();
 
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
+		# Intrusion Detection System integration
 		require CGI::IDS;
 		CGI::IDS->import();
 
@@ -88,9 +92,10 @@ sub new {
 		$ids->set_scan_keys(scan_keys => 1);
 		my $impact = $ids->detect_attacks(request => $info->params());
 		if($impact > 0) {
-			die "IDS impact is $impact";
+			die "IDS impact is $impact";	# Block detected attacks
 		}
 
+		# Connection throttling system
 		require Data::Throttler;
 		Data::Throttler->import();
 
@@ -98,17 +103,18 @@ sub new {
 		my $db_file = File::Spec->catdir($info->tmpdir(), 'throttle');
 		eval {
 			my $throttler = Data::Throttler->new(
-				max_items => 30,
-				interval => 90,
+				max_items => 30,	# Allow 30 requests
+				interval => 90,	# Per 90 second window
 				backend => 'YAML',
 				backend_options => {
 					db_file => $db_file
 				}
 			);
 
+			# Block if over the limit
 			unless($throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
-				$info->status(429);
-				sleep(1);
+				$info->status(429);	# Too many requests
+				sleep(1);	# Slow down attackers
 				if($args{'logger'}) {
 					$args{'logger'}->_warn("$ENV{REMOTE_ADDR} connexion throttled");
 				}
@@ -118,18 +124,23 @@ sub new {
 		if($@) {
 			unlink($db_file);
 		}
+
+		# Country based blocking
 		if(my $lingua = $args{lingua}) {
 			if($blacklist{uc($lingua->country())}) {
 				die "$ENV{REMOTE_ADDR} is from a blacklisted country ", $lingua->country();
 			}
 		}
 	}
+
+	# Configuration loading
 	my $config_dir = _find_config_dir(\%args, $info);
 	if($args{'logger'}) {
 		$args{'logger'}->debug(__PACKAGE__, ' (', __LINE__, "): path = $config_dir");
 	}
 	my $config;
 	eval {
+		# Try domain-specific config first, then detauls
 		if(-r File::Spec->catdir($config_dir, $info->domain_name())) {
 			$config = Config::Auto::parse($info->domain_name(), path => $config_dir);
 		} elsif (-r File::Spec->catdir($config_dir, 'default')) {
@@ -148,17 +159,16 @@ sub new {
 		$config = { %{$config}, %{$args{'config'}} };
 	}
 
+	# Initialise the template system
 	Template::Filters->use_html_entities();
 
 	# _ names included for legacy reasons, they will go away
 	my $self = {
-		cachedir => $args{cachedir},
 		_cachedir => $args{cachedir},
 		config => $config,
 		_config => $config,
 		info => $info,
 		_info => $info,
-		logger => $args{logger},
 		_logger => $args{logger},
 		%args,
 	};
@@ -176,6 +186,7 @@ sub new {
 		$self->{'_page'} = $page;
 	}
 
+	# Social media integration
 	if(my $twitter = $config->{'twitter'}) {
 		$smcache ||= create_memory_cache(config => $config, logger => $args{'logger'}, namespace => 'HTML::SocialMedia');
 		$sm ||= HTML::SocialMedia->new({ twitter => $twitter, cache => $smcache, lingua => $args{lingua}, logger => $args{logger} });
@@ -191,7 +202,7 @@ sub new {
 	return bless $self, $class;
 }
 
-# Determine the configuration directory
+# Internal method to determine the configuration directory
 sub _find_config_dir
 {
 	my($args, $info) = @_;
@@ -422,6 +433,9 @@ sub http
 	}
 
 	# Security headers
+	# - Clickjacking protection
+	# - MIME type enforcement
+	# - Referrer policy
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
 	# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
 

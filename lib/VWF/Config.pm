@@ -2,7 +2,7 @@ package VWF::Config;
 
 =head1 NAME
 
-VWF::Config - Site independent configuration file
+VWF::Config - Site-independent configuration file
 
 =head1 VERSION
 

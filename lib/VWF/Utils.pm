@@ -7,6 +7,11 @@ package VWF::Utils;
 
 VWF::Utils - Random subroutines for VWF
 
+=head1 DESCRIPTION
+
+Utility module for cache management and geospatial calculations.
+Provides cross-driver cache initialization and Haversine formula implementation.
+
 =head1 VERSION
 
 Version 0.01
@@ -50,6 +55,8 @@ sub create_disc_cache {
 
 	my $logger = $args->{'logger'};
 	my $driver = $config->{disc_cache}->{driver};
+
+	# Default to BerkeleyDB if no driver specified
 	unless(defined($driver)) {
 		my $root_dir = $ENV{'root_dir'} || $args->{'root_dir'} || $config->{disc_cache}->{root_dir} || $config->{'root_dir'};
 		throw Error::Simple('root_dir is not optional') unless($root_dir);
@@ -235,7 +242,7 @@ my $pi = atan2(1,1) * 4;
 #:::  This function get the arccos function using arctan function   :::
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sub _acos {
-	my ($rad) = @_;
+	my $rad = shift;
 	my $ret = atan2(sqrt(1 - $rad**2), $rad);
 	return $ret;
 }
@@ -244,7 +251,7 @@ sub _acos {
 #:::  This function converts decimal degrees to radians             :::
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sub _deg2rad {
-	my ($deg) = @_;
+	my $deg = shift;
 	return ($deg * $pi / 180);
 }
 
@@ -252,7 +259,7 @@ sub _deg2rad {
 #:::  This function converts radians to decimal degrees             :::
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sub _rad2deg {
-	my ($rad) = @_;
+	my $rad = shift;
 	return ($rad * 180 / $pi);
 }
 
