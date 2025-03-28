@@ -74,7 +74,7 @@ sub new {
 		Data::Validate::URI->import();
 
 		unless(Data::Validate::URI->new()->is_uri($ENV{'HTTP_REFERER'})) {
-			return 0;
+			return;
 		}
 	}
 
@@ -107,8 +107,12 @@ sub new {
 			);
 
 			unless($throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
+				$info->status(429);
 				sleep(1);
-				die "$ENV{REMOTE_ADDR} connexion throttled";
+				if($args{'logger'}) {
+					$args{'logger'}->_warn("$ENV{REMOTE_ADDR} connexion throttled");
+				}
+				return;
 			}
 		};
 		if($@) {
@@ -122,7 +126,7 @@ sub new {
 	}
 	my $config_dir = _find_config_dir(\%args, $info);
 	if($args{'logger'}) {
-		$args{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " path = $config_dir");
+		$args{'logger'}->debug(__PACKAGE__, ' (', __LINE__, "): path = $config_dir");
 	}
 	my $config;
 	eval {
