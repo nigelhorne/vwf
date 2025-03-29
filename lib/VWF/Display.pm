@@ -116,7 +116,7 @@ sub new
 				$info->status(429);	# Too many requests
 				sleep(1);	# Slow down attackers
 				if($args{'logger'}) {
-					$args{'logger'}->_warn("$ENV{REMOTE_ADDR} connexion throttled");
+					$args{'logger'}->warn("$ENV{REMOTE_ADDR} connexion throttled");
 				}
 				return;
 			}
