@@ -466,7 +466,11 @@ sub doit
 
 	my $error = $@;
 	if($error) {
-		$logger->error($error);
+		if($info->status() == 429) {
+			$logger->notice($error);
+		} else {
+			$logger->error($error);
+		}
 		$display = undef;
 	}
 
@@ -512,7 +516,7 @@ sub doit
 			}
 			$info->status(500);
 			$log->status(500);
-		} else {
+		} elsif(($info->status() == 200) || ($info->status() == 403)) {
 			# No permission to show this page
 			print "Status: 403 Forbidden\n",
 				"Content-type: text/plain\n",
@@ -523,8 +527,20 @@ sub doit
 			}
 			$info->status(403);
 			$log->status(403);
+		} else {
+			my $status = $info->status();
+			# No permission to show this page
+			print "Status: $status ",
+				HTTP::Status::status_message($status),
+				"Content-type: text/plain\n",
+				"Pragma: no-cache\n\n";
+
+			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
+				print "Page unavailable - something is wrong at your end, please fix and try again\n";
+			}
+			$log->status($status);
 		}
-		vwflog($vwflog, $info, $lingua, $syslog, 'Access denied', $log);
+		vwflog($vwflog, $info, $lingua, $syslog, $error ? $error : 'Access denied', $log);
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
 }
