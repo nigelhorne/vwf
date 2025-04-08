@@ -268,7 +268,13 @@ sub doit
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	$config ||= VWF::Config->new({ logger => $logger, info => $info, debug => $params{'debug'} });
+	$config ||= VWF::Config->new({
+		logger => $logger,
+		info => $info,
+		debug => $params{'debug'},
+		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info })	# Use a temporary CGI::Lingua
+	});
+
 	# Stores things for a day or longer
 	$info_cache ||= create_disc_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 

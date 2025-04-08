@@ -55,103 +55,72 @@ sub new
 		$args{'logger'}->debug(__PACKAGE__, '->new()');
 	}
 
-	my $config_dir;
+	my @config_dirs;
 	if($ENV{'CONFIG_DIR'}) {
-		$config_dir = $ENV{'CONFIG_DIR'};
+		@config_dirs = [$ENV{'CONFIG_DIR'}];
 	} else {
-		$config_dir = File::Spec->catdir(
+		if($args{config_directory}) {
+			push(@config_dirs, $args{config_directory});
+		}
+		push(@config_dirs, File::Spec->catdir(
 				$info->script_dir(),
 				File::Spec->updir(),
 				File::Spec->updir(),
 				'conf'
-			);
-		if($args{logger}) {
-			$args{logger}->debug("Looking for configuration $config_dir/", $info->domain_name());
-		}
+			), File::Spec->catdir(
+				$info->script_dir(),
+				File::Spec->updir(),
+				'conf'
+			)
+		);
 
-		if(!-d $config_dir) {
-			$config_dir = File::Spec->catdir(
-					$info->script_dir(),
-					File::Spec->updir(),
-					'conf'
-				);
-			if($args{logger}) {
-				$args{logger}->debug("Looking for configuration $config_dir/", $info->domain_name());
-			}
+		if($ENV{'DOCUMENT_ROOT'}) {
+			push(@config_dirs, File::Spec->catdir(
+				$ENV{'DOCUMENT_ROOT'},
+				File::Spec->updir(),
+				'lib',
+				'conf'
+			))
 		}
-
-		if(!-d $config_dir) {
-			if($ENV{'DOCUMENT_ROOT'}) {
-				$config_dir = File::Spec->catdir(
-					$ENV{'DOCUMENT_ROOT'},
-					File::Spec->updir(),
-					'lib',
-					'conf'
-				);
-			} else {
-				$config_dir = File::Spec->catdir(
-					$ENV{'HOME'},
-					'lib',
-					'conf'
-				);
-			}
-			if($args{logger}) {
-				$args{logger}->debug("Looking for configuration $config_dir/", $info->domain_name());
-			}
-		}
-
-		if(!-d $config_dir) {
-			if($args{config_directory}) {
-				$config_dir = $args{config_directory};
-			} elsif($args{logger}) {
-				while(my ($key,$value) = each %ENV) {
-					$args{logger}->debug("$key=$value");
-				}
-			}
-		}
-
-		if(my $lingua = $args{'lingua'}) {
-			my $language;
-			if(($language = $lingua->language_code_alpha2()) && (-d "$config_dir/$language")) {
-				$config_dir .= "/$language";
-			} elsif(-d "$config_dir/default") {
-				$config_dir .= '/default';
-			}
-		}
+		push(@config_dirs, File::Spec->catdir(
+			$ENV{'HOME'},
+			'lib',
+			'conf'
+		));
 	}
+
+	my $language;
+	if(my $lingua = $args{'lingua'}) {
+		$language = $lingua->language_code_alpha2();
+	} else {
+		$language = $info->lang();
+	}
+	# if($language) {
+		# if(($language = $lingua->language_code_alpha2()) && (-d "$config_dir/$language")) {
+			# $config_dir .= "/$language";
+		# } elsif(-d "$config_dir/default") {
+			# $config_dir .= '/default';
+		# }
+
 	# if($args{'debug'}) {
 		# # Not sure this really does anything
 		# $Config::Auto::Debug = 1;
 	# }
-	my $config = Config::Abstraction->new(config_dirs => [$config_dir], config_file => $args{'config_file'} || $ENV{'CONFIG_FILE'} || $info->domain_name(), logger => $args{'logger'})->all();
-	if((!defined($config)) || scalar(keys %{$config} == 0)) {
-		$config = Config::Abstraction->new(config_dirs => [$config_dir], config_file => 'default', logger => $args{'logger'})->all();
-	}
-	# if((!defined($config)) || scalar(keys %{$config} == 0)) {
-	if(0) {
-		my $config_file = $args{'config_file'} || $ENV{'CONFIG_FILE'} || File::Spec->catdir($config_dir, $info->domain_name());
-		if($args{logger}) {
-			$args{logger}->debug("Configuration path: $config_file");
-		}
-		eval {
-			if(-r $config_file) {
-				if($args{logger}) {
-					$args{logger}->debug("Found configuration in $config_file");
-				}
-				$config = Config::Auto::parse($config_file);
-			} elsif (-r File::Spec->catdir($config_dir, 'default')) {
-				$config_file = File::Spec->catdir($config_dir, 'default');
-				if($args{logger}) {
-					$args{logger}->debug("Found configuration in $config_file");
-				}
-				$config = Config::Auto::parse('default', path => $config_dir);
-			} else {
-				die "no suitable config file found in $config_dir";
+
+	if($args{logger}) {
+		while(my ($key,$value) = each %ENV) {
+			if($value) {
+				$args{logger}->debug("$key=$value");
 			}
-		};
-		if($@ || !defined($config)) {
-			throw Error::Simple("$config_file: configuration error: $@");
 		}
+	}
+
+	my $config = Config::Abstraction->new(
+		config_dirs => \@config_dirs,
+		config_files => [$args{'config_file'}, $ENV{'CONFIG_FILE'}, $info->domain_name(), 'default'],
+		logger => $args{'logger'})->all();
+	if($@ || !defined($config)) {
+		throw Error::Simple("Configuration error: $@");
 	}
 
 	# The values in config are defaults which can be overridden by
@@ -179,9 +148,10 @@ sub new
 		}
 	}
 
-	unless($config->{'config_path'}) {
-		$config->{'config_path'} = File::Spec->catdir($config_dir, $info->domain_name());
-	}
+	# unless($config->{'config_path'}) {
+		# $config->{'config_path'} = File::Spec->catdir($config_dir, $info->domain_name());
+	# }
+	print __PACKAGE__, '(', __LINE__, '): ', Data::Dumper->new([$config])->Dump();
 
 	return bless $config, $class;
 }
