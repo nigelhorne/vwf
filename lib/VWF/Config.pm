@@ -98,11 +98,11 @@ sub new
 
 	if($language) {
 		@config_dirs = map {
-			("$_/$language", "$_/default", $_)
+			($_, "$_/default", "$_/$language")
 		} @config_dirs;
 	} else {
 		@config_dirs = map {
-			("$_/default", $_)
+			($_, File::Spec->catdir($_, 'default'))
 		} @config_dirs;
 	}
 
@@ -121,7 +121,7 @@ sub new
 
 	my $config = Config::Abstraction->new(
 		config_dirs => \@config_dirs,
-		config_files => [$args{'config_file'}, $ENV{'CONFIG_FILE'}, $info->domain_name(), 'default'],
+		config_files => ['default', $info->domain_name(), $ENV{'CONFIG_FILE'}, $args{'config_file'}],
 		logger => $args{'logger'})->all();
 	if($@ || !defined($config)) {
 		throw Error::Simple("Configuration error: $@");
@@ -155,7 +155,9 @@ sub new
 	# unless($config->{'config_path'}) {
 		# $config->{'config_path'} = File::Spec->catdir($config_dir, $info->domain_name());
 	# }
-	print __PACKAGE__, '(', __LINE__, '): ', Data::Dumper->new([$config])->Dump();
+	if($args{'debug'} && $args{'logger'}) {
+		$args{'logger'}->debug(__PACKAGE__, '(', __LINE__, '): ', Data::Dumper->new([$config])->Dump());
+	}
 
 	return bless $config, $class;
 }
