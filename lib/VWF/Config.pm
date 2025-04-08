@@ -82,11 +82,13 @@ sub new
 				'conf'
 			))
 		}
-		push(@config_dirs, File::Spec->catdir(
-			$ENV{'HOME'},
-			'lib',
-			'conf'
-		));
+		if($ENV{'HOME') {
+			push(@config_dirs, File::Spec->catdir(
+				$ENV{'HOME'},
+				'lib',
+				'conf'
+			));
+		}
 	}
 
 	# Look for localised configuratins
