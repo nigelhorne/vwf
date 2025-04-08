@@ -3,5 +3,9 @@
 	<memory_cache>
 		<driver>Null</driver>
 	</memory_cache>
+	<disc_cache>
+		<driver>Null</driver>
+	</disc_cache>
 	<SiteTitle>Sample VWF site</SiteTitle>
+	<root_dir>/Users/njh/src/njh/vwf</root_dir>
 </config>
