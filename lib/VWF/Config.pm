@@ -82,7 +82,7 @@ sub new
 				'conf'
 			))
 		}
-		if($ENV{'HOME') {
+		if($ENV{'HOME'}) {
 			push(@config_dirs, File::Spec->catdir(
 				$ENV{'HOME'},
 				'lib',
