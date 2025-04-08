@@ -47,9 +47,9 @@ jobs:
       - name: Run Tests
         run: |
           cd cgi-bin && mkdir -p ../data && perl -c -MO=Lint ./page.fcgi '' && perl -c -Mwarnings::unused ./page.fcgi ''
-          rootdir=$(pwd)/../.. perl page.fcgi page=index
-          rootdir=$(pwd)/../.. perl page.fcgi page=meta_data
-          rootdir=$(pwd)/../.. perl page.fcgi page=upload publish='Stock%20or%20(1,2\)=(select*from(select%20name_const(CHAR(111,108,111,108,111,115,104,101,114\),1\),name_const(CHAR( <-- HERE 111,108,111,108,111,115,104,101,114\),1\)\)a\)%20--%20and%201%3D1'
-          rootdir=$(pwd)/../.. perl page.fcgi page=/etc/passwd
+          root_dir=$(pwd)/../.. perl page.fcgi page=index
+          root_dir=$(pwd)/../.. perl page.fcgi page=meta_data
+          root_dir=$(pwd)/../.. perl page.fcgi page=upload publish='Stock%20or%20(1,2\)=(select*from(select%20name_const(CHAR(111,108,111,108,111,115,104,101,114\),1\),name_const(CHAR( <-- HERE 111,108,111,108,111,115,104,101,114\),1\)\)a\)%20--%20and%201%3D1'
+          root_dir=$(pwd)/../.. perl page.fcgi page=/etc/passwd
           cd ../tests && prove get_params && prove get_template_path
           cat /tmp/vwf.log
