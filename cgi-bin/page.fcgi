@@ -272,7 +272,7 @@ sub doit
 		logger => $logger,
 		info => $info,
 		debug => $params{'debug'},
-		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info })	# Use a temporary CGI::Lingua
+		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })	# Use a temporary CGI::Lingua
 	});
 
 	# Stores things for a day or longer
