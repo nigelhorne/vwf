@@ -89,28 +89,32 @@ sub new
 		));
 	}
 
+	# Look for localised configuratins
 	my $language;
 	if(my $lingua = $args{'lingua'}) {
 		$language = $lingua->language_code_alpha2();
-	} else {
-		$language = $info->lang();
 	}
-	# if($language) {
-		# if(($language = $lingua->language_code_alpha2()) && (-d "$config_dir/$language")) {
-			# $config_dir .= "/$language";
-		# } elsif(-d "$config_dir/default") {
-			# $config_dir .= '/default';
-		# }
+	$language ||= $info->lang();
 
-	# if($args{'debug'}) {
+	if($language) {
+		@config_dirs = map {
+			("$_/$language", "$_/default", $_)
+		} @config_dirs;
+	} else {
+		@config_dirs = map {
+			("$_/default", $_)
+		} @config_dirs;
+	}
+
+	if($args{'debug'}) {
 		# # Not sure this really does anything
 		# $Config::Auto::Debug = 1;
-	# }
 
-	if($args{logger}) {
-		while(my ($key,$value) = each %ENV) {
-			if($value) {
-				$args{logger}->debug("$key=$value");
+		if($args{logger}) {
+			while(my ($key,$value) = each %ENV) {
+				if($value) {
+					$args{logger}->debug("$key=$value");
+				}
 			}
 		}
 	}
