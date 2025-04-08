@@ -24,7 +24,7 @@ our $VERSION = '0.01';
 
 use warnings;
 use strict;
-use Config::Auto;
+use Config::Abstraction;
 use CGI::Info;
 use File::Spec;
 
@@ -123,29 +123,35 @@ sub new
 		# # Not sure this really does anything
 		# $Config::Auto::Debug = 1;
 	# }
-	my $config;
-	my $config_file = $args{'config_file'} || $ENV{'CONFIG_FILE'} || File::Spec->catdir($config_dir, $info->domain_name());
-	if($args{logger}) {
-		$args{logger}->debug("Configuration path: $config_file");
+	my $config = Config::Abstraction->new(config_dirs => [$config_dir], config_file => $args{'config_file'} || $ENV{'CONFIG_FILE'} || $info->domain_name(), logger => $args{'logger'})->all();
+	if((!defined($config)) || scalar(keys %{$config} == 0)) {
+		$config = Config::Abstraction->new(config_dirs => [$config_dir], config_file => 'default', logger => $args{'logger'})->all();
 	}
-	eval {
-		if(-r $config_file) {
-			if($args{logger}) {
-				$args{logger}->debug("Found configuration in $config_file");
-			}
-			$config = Config::Auto::parse($config_file);
-		} elsif (-r File::Spec->catdir($config_dir, 'default')) {
-			$config_file = File::Spec->catdir($config_dir, 'default');
-			if($args{logger}) {
-				$args{logger}->debug("Found configuration in $config_file");
-			}
-			$config = Config::Auto::parse('default', path => $config_dir);
-		} else {
-			die "no suitable config file found in $config_dir";
+	# if((!defined($config)) || scalar(keys %{$config} == 0)) {
+	if(0) {
+		my $config_file = $args{'config_file'} || $ENV{'CONFIG_FILE'} || File::Spec->catdir($config_dir, $info->domain_name());
+		if($args{logger}) {
+			$args{logger}->debug("Configuration path: $config_file");
 		}
-	};
-	if($@ || !defined($config)) {
-		throw Error::Simple("$config_file: configuration error: $@");
+		eval {
+			if(-r $config_file) {
+				if($args{logger}) {
+					$args{logger}->debug("Found configuration in $config_file");
+				}
+				$config = Config::Auto::parse($config_file);
+			} elsif (-r File::Spec->catdir($config_dir, 'default')) {
+				$config_file = File::Spec->catdir($config_dir, 'default');
+				if($args{logger}) {
+					$args{logger}->debug("Found configuration in $config_file");
+				}
+				$config = Config::Auto::parse('default', path => $config_dir);
+			} else {
+				die "no suitable config file found in $config_dir";
+			}
+		};
+		if($@ || !defined($config)) {
+			throw Error::Simple("$config_file: configuration error: $@");
+		}
 	}
 
 	# The values in config are defaults which can be overridden by
