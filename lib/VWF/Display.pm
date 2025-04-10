@@ -14,7 +14,7 @@ our $VERSION = '0.01';
 use strict;
 use warnings;
 
-use Config::Auto;
+use Config::Abstraction;
 use CGI::Info;
 use Data::Dumper;
 use File::Spec;
@@ -140,14 +140,8 @@ sub new
 	}
 	my $config;
 	eval {
-		# Try domain-specific config first, then detauls
-		if(-r File::Spec->catdir($config_dir, $info->domain_name())) {
-			$config = Config::Auto::parse($info->domain_name(), path => $config_dir);
-		} elsif (-r File::Spec->catdir($config_dir, 'default')) {
-			$config = Config::Auto::parse('default', path => $config_dir);
-		} else {
-			die 'no suitable config file found';
-		}
+		# Try default first, then domain-specific config first
+		$config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()])->all();
 	};
 	if($@ || !defined($config)) {
 		die "Configuration error: $@: $config_dir/", $info->domain_name();
