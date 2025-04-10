@@ -30,6 +30,7 @@ use CGI::Info 0.94;	# Gets all messages
 use CGI::Lingua 0.61;
 use CHI;
 use Class::Simple;
+use Database::Abstraction;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
 use FCGI;
