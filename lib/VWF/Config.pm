@@ -137,11 +137,17 @@ sub new
 
 	# Allow variables to be overridden by the environment
 	foreach my $key(keys %{$config}) {
-		if($ENV{$key}) {
+		if(my $value = $ENV{$key}) {
 			if($args{'logger'}) {
-				$args{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " overwriting $key, ", $config->{$key}, ' with ', $ENV{$key});
+				$args{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " overwriting $key, ", $config->{$key}, " with $value");
 			}
-			$config->{$key} = $ENV{$key};
+			# If the value contains an equals make it into a hash value
+			if($value =~ /(.+)=(.+)/) {
+				delete $config->{$key} if(!ref($config->{$key}));
+				$config->{$key}{$1} = $2;
+			} else {
+				$config->{$key} = $value;
+			}
 		}
 	}
 
