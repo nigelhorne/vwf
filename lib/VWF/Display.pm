@@ -353,7 +353,7 @@ sub get_template_path
 
 	my ($fh, $filename) = File::pfopen::pfopen($prefix, $modulepath, 'tmpl:tt:html:htm:txt');
 	if((!defined($filename)) || (!defined($fh))) {
-		throw Error::Simple("Can't find suitable $modulepath html or tmpl file in $prefix in $dir or a subdir");
+		throw Error::Simple("Can't find suitable $modulepath html or tmpl/tt file in $prefix in $dir or a subdir");
 	}
 	close($fh);
 	$self->_debug({ message => "using $filename" });
@@ -450,7 +450,7 @@ sub html {
 	my $filename = $self->get_template_path();
 	my $rc;
 
-	# Handle template files (.tmpl or .t)
+	# Handle template files (.tmpl or .tt)
 	if($filename =~ /.+\.t(mpl|t)$/) {
 		require Template;
 		Template->import();
