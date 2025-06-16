@@ -16,7 +16,12 @@
     }
 
     function sanitizeHtml(html) {
-        return html.replace(/<[^>]*>?/gi, sanitizeTag);
+        let previous;
+        do {
+            previous = html;
+            html = html.replace(/<[^>]*>?/gi, sanitizeTag);
+        } while (html !== previous);
+        return html;
     }
 
     // (tags that can be opened/closed) | (tags that stand alone)
