@@ -487,6 +487,7 @@ sub html {
 			INTERPOLATE => 1,
 			POST_CHOMP => 1,
 			ABSOLUTE => 1,
+			PLUGINS => { JSON => 'Template::Plugin::JSON' },
 		});
 
 		$self->_debug({ message => __PACKAGE__ . ': ' . __LINE__ . ': Passing these to the template: ' . join(', ', keys %{$vals}) });
