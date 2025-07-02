@@ -112,11 +112,10 @@ sub create_disc_cache {
 		}
 		$chi_args{'create_table'} = 1;
 	} elsif($driver eq 'Redis') {
-		my %redis_options = (
+		$chi_args{'redis_options'} = {
 			reconnect => 60,
 			every => 1_000_000
-		);
-		$chi_args{'redis_options'} = \%redis_options;
+		};
 	} elsif($driver ne 'Null') {
 		$chi_args{'root_dir'} = $ENV{'root_dir'} || $args->{'root_dir'} || $config->{disc_cache}->{root_dir};
 		throw Error::Simple('root_dir is not optional') unless($chi_args{'root_dir'});
@@ -202,11 +201,10 @@ sub create_memory_cache {
 			$logger->debug("root_dir: $chi_args{root_dir}");
 		}
 	} elsif($driver eq 'Redis') {
-		my %redis_options = (
+		$chi_args{'redis_options'} = {
 			reconnect => 60,
 			every => 1_000_000
-		);
-		$chi_args{'redis_options'} = \%redis_options;
+		};
 	}
 	return CHI->new(%chi_args);
 }
