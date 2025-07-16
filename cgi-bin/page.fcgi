@@ -538,7 +538,6 @@ sub doit
 			$log->status(403);
 		} else {
 			my $status = $info->status();
-			# No permission to show this page
 			print "Status: $status ",
 				HTTP::Status::status_message($status),
 				"Content-type: text/plain\n",
