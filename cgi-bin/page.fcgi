@@ -6,7 +6,7 @@
 # Can be tested at the command line, e.g.:
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
-#	root_dir=$(pwd)/.. ./page.fcgi mobile=1 page=index lang=fr
+#	root_dir=$(pwd)/.. ./page.fcgi --mobile page=index lang=fr
 # To turn off the linting of HTML on a search-engine landing page
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
@@ -33,10 +33,12 @@ use Class::Simple;
 use Database::Abstraction;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
+use Config::Abstraction;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
 use Log::Any::Adapter;
+use Log::Abstraction;
 use Error qw(:try);
 use File::Spec;
 use POSIX qw(strftime);
@@ -91,6 +93,10 @@ my $script_dir = $info->script_dir();
 Log::Log4perl::init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
 Log::WarnDie->dispatcher($logger);
+
+my $env_prefix = uc($info->host_name()) . '_';
+$env_prefix =~ tr/\./_/;
+$logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => 'example.com', config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
 
 # my $pagename = "VWF::Display::$script_name";
 # eval "require $pagename";
@@ -267,13 +273,15 @@ sub doit
 {
 	CGI::Info->reset();
 
-	$logger->debug('In doit - domain is ', $info->domain_name());
+	# Call domain_name in a class context to ensure it's reread now that FCGI has started up
+	$logger->debug('In doit - domain is ', CGI::Info->domain_name());
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
+	# Don't pass $info in since it was created before the connection, so it doesn't know the domain name
+	#	config file to read
 	$config ||= VWF::Config->new({
 		logger => $logger,
-		info => $info,
 		debug => $params{'debug'},
 		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })	# Use a temporary CGI::Lingua
 	});
