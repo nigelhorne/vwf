@@ -191,7 +191,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 			$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
 		}
 		Log::Any::Adapter->set('Stdout', log_level => 'trace');
-		$logger = Log::Any->get_logger(category => $script_name);
+		# $logger = Log::Any->get_logger(category => $script_name);
+		$logger = Log::Abstraction->new(logger => sub { print join(', ', @{$_[0]->{'message'}}), "\n" }, level => 'debug');
 		Log::WarnDie->dispatcher($logger);
 		Database::Abstraction::init({ logger => $logger });
 		$info->set_logger($logger);
@@ -213,7 +214,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 
 	$requestcount++;
 	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
-	$logger = Log::Any->get_logger(category => $script_name);
+	# $logger = Log::Any->get_logger(category => $script_name);
 	$logger->info("Request $requestcount: ", $ENV{'REMOTE_ADDR'});
 	$info->set_logger($logger);
 	$index->set_logger($logger);
