@@ -84,6 +84,10 @@ sub create_disc_cache {
 		# $chi_args{'on_get_error'} = 'log';
 	# }
 
+        # CHI uses server, Sys::Syslog uses host :-(
+        if($config->{disc_cache}->{host}) {
+                $config->{'disc_cache'}->{'server'} = delete $config->{'disc_cache'}->{'host'};
+        }
 	if($config->{disc_cache}->{server}) {
 		my @servers;
 		if($config->{disc_cache}->{server} =~ /,/) {
@@ -167,6 +171,10 @@ sub create_memory_cache {
 		$chi_args{'on_get_error'} = 'log';
 	}
 
+        # CHI uses server, Sys::Syslog uses host :-(
+        if($config->{memory_cache}->{host}) {
+                $config->{'memory_cache'}->{'server'} = delete $config->{'memory_cache'}->{'host'};
+        }
 	if($config->{memory_cache}->{server}) {
 		my @servers;
 		if($config->{memory_cache}->{server} =~ /,/) {
