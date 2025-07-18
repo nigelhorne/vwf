@@ -92,11 +92,12 @@ my $buffercache;
 my $script_dir = $info->script_dir();
 Log::Log4perl::init("$script_dir/../conf/$script_name.l4pconf");
 my $logger = Log::Log4perl->get_logger($script_name);
-Log::WarnDie->dispatcher($logger);
+# Log::WarnDie->dispatcher($logger);
 
 my $env_prefix = uc($info->host_name()) . '_';
 $env_prefix =~ tr/\./_/;
 $logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => 'example.com', config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
+Log::WarnDie->dispatcher($logger);
 
 # my $pagename = "VWF::Display::$script_name";
 # eval "require $pagename";

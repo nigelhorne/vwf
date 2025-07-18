@@ -21,6 +21,7 @@ use File::Spec;
 use Template::Filters;
 use Template::Plugin::EnvHash;
 use Template::Plugin::Math;
+use Template::Plugin::JSON;
 use HTML::SocialMedia;
 use VWF::Utils;
 use Error;
