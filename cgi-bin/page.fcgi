@@ -22,7 +22,6 @@ BEGIN {
 
 no lib '.';
 
-use Log::Log4perl qw(:levels);	# Put first to cleanup last
 use Log::WarnDie 0.09;
 use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
@@ -37,7 +36,6 @@ use Config::Abstraction;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
-use Log::Any::Adapter;
 use Log::Abstraction;
 use Error qw(:try);
 use File::Spec;
@@ -90,13 +88,9 @@ my $lingua_cache;
 my $buffercache;
 
 my $script_dir = $info->script_dir();
-Log::Log4perl::init("$script_dir/../conf/$script_name.l4pconf");
-my $logger = Log::Log4perl->get_logger($script_name);
-# Log::WarnDie->dispatcher($logger);
-
 my $env_prefix = uc($info->host_name()) . '_';
 $env_prefix =~ tr/\./_/;
-$logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => 'example.com', config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
+my $logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => 'example.com', config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
 Log::WarnDie->dispatcher($logger);
 
 # my $pagename = "VWF::Display::$script_name";
@@ -191,11 +185,9 @@ while($handling_request = ($request->Accept() >= 0)) {
 			$lang =~ tr/_/-/;
 			$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
 		}
-		Log::Any::Adapter->set('Stdout', log_level => 'trace');
-		# $logger = Log::Any->get_logger(category => $script_name);
+
 		$logger = Log::Abstraction->new(logger => sub { print join(', ', @{$_[0]->{'message'}}), "\n" }, level => 'debug');
 		Log::WarnDie->dispatcher($logger);
-		Database::Abstraction::init({ logger => $logger });
 		$info->set_logger($logger);
 		$index->set_logger($logger);
 		$vwf_log->set_logger($logger);
@@ -214,9 +206,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 	}
 
 	$requestcount++;
-	Log::Any::Adapter->set( { category => $script_name }, 'Log4perl');
-	# $logger = Log::Any->get_logger(category => $script_name);
 	$logger->info("Request $requestcount: ", $ENV{'REMOTE_ADDR'});
+	# $books->set_logger($logger);
 	$info->set_logger($logger);
 	$index->set_logger($logger);
 	$vwf_log->set_logger($logger);

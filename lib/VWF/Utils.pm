@@ -31,12 +31,7 @@ use CHI;
 use Data::Dumper;
 use DBI;
 use Error;
-use Log::Any::Adapter;
 use Params::Get;
-
-BEGIN {
-	Log::Any::Adapter->set('Log4perl');
-}
 
 =head1 SUBROUTINES/METHODS
 

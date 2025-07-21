@@ -97,12 +97,14 @@ The configuration file takes the form of:
 For example, if your index.tmpl file lives in /usr/lib/example.com/templates/VWF/web/index.tmpl,
 then you would add 'root_dir /usr/lib/example.com'.
 
-The name of the configuration file the sitename, e.g. /usr/lib/lib/conf/example.com.
+The name of the configuration file the sitename, e.g. /usr/lib/conf/example.com.
 
 Finally change conf/index.l4pconf to the logging mechanism of your choice.
 
 The database system is yet to be documented, but essentially it provides
 a simple way to include dynamic data in your templates.
+
+Look everywhere in the code and configuration files for the string "example.com" and replace that to suit.
 
 ## Usage
 VWF is smart enough that you can debug from the command line before you deploy.
