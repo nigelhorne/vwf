@@ -44,7 +44,7 @@ jobs:
           cpanm --skip-satisfied -qn Database::Abstraction Log::WarnDie CGI::Lingua FCGI::Buffer || cat /github/home/.cpanm/work/*/build.log
           cpanm --skip-satisfied -qn String::Random Log::Dispatch::File Class::Simple Taint::Runtime
           cpanm --skip-satisfied -qn LWP::UserAgent::Cached Data::Serializer CGI::Carp B::Lint FCGI Template::Plugin::EnvHash HTML::SocialMedia Error IPC::System::Simple
-          cpanm --skip-satisfied -qn Log::Any::Adapter::Log4perl XML::Simple CHI DBD::CSV
+          cpanm --skip-satisfied -qn Template::Plugin::JSON Log::Any::Adapter::Log4perl XML::Simple CHI DBD::CSV
           cpanm --skip-satisfied -qn warnings::unused File::HomeDir Config::Abstraction Template::Filters
       - name: Run Tests
         run: |
