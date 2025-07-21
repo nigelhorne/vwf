@@ -186,6 +186,8 @@ while($handling_request = ($request->Accept() >= 0)) {
 			$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
 		}
 
+		Database::Abstraction::init({ logger => $logger });
+
 		$logger = Log::Abstraction->new(logger => sub { print join(', ', @{$_[0]->{'message'}}), "\n" }, level => 'debug');
 		Log::WarnDie->dispatcher($logger);
 		$info->set_logger($logger);
