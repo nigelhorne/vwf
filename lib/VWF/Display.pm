@@ -92,7 +92,7 @@ sub new
 		my $ids = CGI::IDS->new();
 		$ids->set_scan_keys(scan_keys => 1);
 		my $impact = $ids->detect_attacks(request => $info->params());
-		if($impact > 0) {
+		if($impact > 30) {
 			die $ENV{'REMOTE_ADDR'}, ": IDS impact is $impact";	# Block detected attacks
 		}
 
