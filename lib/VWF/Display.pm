@@ -27,6 +27,7 @@ use VWF::Utils;
 use Error;
 use Fatal qw(:void open);
 use File::pfopen;
+use Params::Get;
 use Scalar::Util;
 
 # TODO: read this from the config file
@@ -400,7 +401,7 @@ Returns the HTTP header section, terminated by an empty line
 sub http
 {
 	my $self = shift;
-	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my $params = Params::Get::get_params(undef, @_);
 
 	# Handle session cookies
 	# TODO: Only session cookies as the moment
@@ -416,9 +417,9 @@ sub http
 	# my $language = $self->{_lingua} ? $self->{_lingua}->language() : 'English';
 
 	my $rc;
-	if($params{'Content-Type'}) {
+	if($params->{'Content-Type'}) {
 		# Allow the content type to be forceably set
-		$rc = $params{'Content-Type'} . "\n";
+		$rc = $params->{'Content-Type'} . "\n";
 	} else {
 		# Determine content type
 		my $filename = $self->get_template_path();
