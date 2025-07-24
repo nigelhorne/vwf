@@ -304,7 +304,9 @@ sub get_template_path
 	}
 
 	if($self->{_filename}) {
-		$self->{_logger}->trace({ message => 'returning ' . $self->{_filename} });
+		if($self->{_logger}) {
+			$self->{_logger}->trace({ message => 'returning ' . $self->{_filename} });
+		}
 		return $self->{_filename};
 	}
 
