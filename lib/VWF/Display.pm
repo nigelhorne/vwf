@@ -143,7 +143,9 @@ sub new
 	my $config;
 	eval {
 		# Try default first, then domain-specific config first
-		$config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()])->all();
+		if($config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()])) {
+			$config = $config->all();
+		}
 	};
 	if($@ || !defined($config)) {
 		die "Configuration error: $@: $config_dir/", $info->domain_name();
