@@ -86,15 +86,17 @@ sub new
 	my $info = $args{info} || CGI::Info->new();
 
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
-		# Intrusion Detection System integration
-		require CGI::IDS;
-		CGI::IDS->import();
+		if(my $params = $info->params()) {
+			# Intrusion Detection System integration
+			require CGI::IDS;
+			CGI::IDS->import();
 
-		my $ids = CGI::IDS->new();
-		$ids->set_scan_keys(scan_keys => 1);
-		my $impact = $ids->detect_attacks(request => $info->params());
-		if($impact > 30) {
-			die $ENV{'REMOTE_ADDR'}, ": IDS impact is $impact";	# Block detected attacks
+			my $ids = CGI::IDS->new();
+			$ids->set_scan_keys(scan_keys => 1);
+			my $impact = $ids->detect_attacks(request => $params);
+			if($impact > 30) {
+				die $ENV{'REMOTE_ADDR'}, ": IDS impact is $impact";	# Block detected attacks
+			}
 		}
 
 		# Connection throttling system
