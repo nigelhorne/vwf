@@ -54,7 +54,7 @@ sub new
 	my $params = Params::Get::get_params(undef, @_);
 
 	if (exists $params->{logger} && defined $params->{logger}) {
-		Throw Error::Simple( "logger must be an object with debug method")
+		Throw Error::Simple('logger must be an object with debug method')
 		    unless ref($params->{logger}) && $params->{logger}->can('debug');
 	}
 
@@ -63,7 +63,7 @@ sub new
 	}
 
 	if(exists $params->{config} && defined $params->{config}) {
-		Throw Error::Simple( "config must be a hash reference") unless ref($params->{config}) eq 'HASH';
+		Throw Error::Simple('config must be a hash reference') unless ref($params->{config}) eq 'HASH';
 	}
 
 	my $class = ref($proto) || $proto;
@@ -165,6 +165,13 @@ sub new
 	# Allow variables to be overridden by the environment
 	foreach my $key(keys %{$config}) {
 		if(my $value = $ENV{$key}) {
+			# Validate environment variable names
+			# throw Error::Simple("Invalid environment variable name: $key")
+				# unless $key =~ /^[A-Z_][A-Z0-9_]*$/;
+
+			# Sanitize values
+			# $value =~ s/[^\w\s=\.\-]//g;	# Remove potentially dangerous characters
+
 			if($params->{'logger'}) {
 				$params->{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " overwriting $key, ", $config->{$key}, " with $value");
 			}
