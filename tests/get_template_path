@@ -7,20 +7,22 @@ use strict;
 use warnings;
 
 use Cwd;
+use FindBin qw($Bin);
 use Test::More tests => 1;
 
-use lib '../lib';
+use lib "$Bin/../lib";
 
 use VWF::Display;
 
 {
 	package MockLogger;
 	sub new { bless {}, shift }
-	# sub trace { print "TRACE: @_ \n" }
-	# sub debug { print "DEBUG: @_ \n" }
-	sub trace { }
-	sub info { }
-	sub debug { }
+	sub trace { shift; ::diag "TRACE: @_\n" }
+	sub info { shift; ::diag "INFO: @_\n" }
+	sub debug { shift; ::diag "DEBUG: @_\n" }
+	# sub trace { }
+	# sub info { }
+	# sub debug { }
 }
 
 {
@@ -68,4 +70,3 @@ if ($@) {
 }
 
 # Add more tests for various configurations and edge cases
-
