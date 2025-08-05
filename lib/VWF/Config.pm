@@ -148,7 +148,8 @@ sub new
 				unless -d $params->{config_directory};
 			push(@config_dirs, $params->{config_directory});
 		}
-		push(@config_dirs, File::Spec->catdir(
+		@config_dirs = (
+			File::Spec->catdir(
 				$info->script_dir(),
 				File::Spec->updir(),
 				File::Spec->updir(),
