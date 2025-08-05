@@ -31,7 +31,7 @@ use CHI;
 use Data::Dumper;
 use DBI;
 use Error;
-use Params::Get;
+use Params::Get 0.13;
 
 =head1 SUBROUTINES/METHODS
 
