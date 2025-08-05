@@ -60,6 +60,9 @@ sub new
 
 	my @config_dirs;
 	if($ENV{'CONFIG_DIR'}) {
+		# Validate directory exists
+		throw Error::Simple("CONFIG_DIR '$ENV{CONFIG_DIR}' does not exist or is not readable" )
+			unless -d $ENV{'CONFIG_DIR'} && -r $ENV{'CONFIG_DIR'};
 		@config_dirs = ($ENV{'CONFIG_DIR'});
 	} else {
 		if($args{config_directory}) {

@@ -145,7 +145,7 @@ sub new
 	my $config;
 	eval {
 		# Try default first, then domain-specific config first
-		if($config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()])) {
+		if($config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()], logger => $args{'logger'})) {
 			$config = $config->all();
 		}
 	};
