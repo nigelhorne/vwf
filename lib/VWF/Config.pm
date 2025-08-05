@@ -31,6 +31,7 @@ use CGI::Info;
 use Data::Dumper;
 use Error::Simple;
 use File::Spec;
+use Params::Get 0.13;
 
 =head1 SUBROUTINES/METHODS
 
@@ -50,14 +51,23 @@ Values in the file are overridden by what's in the environment
 sub new
 {
 	my $proto = shift;
-	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
+	my $params = Params::Get::get_params(undef, @_);
+
+	if (exists $params->{logger} && defined $params->{logger}) {
+		Throw Error::Simple( "logger must be an object with debug method")
+		    unless ref($params->{logger}) && $params->{logger}->can('debug');
+	}
+
+	if($params->{'logger'}) {
+		$params->{'logger'}->debug(__PACKAGE__, '->new()');
+	}
+
+	if(exists $params->{config} && defined $params->{config}) {
+		Throw Error::Simple( "config must be a hash reference") unless ref($params->{config}) eq 'HASH';
+	}
 
 	my $class = ref($proto) || $proto;
-	my $info = $args{info} || CGI::Info->new();
-
-	if($args{'logger'}) {
-		$args{'logger'}->debug(__PACKAGE__, '->new()');
-	}
+	my $info = $params->{info} || CGI::Info->new();
 
 	my @config_dirs;
 	if($ENV{'CONFIG_DIR'}) {
@@ -66,8 +76,11 @@ sub new
 			unless -d $ENV{'CONFIG_DIR'} && -r $ENV{'CONFIG_DIR'};
 		@config_dirs = ($ENV{'CONFIG_DIR'});
 	} else {
-		if($args{config_directory}) {
-			push(@config_dirs, $args{config_directory});
+		if($params->{config_directory}) {
+			throw Error::Simple("config_directory must be a string") if(ref($params->{config_directory}));
+			throw Error::Simple("config_directory '$params->{config_directory}' does not exist")
+				unless -d $params->{config_directory};
+			push(@config_dirs, $params->{config_directory});
 		}
 		push(@config_dirs, File::Spec->catdir(
 				$info->script_dir(),
@@ -100,7 +113,7 @@ sub new
 
 	# Look for localised configurations
 	my $language;
-	if(my $lingua = $args{'lingua'}) {
+	if(my $lingua = $params->{'lingua'}) {
 		$language = $lingua->language_code_alpha2();
 	}
 	$language ||= $info->lang();
@@ -115,14 +128,14 @@ sub new
 		} @config_dirs;
 	}
 
-	if($args{'debug'}) {
+	if($params->{'debug'}) {
 		# Not sure this really does anything
 		# $Config::Auto::Debug = 1;
 
-		if($args{logger}) {
+		if($params->{logger}) {
 			while(my ($key,$value) = each %ENV) {
 				if($value) {
-					$args{logger}->debug("$key=$value");
+					$params->{logger}->debug("$key=$value");
 				}
 			}
 		}
@@ -132,8 +145,8 @@ sub new
 	eval {
 		$config = Config::Abstraction->new(
 			config_dirs => \@config_dirs,
-			config_files => ['default', $info->domain_name(), $ENV{'CONFIG_FILE'}, $args{'config_file'}],
-			logger => $args{'logger'}
+			config_files => ['default', $info->domain_name(), $ENV{'CONFIG_FILE'}, $params->{'config_file'}],
+			logger => $params->{'logger'}
 		)->all();
 	};
 	if($@ || !defined($config)) {
@@ -144,16 +157,16 @@ sub new
 	throw Error::Simple('Configuration must be a hash reference') unless(ref($config) eq 'HASH');
 
 	# The values in config are defaults which can be overridden by
-	# the values in args{config}
-	if(defined($args{'config'})) {
-		$config = { %{$config}, %{$args{'config'}} };
+	# the values in params->{config}
+	if(defined($params->{'config'})) {
+		$config = { %{$config}, %{$params->{'config'}} };
 	}
 
 	# Allow variables to be overridden by the environment
 	foreach my $key(keys %{$config}) {
 		if(my $value = $ENV{$key}) {
-			if($args{'logger'}) {
-				$args{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " overwriting $key, ", $config->{$key}, " with $value");
+			if($params->{'logger'}) {
+				$params->{'logger'}->debug(__PACKAGE__, ': ', __LINE__, " overwriting $key, ", $config->{$key}, " with $value");
 			}
 			# If the value contains an equals make it into a hash value
 			if($value =~ /(.+)=(.+)/) {
@@ -177,8 +190,8 @@ sub new
 	# unless($config->{'config_path'}) {
 		# $config->{'config_path'} = File::Spec->catdir($config_dir, $info->domain_name());
 	# }
-	if($args{'debug'} && $args{'logger'}) {
-		$args{'logger'}->debug(__PACKAGE__, '(', __LINE__, '): ', Data::Dumper->new([$config])->Dump());
+	if($params->{'debug'} && $params->{'logger'}) {
+		$params->{'logger'}->debug(__PACKAGE__, '(', __LINE__, '): ', Data::Dumper->new([$config])->Dump());
 	}
 
 	return bless $config, $class;
