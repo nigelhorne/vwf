@@ -1,17 +1,5 @@
 package VWF::Config;
 
-=head1 NAME
-
-VWF::Config - Site-independent configuration file for the Versatile Web Framework
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
 # VWF is licensed under GPL2.0 for personal use only
 # njh@bandsman.co.uk
 
@@ -33,9 +21,25 @@ use Error::Simple;
 use File::Spec;
 use Params::Get 0.13;
 
+=encoding utf-8
+
+=head1 NAME
+
+VWF::Config - Site-independent configuration file for the Versatile Web Framework
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
 =head1 SUBROUTINES/METHODS
 
 =head2 new
+
+Creates a new VWF::Config instance with hierarchical configuration loading.
 
 Takes four optional arguments:
 	info (CGI::Info object)
@@ -45,6 +49,68 @@ Takes four optional arguments:
 	config (ref to hash of values to override in the config file
 
 Values in the file are overridden by what's in the environment
+
+B<Parameters:>
+
+=over 4
+
+=item * C<info> - CGI::Info object (optional, created if not provided)
+
+=item * C<logger> - Logger object with debug() method (optional)
+
+=item * C<config_directory> - Additional config directory path (optional)
+
+=item * C<config_file> - Specific config filename (optional)
+
+=item * C<config> - Hash ref of override values (optional)
+
+=back
+
+B<Configuration Resolution Order:>
+1. Base configuration files
+2. Values from config parameter
+3. Environment variable overrides
+
+B<Directory Search Order:>
+1. $ENV{CONFIG_DIR} (if set)
+2. Provided config_directory
+3. ../conf relative to script
+4. ../../conf relative to script
+5. $DOCUMENT_ROOT/../lib/conf
+6. $HOME/lib/conf
+
+B<Returns:> Blessed VWF::Config object
+
+B<Throws:> Error::Simple on configuration errors
+
+=head3 FORMAL SPECIFICATION
+
+    [STRING, HASH, LOGGER]
+
+    ConfigState ::= ⟨⟨ config_dirs : ℙ STRING;
+                      config_data : HASH;
+                      logger : LOGGER ⟩⟩
+
+    ConfigArgs ::= ⟨⟨ info : CGI_Info;
+                     logger : LOGGER;
+                     config_directory : STRING;
+                     config_file : STRING;
+                     config : HASH ⟩⟩
+
+    Init : ConfigArgs → ConfigState
+
+    ∀ params : ConfigArgs •
+      let dirs == if env.CONFIG_DIR ≠ ∅
+                  then {env.CONFIG_DIR}
+                  else default_dirs ∪ {params.config_directory} fi •
+      let valid_dirs == {d : dirs | ∃ f : FILE • readable(d, f)} •
+      valid_dirs ≠ ∅ ∧
+      config_data ∈ HASH ∧
+      config_data = merge(file_config, params.config, env_overrides)
+
+    ValidConfigKey == {k : STRING | k ∈ dom config_data}
+
+    GetConfigValue : ValidConfigKey → (STRING ∪ HASH ∪ ARRAY)
 
 =cut
 
