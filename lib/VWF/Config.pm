@@ -25,6 +25,7 @@ our $VERSION = '0.01';
 use warnings;
 use strict;
 
+use Carp;
 use Config::Abstraction;
 use CGI::Info;
 use Data::Dumper;
@@ -186,8 +187,15 @@ sub AUTOLOAD
 	# Extract the method name from the AUTOLOAD variable
 	(my $key = $AUTOLOAD) =~ s/.*:://;
 
+	# Don't handle special methods
+	return if $key eq 'DESTROY';
+
+	# Validate method name - only allow safe config keys
+	Carp::croak("Invalid key name: $key" ) unless $key =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
 	# Return the value of the corresponding hash key
-	return $self->{$key};
+	# Only return existing keys to avoid auto-vivification
+	return exists $self->{$key} ? $self->{$key} : undef;
 }
 
 1;
