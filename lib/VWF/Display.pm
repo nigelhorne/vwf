@@ -211,7 +211,18 @@ sub _find_config_dir
 		return $ENV{'CONFIG_DIR'};
 	}
 
-	my $config_dir = File::Spec->catdir(
+	# Look first in $root_dir/conf
+
+	my $config_dir = $ENV{'root_dir'};
+	if(defined($config_dir) && (-d $config_dir)) {
+		$config_dir = File::Spec->catdir($config_dir, 'conf');
+
+		if(-d $config_dir) {
+			return $config_dir;
+		}
+	}
+
+	$config_dir = File::Spec->catdir(
 			$info->script_dir(),
 			File::Spec->updir(),
 			File::Spec->updir(),

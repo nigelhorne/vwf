@@ -19,6 +19,7 @@ use VWF::Display;
 	# sub trace { print "TRACE: @_ \n" }
 	# sub debug { print "DEBUG: @_ \n" }
 	sub trace { }
+	sub info { }
 	sub debug { }
 }
 
