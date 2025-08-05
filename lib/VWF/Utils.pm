@@ -1,7 +1,7 @@
 package VWF::Utils;
 
 # VWF is licensed under GPL2.0 for personal use only
-# njh@bandsman.co.uk
+# njh@nigelhorne.com
 
 =head1 NAME
 
@@ -88,58 +88,6 @@ Returns: CHI cache object
 sub create_memory_cache {
     my $args = Params::Get::get_params(undef, @_);
     return _create_cache('memory_cache', $args);
-}
-
-=head2 distance
-
-Calculate the great circle distance between two points on Earth using the Haversine formula.
-More accurate than the original implementation, especially for short distances.
-
-Parameters:
-- lat1, lon1: Latitude and longitude of first point (decimal degrees)
-- lat2, lon2: Latitude and longitude of second point (decimal degrees) 
-- unit: 'K' for kilometers, 'N' for nautical miles, 'M' or undef for statute miles
-
-Returns: Distance in specified units
-
-Throws: Error on invalid input parameters
-
-=cut
-
-sub distance($lat1, $lon1, $lat2, $lon2, $unit = 'M') {
-    # Input validation
-    for my $coord_ref ([\$lat1, 'lat1'], [\$lon1, 'lon1'], [\$lat2, 'lat2'], [\$lon2, 'lon2']) {
-        my ($coord, $name) = @$coord_ref;
-        croak "$name must be defined" unless defined $$coord;
-        croak "$name must be numeric" unless looks_like_number($$coord);
-    }
-    
-    # Range validation
-    croak "Latitude must be between -90 and 90 degrees" 
-        if abs($lat1) > 90 || abs($lat2) > 90;
-    croak "Longitude must be between -180 and 180 degrees"
-        if abs($lon1) > 180 || abs($lon2) > 180;
-    
-    # Handle identical points
-    return 0 if $lat1 == $lat2 && $lon1 == $lon2;
-    
-    # Validate unit
-    $unit = uc($unit || 'M');
-    croak "Unknown unit '$unit'. Use 'K', 'N', or 'M'" 
-        unless $unit =~ /^[KNM]$/;
-    
-    # Use optimized calculation with appropriate radius
-    my $radius = $unit eq 'K' ? EARTH_RADIUS_KM :
-                 $unit eq 'N' ? EARTH_RADIUS_NM :
-                 EARTH_RADIUS_MILES;
-    
-    # Haversine formula
-    my $dlat = deg2rad($lat2 - $lat1);
-    my $dlon = deg2rad($lon2 - $lon1);
-    my $a = sin($dlat/2)**2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dlon/2)**2;
-    my $c = 2 * asin(sqrt($a));
-    
-    return $radius * $c;
 }
 
 # Private helper functions
@@ -383,13 +331,65 @@ sub _parse_server_config($config, $logger) {
     return @servers;
 }
 
+=head2 distance
+
+Calculate the great circle distance between two points on Earth using the Haversine formula.
+More accurate than the original implementation, especially for short distances.
+
+Parameters:
+- lat1, lon1: Latitude and longitude of first point (decimal degrees)
+- lat2, lon2: Latitude and longitude of second point (decimal degrees) 
+- unit: 'K' for kilometers, 'N' for nautical miles, 'M' or undef for statute miles
+
+Returns: Distance in specified units
+
+Throws: Error on invalid input parameters
+
+=cut
+
+sub distance($lat1, $lon1, $lat2, $lon2, $unit = 'M') {
+    # Input validation
+    for my $coord_ref ([\$lat1, 'lat1'], [\$lon1, 'lon1'], [\$lat2, 'lat2'], [\$lon2, 'lon2']) {
+        my ($coord, $name) = @$coord_ref;
+        croak "$name must be defined" unless defined $$coord;
+        croak "$name must be numeric" unless looks_like_number($$coord);
+    }
+    
+    # Range validation
+    croak "Latitude must be between -90 and 90 degrees" 
+        if abs($lat1) > 90 || abs($lat2) > 90;
+    croak "Longitude must be between -180 and 180 degrees"
+        if abs($lon1) > 180 || abs($lon2) > 180;
+    
+    # Handle identical points
+    return 0 if $lat1 == $lat2 && $lon1 == $lon2;
+    
+    # Validate unit
+    $unit = uc($unit || 'M');
+    croak "Unknown unit '$unit'. Use 'K', 'N', or 'M'" 
+        unless $unit =~ /^[KNM]$/;
+    
+    # Use optimized calculation with appropriate radius
+    my $radius = $unit eq 'K' ? EARTH_RADIUS_KM :
+                 $unit eq 'N' ? EARTH_RADIUS_NM :
+                 EARTH_RADIUS_MILES;
+    
+    # Haversine formula
+    my $dlat = deg2rad($lat2 - $lat1);
+    my $dlon = deg2rad($lon2 - $lon1);
+    my $a = sin($dlat/2)**2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dlon/2)**2;
+    my $c = 2 * asin(sqrt($a));
+    
+    return $radius * $c;
+}
+
 1;
 
 __END__
 
 =head1 AUTHOR
 
-Nigel Horne, C<< <njh at bandsman.co.uk> >>
+Nigel Horne, C<< <njh at nigelhorne.com> >>
 
 =head1 BUGS
 
