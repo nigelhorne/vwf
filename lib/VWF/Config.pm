@@ -24,8 +24,11 @@ our $VERSION = '0.01';
 
 use warnings;
 use strict;
+
 use Config::Abstraction;
 use CGI::Info;
+use Data::Dumper;
+use Error::Simple;
 use File::Spec;
 
 =head1 SUBROUTINES/METHODS
@@ -57,7 +60,7 @@ sub new
 
 	my @config_dirs;
 	if($ENV{'CONFIG_DIR'}) {
-		@config_dirs = [$ENV{'CONFIG_DIR'}];
+		@config_dirs = ($ENV{'CONFIG_DIR'});
 	} else {
 		if($args{config_directory}) {
 			push(@config_dirs, $args{config_directory});
