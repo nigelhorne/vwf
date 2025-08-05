@@ -2,7 +2,7 @@ package VWF::Config;
 
 =head1 NAME
 
-VWF::Config - Site-independent configuration file
+VWF::Config - Site-independent configuration file for the Versatile Web Framework
 
 =head1 VERSION
 
@@ -62,7 +62,7 @@ sub new
 	my @config_dirs;
 	if($ENV{'CONFIG_DIR'}) {
 		# Validate directory exists
-		throw Error::Simple("CONFIG_DIR '$ENV{CONFIG_DIR}' does not exist or is not readable" )
+		throw Error::Simple("CONFIG_DIR '$ENV{CONFIG_DIR}' does not exist or is not readable")
 			unless -d $ENV{'CONFIG_DIR'} && -r $ENV{'CONFIG_DIR'};
 		@config_dirs = ($ENV{'CONFIG_DIR'});
 	} else {
@@ -128,13 +128,20 @@ sub new
 		}
 	}
 
-	my $config = Config::Abstraction->new(
-		config_dirs => \@config_dirs,
-		config_files => ['default', $info->domain_name(), $ENV{'CONFIG_FILE'}, $args{'config_file'}],
-		logger => $args{'logger'})->all();
+	my $config;
+	eval {
+		$config = Config::Abstraction->new(
+			config_dirs => \@config_dirs,
+			config_files => ['default', $info->domain_name(), $ENV{'CONFIG_FILE'}, $args{'config_file'}],
+			logger => $args{'logger'}
+		)->all();
+	};
 	if($@ || !defined($config)) {
 		throw Error::Simple("Configuration error: $@");
 	}
+
+	# Validate essential configuration structure
+	throw Error::Simple('Configuration must be a hash reference') unless(ref($config) eq 'HASH');
 
 	# The values in config are defaults which can be overridden by
 	# the values in args{config}
@@ -184,14 +191,14 @@ sub AUTOLOAD
 
 	return undef unless($self);
 
-	# Extract the method name from the AUTOLOAD variable
+	# Extract the key name from the AUTOLOAD variable
 	(my $key = $AUTOLOAD) =~ s/.*:://;
 
 	# Don't handle special methods
 	return if $key eq 'DESTROY';
 
 	# Validate method name - only allow safe config keys
-	Carp::croak("Invalid key name: $key" ) unless $key =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+	Carp::croak("Invalid key name: $key") unless $key =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 	# Return the value of the corresponding hash key
 	# Only return existing keys to avoid auto-vivification
