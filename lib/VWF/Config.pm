@@ -285,7 +285,7 @@ sub AUTOLOAD
 	return if $key eq 'DESTROY';
 
 	# Validate method name - only allow safe config keys
-	Carp::croak("Invalid key name: $key") unless $key =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+	Carp::croak(__PACKAGE__, ": Invalid key name: $key") unless $key =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
 	# Return the value of the corresponding hash key
 	# Only return existing keys to avoid auto-vivification
