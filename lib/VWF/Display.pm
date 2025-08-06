@@ -453,10 +453,14 @@ sub http
 	# https://www.owasp.org/index.php/Clickjacking_Defense_Cheat_Sheet
 	# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
 
-	# TODO: investigate Content-Security-Policy
-	return $rc . "X-Frame-Options: SAMEORIGIN\n"
-		. "X-Content-Type-Options: nosniff\n"
-		. "Referrer-Policy: strict-origin-when-cross-origin\n\n";
+	# Enhanced security headers
+	return $rc .
+		"X-Frame-Options: SAMEORIGIN\n" .
+		"X-Content-Type-Options: nosniff\n" .
+		"X-XSS-Protection: 1; mode=block\n" .
+		"Referrer-Policy: strict-origin-when-cross-origin\n" .
+		"Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'\n" .
+		"Strict-Transport-Security: max-age=31536000; includeSubDomains\n\n";
 }
 
 # Run the given data through the template to create HTML
