@@ -389,9 +389,10 @@ sub get_template_path
 
 =head2 set_cookie
 
-Sets cookie values in the object.
+Safely set cookie values with validation.
+
 Takes either a hash reference or a list of key-value pairs as input.
-Iterates over the CGI parameters and stores them in the object's _cookies hash.
+Iterates over the parameters and stores them in the object's _cookies hash.
 Returns the object itself, allowing for method chaining.
 
 =cut
@@ -401,9 +402,19 @@ sub set_cookie
 	my $self = shift;
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	foreach my $key(keys(%params)) {
-		$self->{_cookies}->{$key} = $params{$key};
+	# Validate cookie parameters
+	for my $key (keys %params) {
+		# Sanitize cookie names and values
+		next unless $key =~ /^[a-zA-Z0-9_-]+$/;
+
+		my $value = $params{$key};
+		next unless defined $value;
+
+		# Basic value sanitization
+		$value =~ s/[;\r\n]//g;
+		$self->{_cookies}->{$key} = $value;
 	}
+
 	return $self;
 }
 
