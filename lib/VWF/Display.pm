@@ -11,12 +11,16 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+use v5.20;
 use strict;
 use warnings;
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
 
 use Config::Abstraction;
 use CGI::Info;
 use Data::Dumper;
+use Digest::SHA qw(sha256_hex);
 use File::Spec;
 use Template::Filters;
 use Template::Plugin::EnvHash;
@@ -438,6 +442,12 @@ sub http
 		}
 	}
 
+	# Generate CSRF token for forms
+	if($self->{config}->{security}->{enable_csrf} // 1) {
+		my $csrf_token = $self->_generate_csrf_token();
+		print "Set-Cookie: csrf_token=$csrf_token; path=/; HttpOnly; SameSite=Strict\n";
+	}
+
 	# Determine language, defaulting to English
 	# TODO: Change the headers, e.g. character set, based on the language
 	# my $language = $self->{_lingua} ? $self->{_lingua}->language() : 'English';
@@ -589,6 +599,17 @@ sub _types
 	push @rc, 'web';
 
 	return @rc;
+}
+
+sub _generate_csrf_token($self) {
+	my $timestamp = time();
+	my $random = sprintf("%08x", int(rand(0xFFFFFFFF)));
+	my $secret = $self->{config}->{security}->{csrf_secret} // 'default_secret';
+
+	my $token_data = "$timestamp:$random";
+	my $signature = sha256_hex("$token_data:$secret");
+
+	return "$token_data:$signature";
 }
 
 1;
