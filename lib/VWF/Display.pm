@@ -438,7 +438,10 @@ sub http
 	if(my $cookies = $self->{_cookies}) {
 		foreach my $cookie (keys(%{$cookies})) {
 			my $value = exists $cookies->{$cookie} ? $cookies->{$cookie} : '0:0';
-			print "Set-Cookie: $cookie=$value; path=/; HttpOnly\n";
+
+			# Secure cookie settings
+			my $secure = ($self->{'info'}->protocol() eq 'https') ? '; Secure' : '';
+			print "Set-Cookie: $cookie=$value; path=/; HttpOnly; SameSite=Strict$secure\n";
 		}
 	}
 
