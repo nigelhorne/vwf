@@ -89,6 +89,28 @@ sub new
 
 	my $info = $args{info} || CGI::Info->new();
 
+	# Configuration loading
+	my $config_dir = _find_config_dir(\%args, $info);
+	if($args{'logger'}) {
+		$args{'logger'}->debug(__PACKAGE__, ' (', __LINE__, "): path = $config_dir");
+	}
+	my $config;
+	eval {
+		# Try default first, then domain-specific config first
+		if($config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()], logger => $args{'logger'})) {
+			$config = $config->all();
+		}
+	};
+	if($@ || !defined($config)) {
+		die "Configuration error: $@: $config_dir/", $info->domain_name();
+	}
+
+	# The values in config are defaults which can be overridden by
+	# the values in args{config}
+	if(defined($args{'config'})) {
+		$config = { %{$config}, %{$args{'config'}} };
+	}
+
 	unless($info->is_search_engine() || !defined($ENV{'REMOTE_ADDR'})) {
 		if(my $params = $info->params()) {
 			# Intrusion Detection System integration
@@ -97,8 +119,10 @@ sub new
 
 			my $ids = CGI::IDS->new();
 			$ids->set_scan_keys(scan_keys => 1);
+
 			my $impact = $ids->detect_attacks(request => $params);
-			if($impact > 30) {
+			my $threshold = $config->{security}->{ids_threshold} // 50;
+			if($impact > $threshold) {
 				die $ENV{'REMOTE_ADDR'}, ": IDS impact is $impact";	# Block detected attacks
 			}
 		}
@@ -108,11 +132,11 @@ sub new
 		Data::Throttler->import();
 
 		# Handle YAML Errors
-		my $db_file = File::Spec->catdir($info->tmpdir(), 'throttle');
+		my $db_file = $config->{'throttle'}->{'file'} // File::Spec->catdir($info->tmpdir(), 'throttle');
 		eval {
 			my $throttler = Data::Throttler->new(
-				max_items => 30,	# Allow 30 requests
-				interval => 90,	# Per 90 second window
+				max_items => $config->{'throttle'}->{'max_items'} // 30,	# Allow 30 requests
+				interval => $config->{'throttle'}->{'interval'} // 90,	# Per 90 second window
 				backend => 'YAML',
 				backend_options => {
 					db_file => $db_file
@@ -139,28 +163,6 @@ sub new
 				die "$ENV{REMOTE_ADDR} is from a blacklisted country ", $lingua->country();
 			}
 		}
-	}
-
-	# Configuration loading
-	my $config_dir = _find_config_dir(\%args, $info);
-	if($args{'logger'}) {
-		$args{'logger'}->debug(__PACKAGE__, ' (', __LINE__, "): path = $config_dir");
-	}
-	my $config;
-	eval {
-		# Try default first, then domain-specific config first
-		if($config = Config::Abstraction->new(config_dirs => [$config_dir], config_files => ['default', $info->domain_name()], logger => $args{'logger'})) {
-			$config = $config->all();
-		}
-	};
-	if($@ || !defined($config)) {
-		die "Configuration error: $@: $config_dir/", $info->domain_name();
-	}
-
-	# The values in config are defaults which can be overridden by
-	# the values in args{config}
-	if(defined($args{'config'})) {
-		$config = { %{$config}, %{$args{'config'}} };
 	}
 
 	# Initialise the template system
