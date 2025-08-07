@@ -608,7 +608,7 @@ sub _types
 
 sub _generate_csrf_token($self) {
 	my $timestamp = time();
-	my $random = sprintf("%08x", int(rand(0xFFFFFFFF)));
+	my $random = sprintf('%08x', int(rand(0xFFFFFFFF)));
 	my $secret = $self->{config}->{security}->{csrf_secret} // 'default_secret';
 
 	my $token_data = "$timestamp:$random";
