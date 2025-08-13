@@ -337,6 +337,7 @@ sub doit
 			$info->status(429);
 
 			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests', $log);
+			sleep(1);
 			return;
 		}
 	}
