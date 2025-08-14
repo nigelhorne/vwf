@@ -62,8 +62,8 @@ use VWF::Utils;
 # taint_env();
 
 # Set rate limit parameters
-Readonly my $MAX_REQUESTS => 100;	# Max requests allowed
-Readonly my $TIME_WINDOW => 10 * 60;	# Time window in seconds (10 minutes)
+Readonly my $MAX_REQUESTS => 100;	# Default max requests allowed
+Readonly my $TIME_WINDOW => 10 * 60;	# Default time window in seconds (10 minutes)
 
 sub vwflog($$$$$$);	# Ensure all arguments are given
 
@@ -326,7 +326,8 @@ sub doit
 
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
-		if($request_count >= $MAX_REQUESTS) {
+		my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
+		if($request_count >= $max_requests) {
 			# Block request: Too many requests
 			print "Status: 429 Too Many Requests\n",
 				"Content-type: text/plain\n",
@@ -343,7 +344,8 @@ sub doit
 	}
 
 	# Increment request count
-	$rate_limit_cache->set("$script_name:rate_limit:$client_ip", $request_count + 1, $TIME_WINDOW);
+	my $time_window = $config->{'security'}->{'rate_limiting'}->{'time_window'} || $TIME_WINDOW;
+	$rate_limit_cache->set("$script_name:rate_limit:$client_ip", $request_count + 1, $time_window);
 
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
