@@ -1673,7 +1673,33 @@
         // trying to break this feature. You can still break this workaround if you
         // attach a plugin to the converter that sometimes (!) inserts this link. In
         // that case, consider yourself unsupported.
-        while (rendered.indexOf(testlink) != -1)
+        function urlAppearsInRendered(renderedHtml, testUrl) {
+            // Extract all href/src URLs from the rendered HTML
+            var urlPattern = /(?:href|src)\s*=\s*["']([^"']+)["']/gi;
+            var match;
+            var test;
+            try {
+                test = new URL(testUrl);
+            } catch (e) {
+                return false;
+            }
+            while ((match = urlPattern.exec(renderedHtml)) !== null) {
+                try {
+                    var candidate = new URL(match[1], test.origin + "/");
+                    if (
+                        candidate.protocol === test.protocol &&
+                        candidate.host === test.host &&
+                        candidate.pathname.startsWith(test.pathname)
+                    ) {
+                        return true;
+                    }
+                } catch (e) {
+                    // Ignore invalid URLs
+                }
+            }
+            return false;
+        }
+        while (urlAppearsInRendered(rendered, testlink))
             testlink += "nicetry/";
         
         var fakedefs = "\n\n";
