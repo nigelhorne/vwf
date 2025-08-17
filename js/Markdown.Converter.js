@@ -1165,7 +1165,7 @@ else
             text = text.replace(/>/g, "&gt;");
 
             // Now, escape characters that are magic in Markdown:
-            text = escapeCharacters(text, "\*_{}[]\\", false);
+            text = escapeCharacters(text, "\\*_{}[]\\\\", false);
 
             // jj the line above breaks this:
             //---
