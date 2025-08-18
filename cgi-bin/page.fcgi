@@ -63,7 +63,7 @@ use VWF::Utils;
 
 # Set rate limit parameters
 Readonly my $MAX_REQUESTS => 100;	# Default max requests allowed
-Readonly my $TIME_WINDOW => 10 * 60;	# Default time window in seconds (10 minutes)
+Readonly my $TIME_WINDOW => '60s';	# Time window for the maximum requests
 
 sub vwflog($$$$$$);	# Ensure all arguments are given
 
