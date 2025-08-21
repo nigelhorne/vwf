@@ -1,3 +1,5 @@
+[![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
+
 VWF
 ===
 
