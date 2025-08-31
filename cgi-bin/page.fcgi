@@ -7,7 +7,7 @@
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
 #	root_dir=$(pwd)/.. ./page.fcgi --mobile page=index lang=fr
-# To turn off the linting of HTML on a search-engine landing page
+# To turn off the linting of HTML on a search engine landing page
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
 use strict;
@@ -49,7 +49,7 @@ use autodie qw(:all);
 
 # Where to find the VWF modules
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
-			# i.e. the contents of the lib directory in the
+			# i.e., the contents of the lib directory in the
 			# distribution
 use lib '../lib';
 use lib CGI::Info::script_dir() . '/../lib';
@@ -329,12 +329,15 @@ sub doit
 		my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
 		if($request_count >= $max_requests) {
 			# Block request: Too many requests
+			my $retry_after = $config->{'security'}->{'rate_limiting'}->{'time_window'} || $TIME_WINDOW;
+			$retry_after =~ s/\D//g;	# Change 60s to 60, assume TIME_WINDOW is seconds
+
 			print "Status: 429 Too Many Requests\n",
 				"Content-type: text/plain\n",
+				"Retry-After: $retry_after\n",
 				"Pragma: no-cache\n\n";
 
 			$logger->warn("Too many requests from $client_ip");
-			# TODO: Work out how to add the "Retry-After" header, setting to $TIME_WINDOW
 			$info->status(429);
 
 			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests', $log);
