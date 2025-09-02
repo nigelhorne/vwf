@@ -20,6 +20,7 @@ use VWF::Display;
 	sub trace { shift; ::diag "TRACE: @_\n" }
 	sub info { shift; ::diag "INFO: @_\n" }
 	sub debug { shift; ::diag "DEBUG: @_\n" }
+	sub error { shift; ::diag "ERROR: @_\n" }
 	# sub trace { }
 	# sub info { }
 	# sub debug { }
