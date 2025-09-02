@@ -57,9 +57,9 @@ use constant {
 	[STRING, HASH, LOGGER, CHI_CACHE, COORDINATE]
 
 	CacheConfig ::= ⟨⟨ driver : STRING;
-					  servers : seq STRING;
-					  root_dir : STRING;
-					  connect : STRING ⟩⟩
+					 servers : seq STRING;
+					 root_dir : STRING;
+					 connect : STRING ⟩⟩
 
 	CacheArgs ::= ⟨⟨ config : HASH;
 					logger : LOGGER;
@@ -179,7 +179,7 @@ sub _validate_cache_config($config, $cache_type) {
 	return unless exists $config->{$cache_type};
 
 	my $cache_config = $config->{$cache_type};
-	croak "Cache configuration must be a hash reference"
+	croak('Cache configuration must be a hash reference')
 		unless ref($cache_config) eq 'HASH';
 
 	# Validate driver if specified
@@ -201,14 +201,14 @@ sub _validate_cache_config($config, $cache_type) {
 	# Validate port range
 	if (exists $cache_config->{port}) {
 		my $port = $cache_config->{port};
-		croak "Port must be between 1 and 65535"
+		croak('Port must be between 1 and 65535')
 			unless $port >= 1 && $port <= 65535;
 	}
 }
 
 sub _get_default_driver($cache_type, $logger) {
 	# Allow override for testing
-	my $env_var = "TEST_" . uc($cache_type) . "_DRIVER";
+	my $env_var = 'TEST_' . uc($cache_type) . '_DRIVER';
 	return $ENV{$env_var} if $ENV{$env_var};
 
 	# Production defaults
@@ -275,7 +275,7 @@ sub _configure_redis($chi_args, $config, $args, $logger) {
 	my @servers = _parse_server_config($config, $logger);
 	if (@servers) {
 		$chi_args->{servers} = \@servers;
-		$chi_args->{server} = $servers[0];  # Primary server
+		$chi_args->{server} = $servers[0];	# Primary server
 	}
 
 	# Redis-specific options with sensible defaults
@@ -330,13 +330,13 @@ sub _configure_memcached($chi_args, $config, $args, $logger) {
 	} else {
 		# Default to localhost
 		$chi_args->{servers} = ['127.0.0.1:11211'];
-		$logger->debug("Using default Memcached server: 127.0.0.1:11211") if $logger;
+		$logger->debug('Using default Memcached server: 127.0.0.1:11211') if $logger;
 	}
 }
 
 sub _configure_file_based($chi_args, $config, $args) {
 	my $root_dir = $ENV{'root_dir'} || $args->{'root_dir'} ||
-				   $config->{root_dir} || $args->{'config'}->{root_dir};
+				 $config->{root_dir} || $args->{'config'}->{root_dir};
 
 	croak "File-based cache drivers require 'root_dir' parameter" unless $root_dir;
 	croak "Root directory '$root_dir' does not exist or is not writable"
@@ -352,7 +352,7 @@ sub _parse_server_config($config, $logger) {
 
 	my @servers;
 	for my $server_entry (split /,/, $server_config) {
-		$server_entry =~ s/^\s+|\s+$//g;  # trim whitespace
+		$server_entry =~ s/^\s+|\s+$//g;	# trim whitespace
 
 		# If no port specified, add default port
 		unless ($server_entry =~ /:/) {
@@ -399,9 +399,9 @@ sub distance($lat1, $lon1, $lat2, $lon2, $unit = 'M') {
 	}
 
 	# Range validation
-	croak "Latitude must be between -90 and 90 degrees"
+	croak('Latitude must be between -90 and 90 degrees')
 		if abs($lat1) > 90 || abs($lat2) > 90;
-	croak "Longitude must be between -180 and 180 degrees"
+	croak('Longitude must be between -180 and 180 degrees')
 		if abs($lon1) > 180 || abs($lon2) > 180;
 
 	# Handle identical points
