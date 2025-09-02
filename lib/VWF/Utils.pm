@@ -317,7 +317,10 @@ sub _configure_shared_memory($chi_args, $config, $args) {
 }
 
 sub _configure_memory($chi_args, $config) {
-	$chi_args->{global} = $config->{global} // 1;
+	$chi_args->{'global'} = $config->{'global'} // 1;
+	if($chi_args->{'global'}) {
+		$chi_args->{'datastore'} = {};
+	}
 }
 
 sub _configure_memcached($chi_args, $config, $args, $logger) {
