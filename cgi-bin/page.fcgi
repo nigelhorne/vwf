@@ -469,7 +469,7 @@ sub doit
 					if($@) {
 						$logger->warn("$display_module->new(): $@");
 					}
-					$logger->info("Unknown page $page");
+					$logger->notice("Can't instantiate page $page");
 					$invalidpage = 1;
 					if($info->status() == 200) {
 						$info->status(404);
