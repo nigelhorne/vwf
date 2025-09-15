@@ -29,10 +29,10 @@ use CGI::Info 0.94;	# Gets all messages
 use CGI::Lingua 0.61;
 use CHI;
 use Class::Simple;
+use Config::Abstraction;
 use Database::Abstraction;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
-use Config::Abstraction;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
@@ -468,8 +468,9 @@ sub doit
 				if(!defined($display)) {
 					if($@) {
 						$logger->warn("$display_module->new(): $@");
+					} else {
+						$logger->notice("Can't instantiate page $page");
 					}
-					$logger->notice("Can't instantiate page $page");
 					$invalidpage = 1;
 					if($info->status() == 200) {
 						$info->status(404);
