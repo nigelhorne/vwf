@@ -604,7 +604,7 @@ sub _types
 	push @rc, 'web';
 
 	if(my $logger = $self->{'_logger'}) {
-		$logger->trace(__PACKAGE__, '<_types returning ', join(', ', @rc));
+		$logger->trace('< ', __PACKAGE__, '::_types returning ', join(':', @rc));
 	}
 
 	return @rc;
