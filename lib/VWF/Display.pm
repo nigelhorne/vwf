@@ -354,10 +354,10 @@ sub get_template_path
 				}
 				$prefix .= "$dir/$language/$browser_type:" if(-d "$dir/$language/$browser_type");
 				$prefix .= "$dir/$browser_type/$language:" if(-d "$dir/$browser_type/$language");
-				$prefix .= "$dir/$browser_type/default:" if(-d "$dir/$browser_type/default");
-				$prefix .= "$dir/default/$browser_type/:" if(-d "$dir/default/$browser_type");
 			}
 		}
+		$prefix .= "$dir/$browser_type/default:" if(-d "$dir/$browser_type/default");
+		$prefix .= "$dir/default/$browser_type/:" if(-d "$dir/default/$browser_type");
 		$prefix .= "$dir/$browser_type:" if(-d "$dir/$browser_type");
 	}
 
