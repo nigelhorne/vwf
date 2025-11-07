@@ -90,7 +90,7 @@ my $buffercache;
 my $script_dir = $info->script_dir();
 my $env_prefix = uc($info->host_name()) . '_';
 $env_prefix =~ tr/\./_/;
-my $logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => 'example.com', config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
+my $logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => $info->domain_name(), config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
 Log::WarnDie->dispatcher($logger);
 
 # my $pagename = "VWF::Display::$script_name";
@@ -162,11 +162,13 @@ $SIG{PIPE} = 'IGNORE';
 # my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
 # https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
 $SIG{__DIE__} = $SIG{__WARN__} = sub {
+	my $msg = join '', @_;
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
-		print $fout $info->domain_name(), ": @_";
+		print $fout $info->domain_name(), ": $msg";
 	# } else {
 		# print $stderr @_;
 	}
+	$logger->fatal($msg) if($logger);
 	Log::WarnDie->dispatcher(undef);
 	CORE::die @_
 };
