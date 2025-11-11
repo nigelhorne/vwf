@@ -23,6 +23,7 @@ BEGIN {
 no lib '.';
 
 use Log::WarnDie 0.09;
+use Carp::Always;
 use CGI::ACL;
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Info 0.94;	# Gets all messages
