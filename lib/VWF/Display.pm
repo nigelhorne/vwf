@@ -133,12 +133,10 @@ sub new
 
 		# Connection throttling system
 		require Data::Throttler;
-		Data::Throttler->import();
 
-		# Handle YAML Errors
 		my $db_file = $config->{'throttle'}->{'file'} // File::Spec->catdir($info->tmpdir(), 'throttle');
-		eval {
-			my $throttler = Data::Throttler->new(
+		eval {	# Handle YAML Errors
+			my %options = (
 				max_items => $config->{'throttle'}->{'max_items'} // 30,	# Allow 30 requests
 				interval => $config->{'throttle'}->{'interval'} // 90,	# Per 90 second window
 				backend => 'YAML',
@@ -147,17 +145,22 @@ sub new
 				}
 			);
 
-			# Block if over the limit
-			unless($throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
-				$info->status(429);	# Too many requests
-				sleep(1);	# Slow down attackers
-				if($params->{'logger'}) {
-					$params->{'logger'}->warn("$ENV{REMOTE_ADDR} connexion throttled");
+			if(my $throttler = Data::Throttler->new(%options)) {
+				# Block if over the limit
+				if(!$throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
+					$info->status(429);	# Too many requests
+					sleep(1);	# Slow down attackers
+					if($params->{'logger'}) {
+						$params->{'logger'}->warn("$ENV{REMOTE_ADDR} connexion throttled");
+					}
+					return;
 				}
-				return;
 			}
 		};
 		if($@) {
+			if($params->{'logger'}) {
+				$params->{'logger'}->warn("Removing unparsable YAML file $db_file");
+			}
 			unlink($db_file);
 		}
 
