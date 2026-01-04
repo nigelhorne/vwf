@@ -614,7 +614,7 @@ sub blacklisted
 {
 	if(my $remote = $ENV{'REMOTE_ADDR'}) {
 		if($blacklisted_ip{$remote}) {
-			$info->status(301);
+			$info->status(403);
 			return 1;
 		}
 
@@ -622,7 +622,7 @@ sub blacklisted
 		if(my $string = $info->as_string()) {
 			if(($string =~ /SELECT.+AND.+/) || ($string =~ /ORDER BY /) || ($string =~ / OR NOT /) || ($string =~ / AND \d+=\d+/) || ($string =~ /THEN.+ELSE.+END/) || ($string =~ /.+AND.+SELECT.+/) || ($string =~ /\sAND\s.+\sAND\s/) || ($string =~ /AND\sCASE\sWHEN/)) {
 				$blacklisted_ip{$remote} = 1;
-				$info->status(301);
+				$info->status(403);
 				return 1;
 			}
 		}
