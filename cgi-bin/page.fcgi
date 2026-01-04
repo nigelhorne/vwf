@@ -67,8 +67,6 @@ use VWF::Utils;
 Readonly my $MAX_REQUESTS => 100;	# Default max requests allowed
 Readonly my $TIME_WINDOW => '60s';	# Time window for the maximum requests
 
-sub vwflog($$$$$$);	# Ensure all arguments are given
-
 my $info = CGI::Info->new();
 my $config;
 my @suffixlist = ('.pl', '.fcgi');
@@ -634,13 +632,12 @@ sub filter
 	# return 0 if($_[0] =~ /Can't locate auto\/NetAddr\/IP\/InetBase\/AF_INET6.al in /);
 	# return 0 if($_[0] =~ /S_IFFIFO is not a valid Fcntl macro at /);
 
-	return 0 if $_[0] =~ /Can't locate (Net\/OAuth\/V1_0A\/ProtectedResourceRequest\.pm|auto\/NetAddr\/IP\/InetBase\/AF_INET6\.al) in |
-		S_IFFIFO is not a valid Fcntl macro at /x;
+	return 0 if $_[0] =~ /Can't locate (Net\/OAuth\/V1_0A\/ProtectedResourceRequest\.pm|auto\/NetAddr\/IP\/InetBase\/AF_INET6\.al) in |S_IFFIFO is not a valid Fcntl macro at /x;
 	return 1;
 }
 
 # Put something to vwf.log
-sub vwflog($$$$$$)
+sub vwflog
 {
 	my ($vwflog, $info, $lingua, $syslog, $message, $log) = @_;
 
