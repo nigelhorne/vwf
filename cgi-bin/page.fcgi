@@ -37,6 +37,7 @@ use File::Basename;
 use FCGI;
 use FCGI::Buffer;
 use File::HomeDir;
+use HTTP::Status;
 use Log::Abstraction;
 use Error qw(:try);
 use File::Spec;
@@ -573,9 +574,6 @@ sub choose
 	my $status = $info->status();
 
 	if($status != 200) {
-		require HTTP::Status;
-		HTTP::Status->import();
-
 		print "Status: $status ",
 			HTTP::Status::status_message($status),
 			"\n\n";
@@ -637,7 +635,7 @@ sub filter
 	# return 0 if($_[0] =~ /S_IFFIFO is not a valid Fcntl macro at /);
 
 	return 0 if $_[0] =~ /Can't locate (Net\/OAuth\/V1_0A\/ProtectedResourceRequest\.pm|auto\/NetAddr\/IP\/InetBase\/AF_INET6\.al) in |
-		   S_IFFIFO is not a valid Fcntl macro at /x;
+		S_IFFIFO is not a valid Fcntl macro at /x;
 	return 1;
 }
 
