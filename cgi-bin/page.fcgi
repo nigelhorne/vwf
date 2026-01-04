@@ -165,6 +165,7 @@ $SIG{__DIE__} = $SIG{__WARN__} = sub {
 	my $msg = join '', @_;
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
 		print $fout $info->domain_name(), ": $msg";
+		close $fout;
 	# } else {
 		# print $stderr @_;
 	}
@@ -329,6 +330,10 @@ sub doit
 	# Rate limit by IP
 	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
 		my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
+		if($max_requests <= 0) {
+			$logger->warn("rate_limiting->max_requests must be > 0, is $max_requests, ignoring");
+			$max_requests = $MAX_REQUESTS;
+		}
 		if($request_count >= $max_requests) {
 			# Block request: Too many requests
 			my $retry_after = $config->{'security'}->{'rate_limiting'}->{'time_window'} || $TIME_WINDOW;
@@ -650,7 +655,7 @@ sub vwflog
 	}
 	$message ||= '';
 
-	if(!-r $vwflog) {
+	if(!-e $vwflog) {
 		# First run - put in the heading row
 		open(my $fout, '>', $vwflog);
 		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","messages","error"',
@@ -677,7 +682,7 @@ sub vwflog
 			'"', $warnings, '",',
 			'"', $message, '"',
 			"\n";
-		close($fout);
+		close $fout;
 	}
 
 	if($syslog) {
