@@ -314,42 +314,123 @@ sub doit
 		syslog => $syslog,
 	});
 
-	# Configure cache for rate limiting (change to create_disc_cache for persistence)
+	# TODO: update the vwf_log variable to point here
+	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
+	my $log = Class::Simple->new();
+
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
+
+	# Configure cache for rate limiting
 	$rate_limit_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'rate_limit');
 
 	# Get client IP
 	my $client_ip = $ENV{'REMOTE_ADDR'} || 'unknown';
 
+	# Check for CAPTCHA bypass token
+	my $captcha_bypass_key = "$script_name:captcha_bypass:$client_ip";
+	my $has_captcha_bypass = $rate_limit_cache->get($captcha_bypass_key);
+
 	# Check and increment request count
 	my $request_count = $rate_limit_cache->get("$script_name:rate_limit:$client_ip") || 0;
 
-	# TODO: update the vwf_log variable to point here
-	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
-	my $log = Class::Simple->new();
+	# Get rate limit thresholds
+	my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
+	my $max_requests_hard = $config->{'security'}->{'rate_limiting'}->{'max_requests_hard'} || ($max_requests * 1.5);
 
-	# Rate limit by IP
-	unless(grep { $_ eq $client_ip } @rate_limit_trusted_ips) {	# Bypass rate limiting
-		my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
-		if($max_requests <= 0) {
-			$logger->warn("rate_limiting->max_requests must be > 0, is $max_requests, ignoring");
-			$max_requests = $MAX_REQUESTS;
+	# Check if this is a CAPTCHA verification attempt
+	if ($info->param('g-recaptcha-response')) {
+		require 'VWF::CAPTCHA';
+		VWF::CAPTCHA->new();
+    
+		my $recaptcha_config = $config->recaptcha();
+		if ($recaptcha_config && $recaptcha_config->{enabled}) {
+			my $captcha = VWF::CAPTCHA->new(
+				site_key => $recaptcha_config->{site_key},
+				secret_key => $recaptcha_config->{secret_key},
+				logger => $logger
+			);
+		
+			if ($captcha->verify($info->param('g-recaptcha-response'), $client_ip)) {
+				# CAPTCHA verified - grant bypass
+				my $bypass_duration = $config->{'security'}->{'rate_limiting'}->{'captcha_bypass_duration'} || '300s';
+				$rate_limit_cache->set($captcha_bypass_key, 1, $bypass_duration);
+				$rate_limit_cache->set("$script_name:rate_limit:$client_ip", 0, '60s'); # Reset counter
+
+				$logger->info("CAPTCHA verified for $client_ip - rate limit bypass granted");
+				$has_captcha_bypass = 1;
+
+				# Redirect to original page or home
+				my $redirect_page = $info->param('page') || 'index';
+				$info->status(302);
+				print "Status: 302 Found\n",
+					"Location: $ENV{SCRIPT_NAME}?page=$redirect_page\n\n";
+				return;
+			} else {
+				$logger->warn("CAPTCHA verification failed for $client_ip");
+				# Fall through to show CAPTCHA again
+			}
 		}
-		if($request_count >= $max_requests) {
-			# Block request: Too many requests
-			my $retry_after = $config->{'security'}->{'rate_limiting'}->{'time_window'} || $TIME_WINDOW;
-			$retry_after =~ s/\D//g;	# Change 60s to 60, assume TIME_WINDOW is seconds
+	}
 
-			print "Status: 429 Too Many Requests\n",
-				"Content-type: text/plain\n",
-				"Retry-After: $retry_after\n",
-				"Pragma: no-cache\n\n";
+	# Rate limit by IP (unless bypassed)
+	unless($has_captcha_bypass || grep { $_ eq $client_ip } @rate_limit_trusted_ips) {
+		if ($request_count >= $max_requests_hard) {
+			# Hard limit exceeded - show CAPTCHA with warning
+			my $recaptcha_config = $config->recaptcha();
 
-			$logger->warn("Too many requests from $client_ip");
-			$info->status(429);
+			if ($recaptcha_config && $recaptcha_config->{enabled}) {
+				$logger->warn("Hard rate limit exceeded for $client_ip ($request_count requests)");
+				$info->status(429);
 
-			vwflog($vwflog, $info, $lingua, $syslog, 'Too many requests', $log);
-			sleep(1);
-			return;
+				eval 'require VWF::Display::captcha';
+				my $display = VWF::Display::captcha->new({
+					cachedir => $cachedir,
+					info => $info,
+					logger => $logger,
+					lingua => $lingua,
+					config => $config,
+				});
+
+				print "Status: 429 Too Many Requests\n";
+				print "Content-type: text/html\n";
+				print "Retry-After: 60\n";
+				print "Pragma: no-cache\n\n";
+				print $display->as_string({
+					hard_block => 1,
+					request_count => $request_count,
+				});
+
+				vwflog($vwflog, $info, $lingua, $syslog, 'Hard rate limit - CAPTCHA shown', $log);
+				return;
+			}
+		} elsif ($request_count >= $max_requests) {
+			# Soft limit exceeded - show CAPTCHA
+			my $recaptcha_config = $config->recaptcha();
+
+			if ($recaptcha_config && $recaptcha_config->{enabled}) {
+				$logger->info("Soft rate limit exceeded for $client_ip ($request_count requests) - CAPTCHA challenge issued");
+				$info->status(429);
+
+				my $display = VWF::Display::captcha->new({
+					cachedir => $cachedir,
+					info => $info,
+					logger => $logger,
+					lingua => $lingua,
+					config => $config,
+				});
+
+				print "Status: 429 Too Many Requests\n";
+				print "Content-type: text/html\n";
+				print "Retry-After: 60\n";
+				print "Pragma: no-cache\n\n";
+				print $display->as_string({
+					hard_block => 0,
+					request_count => $request_count,
+				});
+
+				vwflog($vwflog, $info, $lingua, $syslog, 'Soft rate limit - CAPTCHA shown', $log);
+				return;
+			}
 		}
 	}
 
@@ -410,8 +491,6 @@ sub doit
 	}
 
 	my $fb = FCGI::Buffer->new()->init($args);
-
-	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
 
 	if($fb->can_cache()) {
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);

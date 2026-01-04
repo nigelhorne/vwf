@@ -41,11 +41,11 @@ sub html {
 	# Parameters to exclude from further processing
 	# my @exclude_keys = qw(page lint_content lang fbclid gclid);
 	# local delete @params{@exclude_keys};
-	local delete $params->{'page'};
-	local delete $params->{'lint_content'};
-	local delete $params->{'lang'};
-	local delete $params->{'fbclid'};
-	local delete $params->{'gclid'};
+	delete local $params->{'page'};
+	delete local $params->{'lint_content'};
+	delete local $params->{'lang'};
+	delete local $params->{'fbclid'};
+	delete local $params->{'gclid'};
 
 	# Database handle
 	my $index = $args{'index'};
