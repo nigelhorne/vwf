@@ -314,12 +314,6 @@ sub doit
 		syslog => $syslog,
 	});
 
-	# TODO: update the vwf_log variable to point here
-	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
-	my $log = Class::Simple->new();
-
-	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
-
 	# Configure cache for rate limiting
 	$rate_limit_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'rate_limit');
 
@@ -341,7 +335,7 @@ sub doit
 	if ($info->param('g-recaptcha-response')) {
 		require 'VWF::CAPTCHA';
 		VWF::CAPTCHA->new();
-    
+
 		my $recaptcha_config = $config->recaptcha();
 		if ($recaptcha_config && $recaptcha_config->{enabled}) {
 			my $captcha = VWF::CAPTCHA->new(
@@ -349,7 +343,7 @@ sub doit
 				secret_key => $recaptcha_config->{secret_key},
 				logger => $logger
 			);
-		
+
 			if ($captcha->verify($info->param('g-recaptcha-response'), $client_ip)) {
 				# CAPTCHA verified - grant bypass
 				my $bypass_duration = $config->{'security'}->{'rate_limiting'}->{'captcha_bypass_duration'} || '300s';
@@ -371,6 +365,12 @@ sub doit
 			}
 		}
 	}
+
+	# TODO: update the vwf_log variable to point here
+	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
+	my $log = Class::Simple->new();
+
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
 
 	# Rate limit by IP (unless bypassed)
 	unless($has_captcha_bypass || grep { $_ eq $client_ip } @rate_limit_trusted_ips) {
