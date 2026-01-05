@@ -3,7 +3,7 @@ package VWF::CAPTCHA;
 use strict;
 use warnings;
 use LWP::UserAgent;
-use JSON;
+use JSON::MaybeXS;
 
 sub new {
 	my ($class, %args) = @_;
@@ -42,8 +42,7 @@ sub verify {
 		return 1;
 	}
 
-	$self->{logger}->warn("reCAPTCHA verification failed for $remote_ip: " .
-		join(', ', @{$result->{'error-codes'} || []}))
+	$self->{logger}->warn("reCAPTCHA verification failed for $remote_ip: " . join(', ', @{$result->{'error-codes'} || []}))
 		if $self->{logger};
 
 	return 0;
