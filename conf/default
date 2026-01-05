@@ -21,7 +21,7 @@
 	<security>
 		<rate_limiting>
 			<!--  Hard limit - block completely -->
-			<max_requests_hard>150 </max_requests_hard>
+			<max_requests_hard>150</max_requests_hard>
 			<!-- Soft limit - show CAPTCHA -->
 			<max_requests>100</max_requests>
 			<time_window>60s</time_window>

@@ -9,8 +9,8 @@ sub new {
 	my ($class, %args) = @_;
 
 	my $self = {
-		site_key => $args{site_key} || die "site_key required",
-		secret_key => $args{secret_key} || die "secret_key required",
+		site_key => $args{site_key} || die 'site_key required',
+		secret_key => $args{secret_key} || die 'secret_key required',
 		logger => $args{logger},
 	};
 
@@ -35,7 +35,7 @@ sub verify {
 		return 0;
 	}
 
-	my $result = decode_json($response->decoded_content);
+	my $result = decode_json($response->decoded_content());
 
 	if ($result->{success}) {
 		$self->{logger}->info("reCAPTCHA verification successful for $remote_ip") if $self->{logger};
