@@ -163,15 +163,15 @@ $SIG{PIPE} = 'IGNORE';
 # https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
 $SIG{__DIE__} = $SIG{__WARN__} = sub {
 	my $msg = join '', @_;
+	Log::WarnDie->dispatcher(undef);
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
 		print $fout $info->domain_name(), ": $msg";
 		close $fout;
 	# } else {
-		# print $stderr @_;
+		# print $stderr $msg;
 	}
 	$logger->fatal($msg) if($logger);
-	Log::WarnDie->dispatcher(undef);
-	CORE::die @_
+	CORE::die $msg;
 };
 
 # my $request = FCGI::Request($stdin, $stdout, $stderr);
@@ -710,7 +710,6 @@ sub blacklisted
 }
 
 # False positives we don't need in the logs
-
 sub filter
 {
 	# return 0 if($_[0] =~ /Can't locate Net\/OAuth\/V1_0A\/ProtectedResourceRequest.pm in /);
