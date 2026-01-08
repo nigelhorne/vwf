@@ -357,8 +357,6 @@ sub doit
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
 	my $log = Class::Simple->new();
 
-	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
-
 	# Stores things for a month or longer
 	$lingua_cache ||= create_disc_cache(config => $config, logger => $logger, namespace => 'CGI::Lingua');
 
@@ -371,6 +369,8 @@ sub doit
 		debug => $params{'debug'},
 		syslog => $syslog,
 	});
+
+	my $cachedir = $params{'cachedir'} || $config->{disc_cache}->{root_dir} || File::Spec->catfile($tmpdir, 'cache');
 
 	# Rate limit by IP (unless bypassed)
 	unless($has_captcha_bypass || grep { $_ eq $client_ip } @rate_limit_trusted_ips) {
