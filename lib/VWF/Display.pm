@@ -318,7 +318,7 @@ sub as_string {
 	# return $self->http() . $html;
 
 	# Build the HTTP response
-	my $rc = $self->http();
+	my $rc = $self->http($args);
 	return $rc =~ /^Location:\s/ms ? $rc : $rc . $self->html($args);
 }
 
@@ -455,7 +455,7 @@ sub http
 	}
 
 	# Generate CSRF token for forms
-	if($self->{config}->{security}->{enable_csrf} // 1) {
+	if($self->{config}->{security}->{csrf}->{enable} // 1) {
 		my $csrf_token = $self->_generate_csrf_token();
 		print "Set-Cookie: csrf_token=$csrf_token; path=/; HttpOnly; SameSite=Strict\n";
 	}
@@ -477,6 +477,10 @@ sub http
 			binmode(STDOUT, ':utf8');
 			$rc = "Content-Type: text/html; charset=UTF-8\n";
 		}
+	}
+
+	if($params->{'Retry-After'}) {
+		$rc = $params->{'Retry-After'} . "\n";
 	}
 
 	# Security headers
@@ -620,7 +624,7 @@ sub _types
 sub _generate_csrf_token($self) {
 	my $timestamp = time();
 	my $random = sprintf('%08x', int(rand(0xFFFFFFFF)));
-	my $secret = $self->{config}->{security}->{csrf_secret} // 'default_secret';
+	my $secret = $self->{config}->{security}->{csrf}->{secret} // 'default_secret';
 
 	my $token_data = "$timestamp:$random";
 	my $signature = sha256_hex("$token_data:$secret");

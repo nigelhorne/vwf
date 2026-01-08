@@ -391,11 +391,9 @@ sub doit
 					config => $config,
 				});
 
-				print "Status: 429 Too Many Requests\n";
-				print "Content-type: text/html\n";
-				print "Retry-After: 60\n";
-				print "Pragma: no-cache\n\n";
+				# print "Pragma: no-cache\n\n";
 				print $display->as_string({
+					Retry_After => 60,
 					hard_block => 1,
 					request_count => $request_count,
 				});
@@ -419,11 +417,9 @@ sub doit
 					config => $config,
 				});
 
-				print "Status: 429 Too Many Requests\n";
-				print "Content-type: text/html\n";
-				print "Retry-After: 60\n";
-				print "Pragma: no-cache\n\n";
+				# print "Pragma: no-cache\n\n";
 				print $display->as_string({
+					Retry_After => 60,
 					hard_block => 0,
 					request_count => $request_count,
 				});

@@ -28,5 +28,12 @@
 			<!-- 5 minutes after successful CAPTCHA -->
 			<captcha_bypass_duration>300s</captcha_bypass_duration>
 		</rate_limiting>
+		<!-- CGI::IDS threshold -->
+		<ids_threshold>50</ids_threshold>
+		<csrf>
+			<!-- Generate CSRF token for forms -->
+			<enable>1</enable>
+			<secret>default_secret</secret>
+		</csrf>
 	</security>
 </config>
