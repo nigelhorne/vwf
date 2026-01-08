@@ -757,7 +757,7 @@ sub vwflog
 			'"', $warnings, '",',
 			'"', $message, '"',
 			"\n";
-		close $fout;
+		close($fout);
 	}
 
 	if($syslog) {
