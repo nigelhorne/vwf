@@ -115,7 +115,7 @@ Database::Abstraction::init({
 
 my $index = VWF::Data::index->new();
 if($@) {
-	$logger->error($@);
+	$logger->error($msg) if($logger);
 	Log::WarnDie->dispatcher(undef);
 	die $@;
 }
