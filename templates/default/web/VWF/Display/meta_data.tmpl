@@ -143,6 +143,19 @@
 						[% END %]
 					</div>
 				</div>
+				<div id="box6">
+					<h2>Server Health</h2>
+					Uptime: [% server.uptime() %]<br>
+					CPU: [% server.cpu() %]%<br>
+					Memory: [% server.memory() %]%<br>
+					Disk: [% server.disk() %]
+				</div>
+
+				<div id="box7">
+					<h2>Traffic</h2>
+					Requests per hour: [% traffic.requests_per_hour() %]<br>
+					Active users: [% traffic.active_users() %]
+				</div>
 			</div>
 		</div>
 	</body>
