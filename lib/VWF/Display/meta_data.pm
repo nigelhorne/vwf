@@ -7,6 +7,7 @@ use warnings;
 
 use parent 'VWF::Display';
 
+use Date::Manip;
 use System::Info;
 use Filesys::Df;
 use Sys::Uptime;
@@ -40,7 +41,7 @@ sub html {
 	return $self->SUPER::html({
 		datapoints => $datapoints,
 		server	 => $server_metrics,
-		traffic	=> $traffic_metrics,
+		traffic => $traffic_metrics,
 	});
 }
 
@@ -77,7 +78,10 @@ sub get_traffic_metrics {
 	my $hour_ago = $now - 3600;
 
 	# Filter entries in the last hour
-	my @recent = grep { $_->{time} > $hour_ago } $vwf_log->selectall_array({ domain_name => $domain_name });
+	my @recent = grep {
+		my $epoch = UnixDate(ParseDate($_->{time}), '%s');
+		$epoch && $epoch > $hour_ago;
+	} $vwf_log->selectall_array({ domain_name => $domain_name });
 
 	# Requests per hour
 	$metrics->{requests_per_hour} = scalar @recent;
