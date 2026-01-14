@@ -26,6 +26,9 @@ sub html {
 	foreach my $type ('web','mobile','search','robot') {
 		my @entries = $vwf_log->type({ domain_name => $domain_name, type => $type });
 		$datapoints .= '{y: ' . scalar(@entries) . ", label: \"$type\"},\n";
+		if($self->{'logger'}) {
+			$self->{'logger'}->debug("$type = " . scalar(@entries));
+		}
 	}
 
 	# --- Server metrics using CPAN modules ---
@@ -74,7 +77,7 @@ sub get_traffic_metrics {
 	my $hour_ago = $now - 3600;
 
 	# Filter entries in the last hour
-	my @recent = grep { $_->{time} > $hour_ago } $vwf_log->entries(domain => $domain_name);
+	my @recent = grep { $_->{time} > $hour_ago } $vwf_log->selectall_array({ domain_name => $domain_name });
 
 	# Requests per hour
 	$metrics->{requests_per_hour} = scalar @recent;
