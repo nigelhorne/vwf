@@ -1,159 +1,125 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-	<meta http-equiv="Content-Language" content="en">
-	<meta name="robots" content="INDEX,FOLLOW">
-	<meta name="language" content="ENGLISH">
-	<meta name="object" content="Index">
-	<meta name="owner" content="Nigel Horne">
-	<meta name="Author" content="Nigel Horne">
-	<meta name="Copyright" content="Copyright (C) 2026 NJH Music, all rights reserved">
-	<title>[% SiteTitle %]: Meta Data</title>
-	[% IF keywords %]
-		<meta name="keywords" content="[% keywords %]" />
-	[% END %]
-	<link rel="stylesheet" type="text/css" href="/css/style.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta http-equiv="Content-Language" content="en">
+<meta name="robots" content="INDEX,FOLLOW">
+<meta name="language" content="ENGLISH">
+<meta name="object" content="Index">
+<meta name="owner" content="Nigel Horne">
+<meta name="Author" content="Nigel Horne">
+<meta name="Copyright" content="Copyright (C) 2026 Nigel Horne, all rights reserved">
+<title>[% SiteTitle %]: Meta Data</title>
+<link rel="stylesheet" type="text/css" href="/css/style.css" />
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { margin:2%; font-family: sans-serif; }
+    .box-wrapper { display:flex; flex-direction:row; height:95vh; width:100%; gap:16px; }
+    .left-column, .right-column { flex:1; display:flex; flex-direction:column; gap:16px; }
+    .panel { padding:10px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; }
+    .panel h2 { margin-bottom:8px; }
+    #chartContainer, #statusChartContainer { height:300px; width:100%; }
+</style>
 
-	<style>
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		body { margin: 2%; overflow: hidden; font-family: sans-serif; }
+<!-- Browser type pie chart -->
+[% IF datapoints %]
+<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+<script>
+window.onload = function() {
+    var browserChart = new CanvasJS.Chart("chartContainer", {
+        animationEnabled: true,
+        title: { text: "Browser Breakdown" },
+        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% datapoints %]] }]
+    });
+    browserChart.render();
 
-		.box-wrapper {
-			display: flex;
-			flex-direction: column;
-			height: 95vh;
-			width: 100%;
-		}
+    [% IF status_dp %]
+    var statusChart = new CanvasJS.Chart("statusChartContainer", {
+        animationEnabled: true,
+        title: { text: "HTTP Status Breakdown" },
+        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% status_dp %]] }]
+    });
+    statusChart.render();
+    [% END %]
+};
+</script>
+[% END %]
 
-		#header {
-			padding: 10px;
-		}
-
-		#content {
-			display: flex;
-			flex-grow: 1;
-			padding: 10px;
-		}
-
-		#left-column {
-			flex: 1;
-			margin-right: 8px;
-		}
-
-		#left-column h2 {
-			margin-top: 16px;
-			margin-bottom: 4px;
-		}
-
-		#right-column {
-			flex: 2;
-			display: flex;
-			flex-direction: column;
-		}
-
-		#chartContainer {
-			flex-grow: 1;
-			margin-top: 8px;
-		}
-	</style>
-
-	<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
-	<script>
-	window.onload = function() {
-		var chart = new CanvasJS.Chart("chartContainer", {
-			animationEnabled: true,
-			title: { text: "Browser breakdown by type" },
-			data: [{
-				type: "pie",
-				startAngle: 240,
-				yValueFormatString: "##0",
-				indexLabel: "{label} {y}",
-				dataPoints: [
-					[% datapoints %]
-				]
-			}]
-		});
-		chart.render();
-	};
-	</script>
 </head>
-
 <body>
-	<div class="box-wrapper">
-		<div id="header">
-			<h1>[% SiteTitle %]: Meta Data</h1>
-		</div>
 
-		<div id="content">
-			<!-- Left Column: Info, Lingua, Server & Traffic metrics -->
-			<div id="left-column">
-				[% IF info %]
-					<h2>Info</h2>
-					domain_name: [% info.domain_name() %]<br>
-					browser_type: [% info.browser_type() %]
-				[% END %]
+<div class="box-wrapper">
+	<h1>[% SiteTitle %]: Meta Data</h1>
 
-				[% IF lingua %]
-					<h2>Lingua</h2>
-					country: [% lingua.country() %]<br>
-					requested_language: [% lingua.requested_language() %]<br>
-					language_code_alpha2: [% lingua.language_code_alpha2() %]
-				[% END %]
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
 
-				[% IF server %]
-					<h2>Server Metrics</h2>
-					CPU count: [% server.cpu_count %]<br>
-					CPU type: [% server.cpu_type %]<br>
-					Disk used: [% server.disk_used_pct %]%<br>
-					Memory used: [% server.memory_used_pct %]%
-				[% END %]
+        <!-- Info Panel -->
+        <div class="panel">
+            [% IF info %]
+                <h2>Info</h2>
+                domain_name: [% info.domain_name() %]<br>
+                browser_type: [% info.browser_type() %]
+            [% END %]
+        </div>
 
-				[% IF traffic %]
-					<h2>Traffic Metrics (last hour)</h2>
-					Requests: [% traffic.requests_per_hour %]<br>
-					Active users: [% traffic.active_users %]<br>
-					Errors: [% traffic.errors_last_hour %]<br>
-					Top URLs:
-					<ul>
-						[% FOREACH url IN traffic.top_urls %]
-							<li>[% url %]</li>
-						[% END %]
-					</ul>
-				[% END %]
-			</div>
+        <!-- Lingua Panel -->
+        <div class="panel">
+            [% IF lingua %]
+                <h2>Lingua</h2>
+                country: [% lingua.country() %]<br>
+                requested_language: [% lingua.requested_language() %]<br>
+                language_code_alpha2: [% lingua.language_code_alpha2() %]
+            [% END %]
+        </div>
 
-			<!-- Right Column: Pie Chart -->
-			<div id="right-column">
-				[% IF datapoints %]
-					<div id="chartContainer" style="height: 100%; width: 100%;"></div>
-				[% END %]
-				[% IF status_datapoints %]
-					<h2>HTTP Status Codes (last hour)</h2>
-					<div id="statusChartContainer" style="height: 300px; width: 100%;"></div>
-					<script>
-						window.onload = function() {
-						var statusChart = new CanvasJS.Chart("statusChartContainer", {
-							animationEnabled: true,
-							title: { text: "HTTP Status Breakdown" },
-							data: [{
-							type: "pie",
-							startAngle: 240,
-							yValueFormatString: "##0",
-							indexLabel: "{label} {y}",
-							    dataPoints: [
-								[% status_datapoints %]
-							    ]
-							}]
-						});
-						statusChart.render();
-						};
-					</script>
-				[% END %]
-			</div>
-		</div>
-	</div>
+        <!-- Server Metrics -->
+	<div class="panel">
+    <h2>Server Metrics</h2>
+    <div class="panel">
+    <h2>Server Metrics</h2>
+    CPU count: [% server.cpu_count %]
+    CPU type: [% server.cpu_type %]<br>
+    Disk used: [% server.disk_used_pct %] %<br>
+    Memory used: [% server.memory_used_pct %] %
+</div>
+
+</div>
+
+        <!-- Traffic Metrics -->
+        <div class="panel">
+            <h2>Traffic Metrics (last hour)</h2>
+            Requests: [% traffic.requests_per_hour %]<br>
+            Active users: [% traffic.active_users %]<br>
+            Errors: [% traffic.errors_last_hour %]
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+
+        <!-- Browser type pie chart -->
+        [% IF datapoints %]
+        <div class="panel">
+            <h2>Browser Breakdown</h2>
+            <div id="chartContainer"></div>
+        </div>
+        [% END %]
+
+        <!-- HTTP status pie chart -->
+        [% IF status_dp %]
+        <div class="panel">
+            <h2>HTTP Status Codes</h2>
+            <div id="statusChartContainer"></div>
+        </div>
+        [% END %]
+
+    </div>
+
+</div>
+
 </body>
 </html>
