@@ -1,11 +1,11 @@
-package NigelHorne::Display::meta_data;
+package VWF::Display::meta_data;
 
 # Display the meta-data page - the internal status of the server and VWF system
 
 use strict;
 use warnings;
 
-use parent 'NigelHorne::Display';
+use parent 'VWF::Display';
 
 use Time::Piece;
 use Time::Seconds;
@@ -39,10 +39,23 @@ sub html {
 	# --- Traffic metrics from vwf_log ---
 	my $traffic_metrics = get_traffic_metrics($self, $vwf_log, $domain_name);
 
+	# --- HTTP status breakdown for pie chart ---
+	my $status_datapoints;
+	my %status_count;
+	foreach my $entry ($vwf_log->selectall_array({ domain_name => $domain_name })) {
+		next unless ref $entry eq 'HASH' && $entry->{http_code};
+		$status_count{ $entry->{http_code} }++;
+	}
+
+	foreach my $code (sort keys %status_count) {
+		$status_datapoints .= '{y: ' . $status_count{$code} . ", label: \"$code\"},\n";
+	}
+
 	return $self->SUPER::html({
 		datapoints => $datapoints,
 		server	 => $server_metrics,
 		traffic => $traffic_metrics,
+		status_datapoints => $status_datapoints,
 	});
 }
 

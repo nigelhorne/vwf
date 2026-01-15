@@ -125,6 +125,30 @@
 						[% END %]
 					</ul>
 				[% END %]
+
+				[% IF status_datapoints %]
+					<h2>HTTP Status Codes (last hour)</h2>
+					<div id="statusChartContainer" style="height: 300px; width: 100%;"></div>
+					<script>
+						window.onload = function() {
+						var statusChart = new CanvasJS.Chart("statusChartContainer", {
+							animationEnabled: true,
+							title: { text: "HTTP Status Breakdown" },
+							data: [{
+							type: "pie",
+							startAngle: 240,
+							yValueFormatString: "##0",
+							indexLabel: "{label} {y}",
+							    dataPoints: [
+								[% status_datapoints %]
+							    ]
+							}]
+						});
+						statusChart.render();
+						};
+					</script>
+				[% END %]
+				
 			</div>
 
 			<!-- Right Column: Pie Chart -->
