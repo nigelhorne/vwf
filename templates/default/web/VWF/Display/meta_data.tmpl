@@ -81,77 +81,73 @@
 <body>
 	<p><center><h1>[% SiteTitle.Default %]: Meta Data</h1></center></p>
 	<div class="box-wrapper">
-
 		<!-- LEFT COLUMN -->
 		<div class="left-column">
 
-		<!-- Info Panel -->
-		<div class="panel">
-			[% IF info %]
-				<h2>Info</h2>
-				domain_name: [% info.domain_name() %]<br>
-				browser_type: [% info.browser_type() %]
+			<!-- Info Panel -->
+			<div class="panel">
+				[% IF info %]
+					<h2>Info</h2>
+					domain_name: [% info.domain_name() %]<br>
+					browser_type: [% info.browser_type() %]
+				[% END %]
+			</div>
+
+			<!-- Lingua Panel -->
+			<div class="panel">
+				[% IF lingua %]
+					<h2>Lingua</h2>
+					country: [% lingua.country() %]<br>
+					requested_language: [% lingua.requested_language() %]<br>
+					language_code_alpha2: [% lingua.language_code_alpha2() %]
+				[% END %]
+			</div>
+
+			<!-- Server Metrics -->
+			<div class="panel">
+				<h2>Server Metrics</h2>
+				CPU count: [% server.cpu_count %]
+				CPU type: [% server.cpu_type %]<br>
+				Disk used: [% server.disk_used_pct %] %<br>
+				Memory used: [% server.memory_used_pct %] %
+			</div>
+
+			<!-- Traffic Metrics -->
+			<div class="panel">
+				<h2>Traffic Metrics (last hour)</h2>
+				Requests: [% traffic.requests_per_hour %]<br>
+				Active users: [% traffic.active_users %]<br>
+				Errors: [% traffic.errors_last_hour %]
+			</div>
+		</div>
+
+		<!-- RIGHT COLUMN -->
+		<div class="right-column">
+
+			<!-- Browser type pie chart -->
+			[% IF datapoints %]
+				<div class="panel">
+					<h2>Browser Breakdown</h2>
+					<div id="chartContainer"></div>
+				</div>
+			[% END %]
+
+			<!-- HTTP status pie chart -->
+			[% IF status_datapoints %]
+				<div class="panel">
+					<h2>HTTP Status Codes</h2>
+					<div id="statusChartContainer"></div>
+				</div>
+			[% END %]
+
+			<!-- Request rate over last 24 hours -->
+			[% IF rate_total_dp %]
+				<div class="panel">
+					<h2>Request Rate (Last 24 Hours)</h2>
+					<div id="rate24hContainer" style="height:300px; width:100%;"></div>
+				</div>
 			[% END %]
 		</div>
-
-        <!-- Lingua Panel -->
-        <div class="panel">
-            [% IF lingua %]
-                <h2>Lingua</h2>
-                country: [% lingua.country() %]<br>
-                requested_language: [% lingua.requested_language() %]<br>
-                language_code_alpha2: [% lingua.language_code_alpha2() %]
-            [% END %]
-        </div>
-
-        <!-- Server Metrics -->
-    <div class="panel">
-    <h2>Server Metrics</h2>
-    CPU count: [% server.cpu_count %]
-    CPU type: [% server.cpu_type %]<br>
-    Disk used: [% server.disk_used_pct %] %<br>
-    Memory used: [% server.memory_used_pct %] %
-</div>
-
-        <!-- Traffic Metrics -->
-        <div class="panel">
-            <h2>Traffic Metrics (last hour)</h2>
-            Requests: [% traffic.requests_per_hour %]<br>
-            Active users: [% traffic.active_users %]<br>
-            Errors: [% traffic.errors_last_hour %]
-        </div>
-
-    </div>
-
-    <!-- RIGHT COLUMN -->
-    <div class="right-column">
-
-        <!-- Browser type pie chart -->
-        [% IF datapoints %]
-        <div class="panel">
-            <h2>Browser Breakdown</h2>
-            <div id="chartContainer"></div>
-        </div>
-        [% END %]
-
-        <!-- HTTP status pie chart -->
-        [% IF status_datapoints %]
-        <div class="panel">
-            <h2>HTTP Status Codes</h2>
-            <div id="statusChartContainer"></div>
-        </div>
-        [% END %]
-
-	<!-- Request rate over last 24 hours -->
-	[% IF rate_total_dp %]
-		<div class="panel">
-			<h2>Request Rate (Last 24 Hours)</h2>
-			<div id="rate24hContainer" style="height:300px; width:100%;"></div>
-		</div>
-	[% END %]
-    </div>
-
-</div>
-
+	</div>
 </body>
 </html>
