@@ -6,7 +6,10 @@
 	<disc_cache>
 		<driver>Null</driver>
 	</disc_cache>
-	<SiteTitle>Sample VWF site</SiteTitle>
+	<SiteTitle>
+		<English>Sample VWF site</English>
+		<Default>Sample VWF site</Default>
+	</SiteTitle>
 	<root_dir>/Users/njh/src/njh/vwf</root_dir>
 
 	<!--

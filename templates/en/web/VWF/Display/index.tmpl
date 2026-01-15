@@ -3,8 +3,8 @@
 		<title>VWF Test Page</title>
 		[% IF twitter %]
 			<meta name="twitter:site" content="@[% twitter %]">
-			[% IF SiteTitle %]
-				<meta name="twitter:title" content="[% SiteTitle.join(' ') %]">
+			[% IF SiteTitle.Default %]
+				<meta name="twitter:title" content="[% SiteTitle.Default.join(' ') %]">
 			[% END %]
 		[% END %]
 	</head>
