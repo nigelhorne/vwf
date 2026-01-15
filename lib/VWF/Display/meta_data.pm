@@ -1,13 +1,14 @@
-package VWF::Display::meta_data;
+package NigelHorne::Display::meta_data;
 
 # Display the meta-data page - the internal status of the server and VWF system
 
 use strict;
 use warnings;
 
-use parent 'VWF::Display';
+use parent 'NigelHorne::Display';
 
-use Date::Manip;
+use Time::Piece;
+use Time::Seconds;
 use System::Info;
 use Filesys::Df;
 use Sys::Uptime;
@@ -63,7 +64,7 @@ sub get_server_metrics {
 
 	# Memory usage (via Sys::MemInfo)
 	my $total_mem = Sys::MemInfo::totalmem();
-	my $free_mem = Sys::MemInfo::freemem();
+	my $free_mem  = Sys::MemInfo::freemem();
 	if (defined $total_mem && defined $free_mem && $total_mem > 0) {
 		$metrics->{memory_used_pct} = int(100 * ($total_mem - $free_mem) / $total_mem);
 	} else {
@@ -76,37 +77,74 @@ sub get_server_metrics {
 # ------------------------------
 # Traffic metrics from vwf_log
 # ------------------------------
+
 sub get_traffic_metrics {
 	my ($self, $vwf_log, $domain_name) = @_;
 	my $metrics = {};
 
-	my $now = time();
-	my $hour_ago = $now - 3600;
+	# Current time and one hour ago (local time)
+	my $now      = time();
+	my $hour_ago = $now - ONE_HOUR + _utc_offset();
 
-	# Filter entries in the last hour
-	my @recent = grep {
-		my $epoch = UnixDate(ParseDate($_->{time}), '%s');
-		$epoch && $epoch > $hour_ago;
-	} $vwf_log->selectall_array({ domain_name => $domain_name });
+	# Get all entries as array of hashrefs
+	my @entries = $vwf_log->selectall_array({ domain_name => $domain_name });
+
+	# Filter entries from last hour
+	my @recent;
+	foreach my $entry (@entries) {
+		next unless ref $entry eq 'HASH' && $entry->{time};
+
+		my $tp;
+		eval { $tp = Time::Piece->strptime($entry->{time}, '%Y-%m-%d %H:%M:%S') };
+		next unless $tp;
+
+		my $epoch = $tp->epoch;
+		push @recent, $entry if $epoch > $hour_ago;
+	}
 
 	# Requests per hour
 	$metrics->{requests_per_hour} = scalar @recent;
 
 	# Active users (unique IPs)
-	my %ips = map { $_->{ip} => 1 } @recent;
+	my %ips;
+	foreach my $entry (@recent) {
+		my $ip = $entry->{ip} // 'unknown';
+		$ips{$ip} = 1;
+	}
 	$metrics->{active_users} = scalar keys %ips;
 
 	# Top 5 endpoints
-	my %urls;
-	$urls{$_->{url}}++ for @recent;
-	my @top_urls = sort { $urls{$b} <=> $urls{$a} } keys %urls;
-	$metrics->{top_urls} = [ @top_urls[0..(4 > $#top_urls ? $#top_urls : 4)] ];
+	# my %urls;
+	# foreach my $entry (@recent) {
+		# my $url = $entry->{url} // '/';
+		# $urls{$url}++;
+	# }
+	# my @top_urls = sort { $urls{$b} <=> $urls{$a} } keys %urls;
+	# $metrics->{top_urls} = [ @top_urls[0..(4 > $#top_urls ? $#top_urls : 4)] ];
 
-	# Error count (status >= 400)
-	my $errors = grep { $_->{status} >= 400 } @recent;
+	# Error count (HTTP code >= 400)
+	my $errors = grep { ($_->{http_code} // 0) >= 400 } @recent;
 	$metrics->{errors_last_hour} = $errors;
 
 	return $metrics;
+}
+
+sub _utc_offset
+{
+	my $local_time = time();
+	my @local = localtime($local_time);
+	my @gmt = gmtime($local_time);
+
+	# Convert both to seconds since midnight
+	my $local_seconds = $local[2] * 3600 + $local[1] * 60 + $local[0];
+	my $gmt_seconds = $gmt[2] * 3600 + $gmt[1] * 60 + $gmt[0];
+
+	# Account for day boundary crossing
+	my $day_diff = $local[3] - $gmt[3];
+	if ($day_diff > 1) { $day_diff = -1; }  # wrapped backwards
+	if ($day_diff < -1) { $day_diff = 1; }  # wrapped forwards
+
+	return $local_seconds - $gmt_seconds + ($day_diff * 86400);
 }
 
 1;
