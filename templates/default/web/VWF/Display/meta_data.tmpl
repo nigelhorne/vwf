@@ -60,7 +60,6 @@
 		}
 	</style>
 
-	[% IF datapoints %]
 	<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 	<script>
 	window.onload = function() {
@@ -80,7 +79,6 @@
 		chart.render();
 	};
 	</script>
-	[% END %]
 </head>
 
 <body>
@@ -125,7 +123,13 @@
 						[% END %]
 					</ul>
 				[% END %]
+			</div>
 
+			<!-- Right Column: Pie Chart -->
+			<div id="right-column">
+				[% IF datapoints %]
+					<div id="chartContainer" style="height: 100%; width: 100%;"></div>
+				[% END %]
 				[% IF status_datapoints %]
 					<h2>HTTP Status Codes (last hour)</h2>
 					<div id="statusChartContainer" style="height: 300px; width: 100%;"></div>
@@ -147,14 +151,6 @@
 						statusChart.render();
 						};
 					</script>
-				[% END %]
-				
-			</div>
-
-			<!-- Right Column: Pie Chart -->
-			<div id="right-column">
-				[% IF datapoints %]
-					<div id="chartContainer" style="height: 100%; width: 100%;"></div>
 				[% END %]
 			</div>
 		</div>
