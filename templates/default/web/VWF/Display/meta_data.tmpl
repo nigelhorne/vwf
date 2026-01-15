@@ -3,58 +3,56 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<meta http-equiv="Content-Language" content="en">
-<meta name="robots" content="INDEX,FOLLOW">
-<meta name="language" content="ENGLISH">
-<meta name="object" content="Index">
-<meta name="owner" content="Nigel Horne">
-<meta name="Author" content="Nigel Horne">
-<meta name="Copyright" content="Copyright (C) 2026 Nigel Horne, all rights reserved">
-<title>[% SiteTitle %]: Meta Data</title>
-<link rel="stylesheet" type="text/css" href="/css/style.css" />
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { margin:2%; font-family: sans-serif; }
-    .box-wrapper { display:flex; flex-direction:row; height:95vh; width:100%; gap:16px; }
-    .left-column, .right-column { flex:1; display:flex; flex-direction:column; gap:16px; }
-    .panel { padding:10px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; }
-    .panel h2 { margin-bottom:8px; }
-    #chartContainer, #statusChartContainer { height:300px; width:100%; }
-</style>
+	<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+	<meta http-equiv="Content-Language" content="en">
+	<meta name="robots" content="INDEX,FOLLOW">
+	<meta name="language" content="ENGLISH">
+	<meta name="object" content="Index">
+	<meta name="owner" content="Nigel Horne">
+	<meta name="Author" content="Nigel Horne">
+	<meta name="Copyright" content="Copyright (C) 2026 Nigel Horne, all rights reserved">
+	<title>[% SiteTitle %]: Meta Data</title>
+	<link rel="stylesheet" type="text/css" href="/css/style.css" />
+	<style>
+		* { margin:0; padding:0; box-sizing:border-box; }
+		body { margin:2%; font-family: sans-serif; }
+		.box-wrapper { display:flex; flex-direction:row; height:95vh; width:100%; gap:16px; }
+		.left-column, .right-column { flex:1; display:flex; flex-direction:column; gap:16px; }
+		.panel { padding:10px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; }
+		.panel h2 { margin-bottom:8px; }
+		#chartContainer, #statusChartContainer { height:300px; width:100%; }
+	</style>
 
-<!-- Browser type pie chart -->
-[% IF datapoints %]
-<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
-<script>
-window.onload = function() {
-    var browserChart = new CanvasJS.Chart("chartContainer", {
-        animationEnabled: true,
-        title: { text: "Browser Breakdown" },
-        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% datapoints %]] }]
-    });
-    browserChart.render();
+	<!-- Browser type pie chart -->
+	[% IF datapoints %]
+		<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+		<script>
+		window.onload = function() {
+		    var browserChart = new CanvasJS.Chart("chartContainer", {
+			animationEnabled: true,
+			title: { text: "Browser Breakdown" },
+			data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% datapoints %]] }]
+		    });
+		    browserChart.render();
 
-    [% IF status_datapoints %]
-    var statusChart = new CanvasJS.Chart("statusChartContainer", {
-        animationEnabled: true,
-        title: { text: "HTTP Status Breakdown" },
-        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% status_datapoints %]] }]
-    });
-    statusChart.render();
-    [% END %]
-};
-</script>
-[% END %]
-
+		    [% IF status_datapoints %]
+		    var statusChart = new CanvasJS.Chart("statusChartContainer", {
+			animationEnabled: true,
+			title: { text: "HTTP Status Breakdown" },
+			data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% status_datapoints %]] }]
+		    });
+		    statusChart.render();
+		    [% END %]
+		};
+		</script>
+	[% END %]
 </head>
 <body>
+	<p><center><h1>[% SiteTitle %]: Meta Data</h1></center></p>
+	<div class="box-wrapper">
 
-<div class="box-wrapper">
-	<center><h1>[% SiteTitle %]: Meta Data</h1></center>
-
-    <!-- LEFT COLUMN -->
-    <div class="left-column">
+		<!-- LEFT COLUMN -->
+		<div class="left-column">
 
         <!-- Info Panel -->
         <div class="panel">
@@ -76,16 +74,12 @@ window.onload = function() {
         </div>
 
         <!-- Server Metrics -->
-	<div class="panel">
-    <h2>Server Metrics</h2>
     <div class="panel">
     <h2>Server Metrics</h2>
     CPU count: [% server.cpu_count %]
     CPU type: [% server.cpu_type %]<br>
     Disk used: [% server.disk_used_pct %] %<br>
     Memory used: [% server.memory_used_pct %] %
-</div>
-
 </div>
 
         <!-- Traffic Metrics -->
