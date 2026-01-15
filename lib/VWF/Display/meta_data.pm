@@ -51,11 +51,14 @@ sub html {
 		$status_datapoints .= '{y: ' . $status_count{$code} . ", label: \"$code\"},\n";
 	}
 
+	my $rate_24h = get_request_rate_24h($vwf_log, $domain_name);
+
 	return $self->SUPER::html({
 		datapoints => $datapoints,
 		server	 => $server_metrics,
 		traffic => $traffic_metrics,
 		status_datapoints => $status_datapoints,
+		rate_24h => $rate_24h,
 	});
 }
 
@@ -140,6 +143,48 @@ sub get_traffic_metrics {
 	$metrics->{errors_last_hour} = $errors;
 
 	return $metrics;
+}
+
+sub get_request_rate_24h {
+	my ($vwf_log, $domain_name) = @_;
+
+	my $now = time();
+	my $day_ago = $now - ONE_DAY + _utc_offset();
+
+	# 15-minute buckets
+	my $bucket_size = 15 * 60;
+	my %buckets;
+
+	foreach my $entry ($vwf_log->selectall_array({ domain_name => $domain_name })) {
+		next unless ref $entry eq 'HASH' && $entry->{time};
+
+		my $tp;
+		eval { $tp = Time::Piece->strptime($entry->{time}, '%Y-%m-%d %H:%M:%S') };
+		next unless $tp;
+
+		my $epoch = $tp->epoch;
+		next if $epoch < $day_ago;
+
+		my $bucket = int($epoch / $bucket_size) * $bucket_size;
+		$buckets{$bucket}++;
+	}
+
+	# Emit CanvasJS datapoints
+	my @points;
+	foreach my $bucket (sort { $a <=> $b } keys %buckets) {
+		my $t = localtime($bucket);
+		push @points, sprintf(
+			'{ x: new Date(%d,%d,%d,%d,%d), y: %d }',
+			$t->year + 1900,
+			$t->mon,
+			$t->mday,
+			$t->hour,
+			int($t->min / 15) * 15,
+			$buckets{$bucket}
+		);
+	}
+
+	return join(",\n", @points);
 }
 
 sub _utc_offset

@@ -43,6 +43,26 @@
 		    });
 		    statusChart.render();
 		    [% END %]
+			[% IF rate_24h %]
+				var rateChart = new CanvasJS.Chart("rate24hContainer", {
+					animationEnabled: true,
+					title: { text: "Request Rate (Last 24 Hours)" },
+					axisX: {
+						valueFormatString: "HH:mm"
+					},
+					axisY: {
+						title: "Requests / 15 min"
+					},
+					data: [{
+						type: "line",
+						markerSize: 2,
+						dataPoints: [
+							[% rate_24h %]
+						]
+					}]
+				});
+				rateChart.render();
+			[% END %]
 		};
 		</script>
 	[% END %]
@@ -111,6 +131,13 @@
         </div>
         [% END %]
 
+	<!-- Request rate over last 24 hours -->
+	[% IF rate_24h %]
+		<div class="panel">
+			<h2>Request Rate (Last 24 Hours)</h2>
+			<div id="rate24hContainer" style="height:300px;width:100%"></div>
+		</div>
+	[% END %]
     </div>
 
 </div>
