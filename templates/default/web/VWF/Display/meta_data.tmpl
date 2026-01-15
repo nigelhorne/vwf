@@ -35,11 +35,11 @@ window.onload = function() {
     });
     browserChart.render();
 
-    [% IF status_dp %]
+    [% IF status_datapoints %]
     var statusChart = new CanvasJS.Chart("statusChartContainer", {
         animationEnabled: true,
         title: { text: "HTTP Status Breakdown" },
-        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% status_dp %]] }]
+        data: [{ type:"pie", startAngle:240, yValueFormatString:"##0", indexLabel:"{label} {y}", dataPoints:[[% status_datapoints %]] }]
     });
     statusChart.render();
     [% END %]
@@ -51,7 +51,7 @@ window.onload = function() {
 <body>
 
 <div class="box-wrapper">
-	<h1>[% SiteTitle %]: Meta Data</h1>
+	<center><h1>[% SiteTitle %]: Meta Data</h1></center>
 
     <!-- LEFT COLUMN -->
     <div class="left-column">
@@ -110,7 +110,7 @@ window.onload = function() {
         [% END %]
 
         <!-- HTTP status pie chart -->
-        [% IF status_dp %]
+        [% IF status_datapoints %]
         <div class="panel">
             <h2>HTTP Status Codes</h2>
             <div id="statusChartContainer"></div>
