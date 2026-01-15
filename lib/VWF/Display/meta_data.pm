@@ -64,7 +64,7 @@ sub get_server_metrics {
 
 	# Memory usage (via Sys::MemInfo)
 	my $total_mem = Sys::MemInfo::totalmem();
-	my $free_mem  = Sys::MemInfo::freemem();
+	my $free_mem = Sys::MemInfo::freemem();
 	if (defined $total_mem && defined $free_mem && $total_mem > 0) {
 		$metrics->{memory_used_pct} = int(100 * ($total_mem - $free_mem) / $total_mem);
 	} else {
@@ -83,7 +83,7 @@ sub get_traffic_metrics {
 	my $metrics = {};
 
 	# Current time and one hour ago (local time)
-	my $now      = time();
+	my $now = time();
 	my $hour_ago = $now - ONE_HOUR + _utc_offset();
 
 	# Get all entries as array of hashrefs
@@ -141,8 +141,8 @@ sub _utc_offset
 
 	# Account for day boundary crossing
 	my $day_diff = $local[3] - $gmt[3];
-	if ($day_diff > 1) { $day_diff = -1; }  # wrapped backwards
-	if ($day_diff < -1) { $day_diff = 1; }  # wrapped forwards
+	if ($day_diff > 1) { $day_diff = -1; }	# wrapped backwards
+	if ($day_diff < -1) { $day_diff = 1; }	# wrapped forwards
 
 	return $local_seconds - $gmt_seconds + ($day_diff * 86400);
 }
