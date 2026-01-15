@@ -219,7 +219,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 
 	my $start = [Time::HiRes::gettimeofday()];
 
-	# TODO:  Make this neater
+	# TODO:	Make this neater
 	try {
 		doit(debug => 0);
 		my $timetaken = Time::HiRes::tv_interval($start);
@@ -269,6 +269,8 @@ exit(0);
 # Create and send response to the client for each request
 sub doit
 {
+	my $request_start = Time::HiRes::time();
+
 	CGI::Info->reset();
 
 	# Call domain_name in a class context to ensure it's reread now that FCGI has started up
