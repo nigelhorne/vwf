@@ -55,14 +55,20 @@ sub get_server_metrics {
 
 	# Disk usage
 	my $df = df('/');
-	$metrics->{disk_used_pct} = $df->{per_used} if $df;
+	if ($df && defined $df->{per_used}) {
+		$metrics->{disk_used_pct} = int($df->{per_used});
+	} else {
+		$metrics->{disk_used_pct} = 0;
+	}
 
 	# Memory usage (via Sys::MemInfo)
 	my $total_mem = Sys::MemInfo::totalmem();
 	my $free_mem = Sys::MemInfo::freemem();
-	$metrics->{memory_used_pct} = $total_mem
-		? int(100 * ($total_mem - $free_mem) / $total_mem)
-		: undef;
+	if (defined $total_mem && defined $free_mem && $total_mem > 0) {
+		$metrics->{memory_used_pct} = int(100 * ($total_mem - $free_mem) / $total_mem);
+	} else {
+		$metrics->{memory_used_pct} = 0;
+	}
 
 	return $metrics;
 }
