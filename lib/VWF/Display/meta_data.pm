@@ -55,11 +55,11 @@ sub get_server_metrics {
 	$metrics->{cpu_type} = $si->cpu_type // '';
 
 	# Disk usage
-	my $df = df('/');
-	if ($df && defined $df->{per_used}) {
-		$metrics->{disk_used_pct} = int($df->{per_used});
+	if(my $df = df('/')) {
+		# prefer 'per' if present
+		$metrics->{disk_used_pct} = $df->{per} // int(100 * ($df->{blocks} - $df->{bfree}) / $df->{blocks});
 	} else {
-		$metrics->{disk_used_pct} = 0;
+		$metrics->{disk_used_pct} = undef;
 	}
 
 	# Memory usage (via Sys::MemInfo)
