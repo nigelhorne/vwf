@@ -60,6 +60,7 @@ sub html {
 		status_dp => $status_datapoints,
 		rate_total_dp => $rate_24h->{total_dp},
 		rate_error_dp => $rate_24h->{error_dp},
+		rate_error_pct_dp => $rate_24h->{error_pct_dp},
 	});
 }
 
@@ -168,25 +169,33 @@ sub get_request_rate_24h {
 		my $bucket = $tp->strftime('%H:00');
 
 		$buckets{$bucket}{total}++;
-		if ( ($entry->{http_code} // 0) >= 400 ) {
+		if(($entry->{http_code} // 0) >= 400) {
 			$buckets{$bucket}{errors}++;
 		}
 	}
 
 	# Build CanvasJS datapoints
-	my (@total_dp, @error_dp);
+	my (@total_dp, @error_dp, @error_pct_dp);
 
 	foreach my $hour (sort keys %buckets) {
+		my $total = $buckets{$hour}{total} // 0;
+		my $errors = $buckets{$hour}{errors} // 0;
+
 		push @total_dp,
-			sprintf('{ label: "%s", y: %d }', $hour, $buckets{$hour}{total} // 0);
+		sprintf('{ label: "%s", y: %d }', $hour, $total);
 
 		push @error_dp,
-			sprintf('{ label: "%s", y: %d }', $hour, $buckets{$hour}{errors} // 0);
+		sprintf('{ label: "%s", y: %d }', $hour, $errors);
+
+		my $pct = $total ? sprintf('%.2f', ($errors / $total) * 100) : 0;
+		push @error_pct_dp,
+		sprintf('{ label: "%s", y: %s }', $hour, $pct);
 	}
 
 	return {
 		total_dp => join(",\n", @total_dp),
 		error_dp => join(",\n", @error_dp),
+		error_pct_dp => join(",\n", @error_pct_dp),
 	};
 }
 
