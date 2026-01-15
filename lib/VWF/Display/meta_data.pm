@@ -51,14 +51,15 @@ sub html {
 		$status_datapoints .= '{y: ' . $status_count{$code} . ", label: \"$code\"},\n";
 	}
 
-	my $rate_24h = get_request_rate_24h($vwf_log, $domain_name);
+	my $rate_24h = get_request_rate_24h($self, $vwf_log, $domain_name);
 
 	return $self->SUPER::html({
 		datapoints => $datapoints,
-		server	 => $server_metrics,
+		server => $server_metrics,
 		traffic => $traffic_metrics,
-		status_datapoints => $status_datapoints,
-		rate_24h => $rate_24h,
+		status_dp => $status_datapoints,
+		rate_total_dp => $rate_24h->{total_dp},
+		rate_error_dp => $rate_24h->{error_dp},
 	});
 }
 
@@ -146,13 +147,11 @@ sub get_traffic_metrics {
 }
 
 sub get_request_rate_24h {
-	my ($vwf_log, $domain_name) = @_;
+	my ($self, $vwf_log, $domain_name) = @_;
 
 	my $now = time();
-	my $day_ago = $now - ONE_DAY + _utc_offset();
+	my $start = $now - ONE_DAY + _utc_offset();
 
-	# 15-minute buckets
-	my $bucket_size = 15 * 60;
 	my %buckets;
 
 	foreach my $entry ($vwf_log->selectall_array({ domain_name => $domain_name })) {
@@ -163,28 +162,32 @@ sub get_request_rate_24h {
 		next unless $tp;
 
 		my $epoch = $tp->epoch;
-		next if $epoch < $day_ago;
+		next if $epoch < $start;
 
-		my $bucket = int($epoch / $bucket_size) * $bucket_size;
-		$buckets{$bucket}++;
+		# Bucket by hour
+		my $bucket = $tp->strftime('%H:00');
+
+		$buckets{$bucket}{total}++;
+		if ( ($entry->{http_code} // 0) >= 400 ) {
+			$buckets{$bucket}{errors}++;
+		}
 	}
 
-	# Emit CanvasJS datapoints
-	my @points;
-	foreach my $bucket (sort { $a <=> $b } keys %buckets) {
-		my $t = localtime($bucket);
-		push @points, sprintf(
-			'{ x: new Date(%d,%d,%d,%d,%d), y: %d }',
-			$t->year + 1900,
-			$t->mon,
-			$t->mday,
-			$t->hour,
-			int($t->min / 15) * 15,
-			$buckets{$bucket}
-		);
+	# Build CanvasJS datapoints
+	my (@total_dp, @error_dp);
+
+	foreach my $hour (sort keys %buckets) {
+		push @total_dp,
+			sprintf('{ label: "%s", y: %d }', $hour, $buckets{$hour}{total} // 0);
+
+		push @error_dp,
+			sprintf('{ label: "%s", y: %d }', $hour, $buckets{$hour}{errors} // 0);
 	}
 
-	return join(",\n", @points);
+	return {
+		total_dp => join(",\n", @total_dp),
+		error_dp => join(",\n", @error_dp),
+	};
 }
 
 sub _utc_offset

@@ -43,23 +43,34 @@
 		    });
 		    statusChart.render();
 		    [% END %]
-			[% IF rate_24h %]
+			[% IF rate_total_dp %]
 				var rateChart = new CanvasJS.Chart("rate24hContainer", {
 					animationEnabled: true,
-					title: { text: "Request Rate (Last 24 Hours)" },
-					axisX: {
-						valueFormatString: "HH:mm"
-					},
+					title: { text: "Requests vs Errors (Last 24 Hours)" },
 					axisY: {
-						title: "Requests / 15 min"
+						title: "Requests"
 					},
-					data: [{
-						type: "line",
-						markerSize: 2,
-						dataPoints: [
-							[% rate_24h %]
-						]
-					}]
+					toolTip: {
+						shared: true
+					},
+					data: [
+						{
+							type: "line",
+							name: "Total Requests",
+							showInLegend: true,
+							dataPoints: [
+								[% rate_total_dp %]
+							]
+						},
+						{
+							type: "line",
+							name: "Errors",
+							showInLegend: true,
+							dataPoints: [
+								[% rate_error_dp %]
+							]
+						}
+					]
 				});
 				rateChart.render();
 			[% END %]
@@ -74,14 +85,14 @@
 		<!-- LEFT COLUMN -->
 		<div class="left-column">
 
-        <!-- Info Panel -->
-        <div class="panel">
-            [% IF info %]
-                <h2>Info</h2>
-                domain_name: [% info.domain_name() %]<br>
-                browser_type: [% info.browser_type() %]
-            [% END %]
-        </div>
+		<!-- Info Panel -->
+		<div class="panel">
+			[% IF info %]
+				<h2>Info</h2>
+				domain_name: [% info.domain_name() %]<br>
+				browser_type: [% info.browser_type() %]
+			[% END %]
+		</div>
 
         <!-- Lingua Panel -->
         <div class="panel">
@@ -132,10 +143,10 @@
         [% END %]
 
 	<!-- Request rate over last 24 hours -->
-	[% IF rate_24h %]
+	[% IF rate_total_dp %]
 		<div class="panel">
 			<h2>Request Rate (Last 24 Hours)</h2>
-			<div id="rate24hContainer" style="height:300px;width:100%"></div>
+			<div id="rate24hContainer" style="height:300px; width:100%;"></div>
 		</div>
 	[% END %]
     </div>
