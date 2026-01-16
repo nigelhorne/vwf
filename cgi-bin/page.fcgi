@@ -400,7 +400,7 @@ sub doit
 					request_count => $request_count,
 				});
 
-				vwflog($vwflog, $info, $lingua, $syslog, 'Hard rate limit - CAPTCHA shown', $log);
+				vwflog($vwflog, $info, $lingua, $syslog, 'Hard rate limit - CAPTCHA shown', $log, $request_start);
 				return;
 			}
 		} elsif ($request_count >= $max_requests) {
@@ -426,7 +426,7 @@ sub doit
 					request_count => $request_count,
 				});
 
-				vwflog($vwflog, $info, $lingua, $syslog, 'Soft rate limit - CAPTCHA shown', $log);
+				vwflog($vwflog, $info, $lingua, $syslog, 'Soft rate limit - CAPTCHA shown', $log, $request_start);
 				return;
 			}
 		}
@@ -461,7 +461,7 @@ sub doit
 			}
 			$logger->info("$remote_addr: access denied: $reason");
 			$info->status(403);
-			vwflog($vwflog, $info, $lingua, $syslog, $reason, $log);
+			vwflog($vwflog, $info, $lingua, $syslog, $reason, $log, $request_start);
 			return;
 		}
 	}
@@ -587,10 +587,10 @@ sub doit
 			index => $index,
 			vwf_log => $vwf_log,
 		});
-		vwflog($vwflog, $info, $lingua, $syslog, '', $log);
+		vwflog($vwflog, $info, $lingua, $syslog, '', $log, $request_start);
 	} elsif($invalidpage) {
 		choose();
-		vwflog($vwflog, $info, $lingua, $syslog, 'Unknown page', $log);
+		vwflog($vwflog, $info, $lingua, $syslog, 'Unknown page', $log, $request_start);
 		return;
 	} else {
 		$logger->debug('disabling cache');
@@ -642,7 +642,7 @@ sub doit
 			}
 			$log->status($status);
 		}
-		vwflog($vwflog, $info, $lingua, $syslog, $error ? $error : 'Access denied', $log);
+		vwflog($vwflog, $info, $lingua, $syslog, $error ? $error : 'Access denied', $log, $request_start);
 		throw Error::Simple($error ? $error : $info->as_string());
 	}
 }
@@ -721,8 +721,13 @@ sub filter
 # Put something to vwf.log
 sub vwflog
 {
-	my ($vwflog, $info, $lingua, $syslog, $message, $log) = @_;
+	my ($vwflog, $info, $lingua, $syslog, $message, $log, $request_start) = @_;
 
+	my $duration_ms = '';
+
+	if($request_start) {
+		$duration_ms = int( (Time::HiRes::time() - $request_start) * 1000 );
+	}
 	my $template;
 	if($log) {
 		$template = $log->template();
@@ -735,7 +740,7 @@ sub vwflog
 	if(!-e $vwflog) {
 		# First run - put in the heading row
 		open(my $fout, '>', $vwflog);
-		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","messages","error"',
+		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","messages","error","duration_ms"',
 			"\n";
 		close $fout;
 	}
@@ -758,6 +763,7 @@ sub vwflog
 			'"', $info->as_string(raw => 1), '",',
 			'"', $warnings, '",',
 			'"', $message, '"',
+			'"', $duration_ms, '"',
 			"\n";
 		close($fout);
 	}
@@ -770,7 +776,7 @@ sub vwflog
 			Sys::Syslog::setlogsock($syslog);
 		}
 		Sys::Syslog::openlog($script_name, 'cons,pid', 'user');
-		Sys::Syslog::syslog('info|local0', '%s %s %s %s %s %d %s %s %s %s',
+		Sys::Syslog::syslog('info|local0', '%s %s %s %s %s %d %s %s %d %s %s',
 			$info->domain_name() || '',
 			$ENV{REMOTE_ADDR} || '',
 			$lingua->country() || '',
@@ -779,6 +785,7 @@ sub vwflog
 			$info->status() || '',
 			$template || '',
 			$info->as_string(raw => 1) || '',
+			$duration_ms,
 			$warnings,
 			$message
 		);
