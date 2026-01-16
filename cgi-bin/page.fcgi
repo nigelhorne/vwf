@@ -724,10 +724,10 @@ sub vwflog
 	my ($vwflog, $info, $lingua, $syslog, $message, $log, $request_start) = @_;
 
 	my $duration_ms = '';
-
 	if($request_start) {
 		$duration_ms = int( (Time::HiRes::time() - $request_start) * 1000 );
 	}
+
 	my $template;
 	if($log) {
 		$template = $log->template();

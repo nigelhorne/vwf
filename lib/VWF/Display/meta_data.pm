@@ -52,6 +52,7 @@ sub html {
 	}
 
 	my $rate_24h = get_request_rate_24h($self, $vwf_log, $domain_name);
+	my $latency_24h = get_latency_24h($self, $vwf_log, $domain_name);
 
 	return $self->SUPER::html({
 		datapoints => $datapoints,
@@ -61,6 +62,8 @@ sub html {
 		rate_total_dp => $rate_24h->{total_dp},
 		rate_error_dp => $rate_24h->{error_dp},
 		rate_error_pct_dp => $rate_24h->{error_pct_dp},
+		latency_avg_dp => $latency_24h->{avg_dp},
+		latency_p95_dp => $latency_24h->{p95_dp},
 	});
 }
 
@@ -196,6 +199,56 @@ sub get_request_rate_24h {
 		total_dp => join(",\n", @total_dp),
 		error_dp => join(",\n", @error_dp),
 		error_pct_dp => join(",\n", @error_pct_dp),
+	};
+}
+
+sub get_latency_24h {
+	my ($self, $vwf_log, $domain_name) = @_;
+
+	my $now = time();
+	my $start = $now - ONE_DAY + _utc_offset();
+
+	my %buckets;
+
+	foreach my $entry ($vwf_log->selectall_array({ domain_name => $domain_name })) {
+		next unless ref $entry eq 'HASH';
+		next unless $entry->{time};
+		next unless defined $entry->{duration_ms};
+
+		my $tp;
+		eval { $tp = Time::Piece->strptime($entry->{time}, '%Y-%m-%d %H:%M:%S') };
+		next unless $tp;
+
+		my $epoch = $tp->epoch;
+		next if $epoch < $start;
+
+		my $hour = $tp->strftime('%H:00');
+
+		push @{ $buckets{$hour} }, $entry->{duration_ms};
+		}
+
+	my (@avg_dp, @p95_dp);
+
+	foreach my $hour (sort keys %buckets) {
+		my @vals = sort { $a <=> $b } @{ $buckets{$hour} };
+		next unless @vals;
+
+		my $count = @vals;
+		my $avg = int( (eval(join('+', @vals)) || 0) / $count );
+
+		my $p95_index = int(0.95 * ($count - 1));
+		my $p95 = $vals[$p95_index];
+
+		push @avg_dp,
+		sprintf('{ label: "%s", y: %d }', $hour, $avg);
+
+		push @p95_dp,
+		sprintf('{ label: "%s", y: %d }', $hour, $p95);
+	}
+
+	return {
+		avg_dp => join(",\n", @avg_dp),
+		p95_dp => join(",\n", @p95_dp),
 	};
 }
 

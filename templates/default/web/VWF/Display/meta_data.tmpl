@@ -79,6 +79,30 @@
 				});
 				rateChart.render();
 			[% END %]
+			var latencyChart = new CanvasJS.Chart("latency24hContainer", {
+				animationEnabled: true,
+				title: { text: "Latency (Last 24 Hours)" },
+				axisY: {
+					title: "Milliseconds"
+				},
+				toolTip: {
+					shared: true
+				},
+				data: [
+					{
+						type: "line",
+						name: "Avg Latency",
+						showInLegend: true,
+						dataPoints: [ [% latency_avg_dp %] ]
+					}, {
+						type: "line",
+						name: "P95 Latency",
+						showInLegend: true,
+						dataPoints: [ [% latency_p95_dp %] ]
+					}
+				]
+			});
+			latencyChart.render();
 		};
 		</script>
 	[% END %]
@@ -152,6 +176,11 @@
 					<div id="rate24hContainer" style="height:300px; width:100%;"></div>
 				</div>
 			[% END %]
+
+			<div class="panel">
+                                <h2>Latency (Last 24 Hours)</h2>
+                                <div id="latency24hContainer" style="height:300px; width:100%;"></div>
+                        </div>
 		</div>
 	</div>
 </body>
