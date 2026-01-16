@@ -213,7 +213,7 @@ sub get_latency_24h {
 	foreach my $entry ($vwf_log->selectall_array({ domain_name => $domain_name })) {
 		next unless ref $entry eq 'HASH';
 		next unless $entry->{time};
-		next unless defined $entry->{duration_ms};
+		next unless exists $entry->{duration_ms};
 
 		my $tp;
 		eval { $tp = Time::Piece->strptime($entry->{time}, '%Y-%m-%d %H:%M:%S') };
@@ -225,7 +225,7 @@ sub get_latency_24h {
 		my $hour = $tp->strftime('%H:00');
 
 		push @{ $buckets{$hour} }, $entry->{duration_ms};
-		}
+	}
 
 	my (@avg_dp, @p95_dp);
 

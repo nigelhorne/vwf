@@ -763,7 +763,7 @@ sub vwflog
 			'"', $info->as_string(raw => 1), '",',
 			'"', $warnings, '",',
 			'"', $message, '",',
-			'"', $duration_ms, '"',
+			$duration_ms,
 			"\n";
 		close($fout);
 	}
