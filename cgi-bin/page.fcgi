@@ -103,6 +103,11 @@ Log::WarnDie->dispatcher($logger);
 # use VWF::Display::meta_data;
 
 use VWF::Data::index;
+if($@) {
+	$logger->error($@) if($logger);
+	Log::WarnDie->dispatcher(undef);
+	die $@;
+}
 use VWF::Data::vwf_log;
 
 my $database_dir = "$script_dir/../data";
@@ -194,6 +199,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 		$logger = Log::Abstraction->new(logger => sub { print join(', ', @{$_[0]->{'message'}}), "\n" }, level => 'debug');
 		Log::WarnDie->dispatcher($logger);
 		$info->set_logger($logger);
+		# TODO - set logger on all databases
 		$index->set_logger($logger);
 		$vwf_log->set_logger($logger);
 		# $Config::Auto::Debug = 1;
