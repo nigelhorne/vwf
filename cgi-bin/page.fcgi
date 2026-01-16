@@ -762,7 +762,7 @@ sub vwflog
 			'"', $template, '",',
 			'"', $info->as_string(raw => 1), '",',
 			'"', $warnings, '",',
-			'"', $message, '"',
+			'"', $message, '",',
 			'"', $duration_ms, '"',
 			"\n";
 		close($fout);
