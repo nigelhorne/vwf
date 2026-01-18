@@ -265,7 +265,6 @@ sub get_slow_endpoints_24h {
 	foreach my $row (@rows) {
 		next unless defined $row->{time};
 		next unless defined $row->{duration_ms};
-		print __LINE__, "\n";
 
 		my $tp;
 		eval { $tp = Time::Piece->strptime($row->{time}, '%Y-%m-%d %H:%M:%S') };
