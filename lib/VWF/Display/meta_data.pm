@@ -298,6 +298,7 @@ sub get_slow_endpoints_24h {
 	foreach my $row (@ranked) {
 		my $label = $row->{template};
 		$label =~ s/"/\\"/g;
+		$label =~ s/^.+\/templates\///;
 
 		push @dp, sprintf(
 			'{ label: "%s", y: %.0f }',
