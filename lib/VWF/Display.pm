@@ -81,7 +81,10 @@ sub new
 
 	if(defined($ENV{'HTTP_REFERER'})) {
 		# Protect against Shellshocker
-		require 'Data::Validate::URI' && Data::Validate::URI->import() unless Data::Validate::URI->can('new');
+		unless(Data::Validate::URI->can('new')) {
+			require Data::Validate::URI;
+			Data::Validate::URI->import();
+		}
 
 		unless(Data::Validate::URI->new()->is_uri($ENV{'HTTP_REFERER'})) {
 			return;	# Block invalid referrers
