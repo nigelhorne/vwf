@@ -758,9 +758,12 @@ sub vwflog
 		close $fout;
 	}
 
-	my $warnings = join('; ',
-		grep defined, map { (($_->{'level'} eq 'warn') || ($_->{'level'} eq 'notice')) ? $_->{'message'} : undef } @{$info->messages()}
-	);
+	my $warnings;
+        if(my $messages = $info->messages()) {
+                $warnings = join('; ',
+                        grep defined, map { (($_->{'level'} eq 'warn') || ($_->{'level'} eq 'notice')) ? $_->{'message'} : undef } @{$messages}
+                        )
+        }
 	$warnings ||= '';
 
 	if(open(my $fout, '>>', $vwflog)) {
