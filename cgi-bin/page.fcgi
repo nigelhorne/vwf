@@ -68,7 +68,6 @@ Readonly my $MAX_REQUESTS => 100;	# Default max requests allowed
 Readonly my $TIME_WINDOW => '60s';	# Time window for the maximum requests
 
 my $info = CGI::Info->new();
-my $config;
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 my $tmpdir = $info->tmpdir();
@@ -110,6 +109,7 @@ if($@) {
 }
 use VWF::Data::vwf_log;
 
+my $config;
 my $database_dir = "$script_dir/../data";
 Database::Abstraction::init({
 	cache => CHI->new(driver => 'Memory', datastore => {}),
@@ -288,6 +288,7 @@ sub doit
 	#	config file to read
 	$config ||= VWF::Config->new({
 		logger => $logger,
+		info => $info,
 		debug => $params{'debug'},
 		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })	# Use a temporary CGI::Lingua
 	});
@@ -420,8 +421,11 @@ sub doit
 
 			if ($recaptcha_config && $recaptcha_config->{enabled}) {
 				$logger->info("Soft rate limit exceeded for $client_ip ($request_count requests) - CAPTCHA challenge issued");
-				$info->status(429);
 
+				unless(VWF::Display::captcha->can('new')) {
+					require VWF::Display::captcha;
+					VWF::Display::captcha->import();
+				}
 				my $display = VWF::Display::captcha->new({
 					cachedir => $cachedir,
 					info => $info,

@@ -30,7 +30,7 @@ sub html {
 	my $request_count = $args{'request_count'} || 0;
 
 	if ($self->{'logger'}) {
-		$self->{'logger'}->debug("Displaying CAPTCHA page for " . ($is_hard_block ? "hard block" : "soft limit"));
+		$self->{'logger'}->debug('Displaying CAPTCHA page for ' . ($is_hard_block ? 'hard block' : 'soft limit'));
 	}
 
 	return $self->SUPER::html({
