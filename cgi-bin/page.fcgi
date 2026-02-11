@@ -186,6 +186,8 @@ my $request = FCGI::Request();
 while($handling_request = ($request->Accept() >= 0)) {
 	unless($ENV{'REMOTE_ADDR'}) {
 		# debugging from the command line
+		my $timer = Timer::Simple->new();
+
 		$ENV{'NO_CACHE'} = 1;
 		if((!defined($ENV{'HTTP_ACCEPT_LANGUAGE'})) && defined($ENV{'LANG'})) {
 			my $lang = $ENV{'LANG'};
@@ -213,6 +215,10 @@ while($handling_request = ($request->Accept() >= 0)) {
 			warn "$msg\n", $msg->stacktrace();
 			$logger->error($msg);
 		};
+		my @elapsed_time = $timer->hms();
+		my $timetaken = int($elapsed_time[2] * 1000);
+
+		$logger->info("$script_name completed in ${timetaken}ms");
 		last;
 	}
 
@@ -223,15 +229,9 @@ while($handling_request = ($request->Accept() >= 0)) {
 	$index->set_logger($logger);
 	$vwf_log->set_logger($logger);
 
-	my $timer = Timer::Simple->new();
-
 	# TODO:	Make this neater
 	try {
 		doit(debug => 0);
-		my @elapsed_time = $timer->hms();
-		my $timetaken = $elapsed_time[2] * 1000;
-
-		$logger->info("$script_name completed in $timetaken seconds");
 	} catch Error with {
 		my $msg = shift;
 		$logger->error("$msg: ", $msg->stacktrace());
@@ -242,6 +242,7 @@ while($handling_request = ($request->Accept() >= 0)) {
 	};
 
 	$request->Finish();
+
 	$handling_request = 0;
 	if($exit_requested) {
 		last;
