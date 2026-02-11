@@ -43,7 +43,7 @@ use Error qw(:try);
 use File::Spec;
 use POSIX qw(strftime);
 use Readonly;
-use Time::HiRes;
+use Timer::Simple;
 
 # FIXME: Sometimes gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
 # use Taint::Runtime qw($TAINT taint_env);
@@ -223,12 +223,13 @@ while($handling_request = ($request->Accept() >= 0)) {
 	$index->set_logger($logger);
 	$vwf_log->set_logger($logger);
 
-	my $start = [Time::HiRes::gettimeofday()];
+	my $timer = Timer::Simple->new();
 
 	# TODO:	Make this neater
 	try {
 		doit(debug => 0);
-		my $timetaken = Time::HiRes::tv_interval($start);
+		my @elapsed_time = $timer->hms();
+		my $timetaken = $elapsed_time[2] * 1000;
 
 		$logger->info("$script_name completed in $timetaken seconds");
 	} catch Error with {
@@ -275,7 +276,7 @@ exit(0);
 # Create and send response to the client for each request
 sub doit
 {
-	my $request_start = Time::HiRes::time();
+	my $request_start = Timer::Simple->new();
 
 	CGI::Info->reset();
 
@@ -742,7 +743,8 @@ sub vwflog
 
 	my $duration_ms = '';
 	if($request_start) {
-		$duration_ms = int((Time::HiRes::time() - $request_start) * 1000);
+		my @elapsed_time = $request_start->hms();
+		$duration_ms = int($elapsed_time[2] * 1000);
 	}
 
 	my $template;
