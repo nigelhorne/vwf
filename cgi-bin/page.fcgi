@@ -215,10 +215,11 @@ while($handling_request = ($request->Accept() >= 0)) {
 			warn "$msg\n", $msg->stacktrace();
 			$logger->error($msg);
 		};
+
 		my @elapsed_time = $timer->hms();
 		my $timetaken = int($elapsed_time[2] * 1000);
-
 		$logger->info("$script_name completed in ${timetaken}ms");
+
 		last;
 	}
 
