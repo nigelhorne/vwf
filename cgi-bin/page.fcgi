@@ -7,7 +7,7 @@
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi page=index
 # To mimic a French mobile site:
 #	root_dir=$(pwd)/.. ./page.fcgi --mobile page=index lang=fr
-# To turn off the linting of HTML on a search engine landing page
+# To turn off the linting of HTML on a search-engine landing page
 #	LANG=en_GB root_dir=$(pwd)/.. ./page.fcgi --search-engine page=index lint_content=0
 
 use strict;
@@ -32,6 +32,7 @@ use CHI;
 use Class::Simple;
 use Config::Abstraction;
 use Database::Abstraction;
+# use Devel::Confess;
 use File::Basename;
 # use CGI::Alert $ENV{'SERVER_ADMIN'} || 'you@example.com';
 use FCGI;
@@ -53,7 +54,7 @@ use autodie qw(:all);
 # use lib '/usr/lib';	# This needs to point to the VWF directory lives,
 			# i.e., the contents of the lib directory in the
 			# distribution
-use lib '../lib';
+# use lib '../lib';
 use lib CGI::Info::script_dir() . '/../lib';
 use lib File::HomeDir->my_home() . '/lib/perl5';
 
@@ -109,7 +110,6 @@ if($@) {
 }
 use VWF::Data::vwf_log;
 
-my $config;
 my $database_dir = "$script_dir/../data";
 Database::Abstraction::init({
 	cache => CHI->new(driver => 'Memory', datastore => {}),
@@ -125,6 +125,7 @@ if($@) {
 	die $@;
 }
 
+my $config;
 # FIXME - support $config->vwflog();
 my $vwf_log = VWF::Data::vwf_log->new({ directory => $info->logdir(), filename => 'vwf.log', no_entry => 1 });
 
