@@ -746,8 +746,7 @@ sub vwflog
 
 	my $duration_ms = '';
 	if($request_start) {
-		my @elapsed_time = $request_start->hms();
-		$duration_ms = int($elapsed_time[2] * 1000);
+		$duration_ms = int( (Time::HiRes::time() - $request_start) * 1000 );
 	}
 
 	my $template;
