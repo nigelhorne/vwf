@@ -185,12 +185,13 @@ sub new
 	# _ names included for legacy reasons, they will go away
 	my $self = {
 		_cachedir => $params->{cachedir},
-		config => $config,
-		_config => $config,
 		info => $info,
 		_info => $info,
 		_logger => $params->{logger},
+		config_dir => $config_dir,
 		%{$params},
+		config => $config,
+		_config => $config,
 	};
 
 	if(my $lingua = $params->{'lingua'}) {
@@ -364,6 +365,11 @@ sub get_template_path
 		return $self->{_filename};
 	}
 
+	# FIXME: reread the config file since something is cloberring it 
+	if(my $config = Config::Abstraction->new(config_dirs => [$self->{config_dir}], config_files => ['default', $self->{info}->domain_name()], logger => $self->{logger})) {
+		$config = $config->all();
+		$self->{config} = $self->{_config} = $config;
+	}
 	my $dir = $ENV{'root_dir'} || $self->{_config}->{root_dir} || $self->{_info}->root_dir();
 	if($self->{_logger}) {
 		$self->{_logger}->debug(__PACKAGE__, ': ', __LINE__, ": root_dir $dir");
