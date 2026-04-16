@@ -2,6 +2,8 @@ package VWF::Display::meta_data;
 
 # Display the meta-data page - the internal status of the server and VWF system
 
+# TODO:  Add breakdown by browser
+
 use strict;
 use warnings;
 
