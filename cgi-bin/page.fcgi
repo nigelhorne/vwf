@@ -58,6 +58,7 @@ use autodie qw(:all);
 use lib CGI::Info::script_dir() . '/../lib';
 use lib File::HomeDir->my_home() . '/lib/perl5';
 
+use VWF::Allow;
 use VWF::Config;
 use VWF::Utils;
 
@@ -468,6 +469,19 @@ sub doit
 			$reason = 'Denied by CGI::ACL';
 		} elsif(blacklisted($info)) {
 			$reason = 'Blacklisted for attempting to break in';
+		} else {
+			try {
+				unless(VWF::Allow::allow({
+					info   => $info,
+					lingua => $lingua,
+					logger => $logger,
+					cache  => $rate_limit_cache,
+				})) {
+					$reason = 'Blocked by VWF::Allow';
+				}
+			} catch Error with {
+				$reason = shift;
+			};
 		}
 		if($reason) {
 			# Client has been blocked
@@ -783,7 +797,7 @@ sub vwflog
 			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
 			'"', $country, '",',
 			'"', $info->browser_type(), '",',
-			'"', $lingua->language(), '",',
+			'"', ($lingua->language() || ''), '",',
 			$info->status(), ',',
 			'"', $template, '",',
 			'"', $info->as_string(raw => 1), '",',

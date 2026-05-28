@@ -12,7 +12,7 @@ use Carp;
 use Error;
 use File::Spec;
 
-use constant DSHIELD => 'https://secure.dshield.org/api/sources/attacks/100/2012-03-08';
+use constant DSHIELD_BASE => 'https://secure.dshield.org/api/sources/attacks/100/';
 
 our %blacklist_countries = (
 	'BY' => 1,
@@ -32,6 +32,7 @@ our %blacklist_countries = (
 	'RS' => 1,
 	'PK' => 1,
 	'UA' => 1,
+	'XH' => 1,
 );
 
 our %blacklist_agents = (
@@ -49,6 +50,13 @@ our %blacklist_agents = (
 
 our %status;
 
+my $STATUS_TTL = 300;	# 5 minutes; keeps memory bounded and lets throttle windows expire
+
+sub _set_status {
+	my ($addr, $val) = @_;
+	$status{$addr} = [$val, time() + $STATUS_TTL];
+}
+
 sub allow {
 	my $addr = $ENV{'REMOTE_ADDR'};
 
@@ -61,11 +69,14 @@ sub allow {
 	my $logger = $args{'logger'};
 
 	if(defined($status{$addr})) {
-		# Cache the value
-		if($logger) {
-			$logger->debug("$addr: cached value ", $status{$addr});
+		my ($val, $expires) = @{$status{$addr}};
+		if(time() < $expires) {
+			if($logger) {
+				$logger->debug("$addr: cached value $val");
+			}
+			return $val;
 		}
-		return $status{$addr};
+		delete $status{$addr};
 	}
 
 	if($logger) {
@@ -77,7 +88,7 @@ sub allow {
 			if($logger) {
 				$logger->info("$blocked blacklisted");
 			}
-			$status{$addr} = 0;
+			_set_status($addr, 0);
 			throw Error::Simple("$addr: $blocked is blacklisted", 1);
 		}
 	}
@@ -89,7 +100,7 @@ sub allow {
 		} else {
 			carp('Info not given');
 		}
-		$status{$addr} = 1;
+		_set_status($addr, 1);
 		return 1;
 	}
 
@@ -114,11 +125,16 @@ sub allow {
 				if($logger) {
 					$logger->warn("$addr has been throttled");
 				}
-				$status{$addr} = 0;
+				_set_status($addr, 0);
 				throw Error::Simple("$addr has been throttled");
 			}
 		};
 		if($@) {
+			if(ref($@) && $@->isa('Error')) {
+				# Deliberate block (throttle) — re-throw so caller sees the denial
+				$@->throw();
+			}
+			# Genuine YAML/IO error from Data::Throttler — delete the corrupt DB and continue
 			if($logger) {
 				$logger->debug("removing $db_file");
 			}
@@ -131,7 +147,7 @@ sub allow {
 				if($logger) {
 					$logger->warn("$addr blocked connexion from ", $lingua->country());
 				}
-				$status{$addr} = 0;
+				_set_status($addr, 0);
 				$info->status(403);
 				throw Error::Simple("$addr: blocked connexion from " . $lingua->country(), 0);
 			}
@@ -153,7 +169,7 @@ sub allow {
 						$logger->warn(Data::Dumper->new([$ids->get_attacks()])->Dump());
 					}
 					if($impact > 30) {
-						$status{$addr} = 0;
+						_set_status($addr, 0);
 						$info->status(403);
 						throw Error::Simple("$addr: IDS blocked connexion for " . $info->as_string());
 					}
@@ -163,7 +179,7 @@ sub allow {
 						if($logger) {
 							$logger->warn("$addr: blocked connexion attempt for /etc/passwd from ", $info->as_string());
 						}
-						$status{$addr} = 0;
+						_set_status($addr, 0);
 						$info->status(403);
 						return 0;
 					}
@@ -174,13 +190,13 @@ sub allow {
 		if(my $referer = $ENV{'HTTP_REFERER'}) {
 			$referer =~ tr/ /+/;	# FIXME - this shouldn't be happening
 
-			if(($referer =~ /^http:\/\/keywords-monitoring-your-success.com\/try.php/) ||
-			   ($referer =~ /^http:\/\/www.tcsindustry\.com\//) ||
-			   ($referer =~ /^http:\/\/free-video-tool.com\//)) {
+			if(($referer =~ /^http:\/\/keywords-monitoring-your-success\.com\/try\.php/) ||
+			   ($referer =~ /^http:\/\/www\.tcsindustry\.com\//) ||
+			   ($referer =~ /^http:\/\/free-video-tool\.com\//)) {
 				if($logger) {
 					$logger->warn("$addr: Blocked trawler");
 				}
-				$status{$addr} = 0;
+				_set_status($addr, 0);
 				throw Error::Simple("$addr: Blocked trawler");
 			}
 			# Protect against Shellshocker
@@ -191,7 +207,7 @@ sub allow {
 				if($logger) {
 					$logger->warn("$addr: Blocked shellshocker for $referer");
 				}
-				$status{$addr} = 0;
+				_set_status($addr, 0);
 				throw Error::Simple("$addr: Blocked shellshocker for $referer");
 			}
 		}
@@ -202,7 +218,7 @@ sub allow {
 				if($logger) {
 					$logger->warn("$addr: Blocked attacker from $addr");
 				}
-				$status{$addr} = 0;
+				_set_status($addr, 0);
 				throw Error::Simple("$addr: Blocked attacker for $addr");
 			}
 		}
@@ -227,7 +243,7 @@ sub allow {
 				$logger->debug("read from cache $cachecontent");
 			}
 			@ips = split(/,/, $cachecontent);
-			if($ips[0]) {
+			if(scalar(@ips)) {
 				$readfromcache = 1;
 			} else {
 				if($logger) {
@@ -242,7 +258,7 @@ sub allow {
 		$logger->warn('Couldn\'t create the DShield cache');
 	}
 
-	unless($ips[0]) {
+	unless(scalar(@ips)) {
 		require LWP::Simple::WithCache;
 		LWP::Simple::WithCache->import();
 		require XML::LibXML;
@@ -254,15 +270,14 @@ sub allow {
 
 		my $xml;
 		eval {
-			if(my $string = LWP::Simple::WithCache::get(DSHIELD)) {
+			my $dshield_url = DSHIELD_BASE . $today;
+			if(my $string = LWP::Simple::WithCache::get($dshield_url)) {
                                 $xml = XML::LibXML->load_xml(string => $string);
 			} elsif($logger) {
-				$logger->warn("Couldn't download ", DSHIELD);
-				delete $status{$addr};
+				$logger->warn("Couldn't download $dshield_url");
 				return 1;
                         } else {
-                                warn DSHIELD;
-				delete $status{$addr};
+                                warn $dshield_url;
 				return 1;
                         }
 		};
@@ -274,7 +289,7 @@ sub allow {
 				$ip =~ s/0*(\d+)/$1/g;	# Perl interprets numbers leading with 0 as octal
 				push @ips, $ip;
 			}
-			if(defined($cache) && $ips[0] && !$readfromcache) {
+			if(defined($cache) && scalar(@ips) && !$readfromcache) {
 				my $cachecontent = join(',', @ips);
 				if($logger) {
 					$logger->info("Setting DShield cache for $today to $cachecontent");
@@ -289,7 +304,7 @@ sub allow {
 		if($logger) {
 			$logger->warn("Dshield blocked connexion from $addr");
 		}
-		$status{$addr} = 0;
+		_set_status($addr, 0);
 		throw Error::Simple("Dshield blocked connexion from $addr");
 	}
 
@@ -297,7 +312,7 @@ sub allow {
 		if($logger) {
 			$logger->warn('Blocking possible jqic');
 		}
-		$status{$addr} = 0;
+		_set_status($addr, 0);
 		throw Error::Simple('Blocking possible jqic');
 	}
 
@@ -305,7 +320,7 @@ sub allow {
 		$logger->trace("Allowing connexion from $addr");
 	}
 
-	$status{$addr} = 1;
+	_set_status($addr, 1);
 	return 1;
 }
 
