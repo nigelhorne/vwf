@@ -4,7 +4,7 @@ use VWF::Utils;
 
 # Decide if we're going to allow this client to view the website
 # Usage:
-#	unless(NJH::Allow::allow({info => $info, lingua => $lingua})) {
+#	unless(VWF::Allow::allow({info => $info, lingua => $lingua})) {
 
 use strict;
 use warnings;
