@@ -109,13 +109,16 @@ sub allow {
 		Data::Throttler->import();
 
 		my $interval = 90;
-		my $max_items = 15;
+		my $max_items = 30;
+		my $db_file = File::Spec->catfile($info->tmpdir(), 'throttle');
 		if(my $config = $args{config}) {
-			$interval = $config->{'security'}->{'rate_limiting'}->{'time_window'} || 90;
-			$max_items = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || 15;
+			if(my $throttle = $config->{throttle}) {
+				$db_file = $throttle->{'file'} // File::Spec->catdir($info->tmpdir(), 'throttle');
+				$max_items = $throttle->{'max_items'} // 30;        # Allow 30 requests
+				$interval = $throttle->{'interval'} // 90;  # Per 90 second window
+			}
 		}
 		# Handle YAML Errors
-		my $db_file = File::Spec->catfile($info->tmpdir(), 'throttle');
 		eval {
 			my $throttler = Data::Throttler->new(
 				max_items => $max_items,
