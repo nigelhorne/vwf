@@ -108,12 +108,18 @@ sub allow {
 		require Data::Throttler;
 		Data::Throttler->import();
 
+		my $interval = 90;
+		my $max_items = 15;
+		if(my $config = $args{config}) {
+			$interval = $config->{'security'}->{'rate_limiting'}->{'time_window'} || 90;
+			$max_items = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || 15;
+		}
 		# Handle YAML Errors
 		my $db_file = File::Spec->catfile($info->tmpdir(), 'throttle');
 		eval {
 			my $throttler = Data::Throttler->new(
-				max_items => 15,
-				interval => 90,
+				max_items => $max_items,
+				interval => $interval,
 				backend => 'YAML',
 				backend_options => {
 					db_file => $db_file
@@ -130,13 +136,12 @@ sub allow {
 			}
 		};
 		if($@) {
-			if(ref($@) && $@->isa('Error')) {
-				# Deliberate block (throttle) — re-throw so caller sees the denial
-				$@->throw();
-			}
 			# Genuine YAML/IO error from Data::Throttler — delete the corrupt DB and continue
 			if($logger) {
-				$logger->debug("removing $db_file");
+				$logger->info("removing $db_file: $@");
+			} elsif(ref($@) && $@->isa('Error')) {
+				# Deliberate block (throttle) — re-throw so caller sees the denial
+				$@->throw();
 			}
 			unlink($db_file);
 		}
