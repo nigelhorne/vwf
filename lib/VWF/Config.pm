@@ -120,7 +120,7 @@ sub new
 	my $params = Params::Get::get_params(undef, @_);
 
 	if (exists $params->{logger} && defined $params->{logger}) {
-		Throw Error::Simple('logger must be an object with debug method')
+		throw Error::Simple('logger must be an object with debug method')
 		    unless ref($params->{logger}) && $params->{logger}->can('debug');
 	}
 
@@ -129,7 +129,7 @@ sub new
 	}
 
 	if(exists $params->{config} && defined $params->{config}) {
-		Throw Error::Simple('config must be a hash reference') unless ref($params->{config}) eq 'HASH';
+		throw Error::Simple('config must be a hash reference') unless ref($params->{config}) eq 'HASH';
 	}
 
 	my $class = ref($proto) || $proto;
