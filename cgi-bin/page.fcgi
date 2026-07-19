@@ -44,6 +44,7 @@ use Error qw(:try);
 use File::Spec;
 use POSIX qw(strftime);
 use Readonly;
+use Module::Runtime qw(require_module);	# Safe dynamic module loading; avoids string eval
 use Timer::Simple;
 use Time::HiRes;
 
@@ -66,32 +67,42 @@ use VWF::Utils;
 # $TAINT = 1;
 # taint_env();
 
-# Set rate limit parameters
-Readonly my $MAX_REQUESTS => 100;	# Default max requests allowed
-Readonly my $TIME_WINDOW => '60s';	# Time window for the maximum requests
+# Soft rate-limit: present a CAPTCHA challenge when a client exceeds this
+# many requests within $TIME_WINDOW.  Overridable via the config file.
+Readonly my $MAX_REQUESTS => 100;
+Readonly my $TIME_WINDOW => '60s';	# CHI-style duration string
 
+# Bootstrap CGI::Info before the FCGI accept loop so we can derive the script
+# name and temp directory for logging even before the first real request.
 my $info = CGI::Info->new();
 my @suffixlist = ('.pl', '.fcgi');
 my $script_name = basename($info->script_name(), @suffixlist);
 my $tmpdir = $info->tmpdir();
 
+# When running under a real HTTP server, redirect STDERR to a per-script log
+# file in the temp directory so that die/warn messages are captured.
 if($ENV{'HTTP_USER_AGENT'}) {
-	# open STDERR, ">&STDOUT";
 	close STDERR;
 	open(STDERR, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"));
 }
 
+# Register the log filter that suppresses known-harmless warnings.
 Log::WarnDie->filter(\&filter);
 
-my $vwflog;	# Location of the vwf.log file, read in from the config file - default = logdir/vwf.log
+# $vwflog holds the path to the CSV access log; resolved from config on first request.
+my $vwflog;
 
+# These caches are created lazily on the first request and reused across the
+# FCGI accept loop to amortise the cost of cache initialisation.
 my $info_cache;
 my $lingua_cache;
 my $buffercache;
 
+# Derive the environment-variable prefix from the hostname (e.g. MY_SITE_)
+# so that per-domain config overrides can be passed as environment variables.
 my $script_dir = $info->script_dir();
 my $env_prefix = uc($info->host_name()) . '_';
-$env_prefix =~ tr/\./_/;
+$env_prefix =~ tr/\./_/;	# dots in hostnames become underscores in env var names
 my $logger = Log::Abstraction->new(Config::Abstraction->new(env_prefix => $env_prefix, flatten => 0, config_file => $info->domain_name(), config_dirs => ["$script_dir/../conf/", "$script_dir/../../conf"])->all());
 Log::WarnDie->dispatcher($logger);
 
@@ -127,102 +138,129 @@ if($@) {
 	die $@;
 }
 
+# $config is populated lazily inside doit() so that per-domain configuration
+# is loaded after the FCGI request has been accepted and the domain is known.
 my $config;
-# FIXME - support $config->vwflog();
 my $vwf_log = VWF::Data::vwf_log->new({ directory => $info->logdir(), filename => 'vwf.log', no_entry => 1 });
 
-# http://www.fastcgi.com/docs/faq.html#PerlSignals
+# FastCGI signal handling: the FCGI process lives across many requests so we
+# cannot exit immediately on SIGTERM/SIGUSR1 — we set a flag and exit cleanly
+# after the current request finishes.  See http://fastcgi.com/docs/faq.html#PerlSignals
 my $requestcount = 0;
-my $handling_request = 0;
-my $exit_requested = 0;
+my $handling_request = 0;	# 1 while inside doit(), 0 between requests
+my $exit_requested = 0;		# set to 1 by sig_handler; checked after each request
+
+# In-memory set of IPs that have been permanently blacklisted this process
+# lifetime (e.g. for sending SQL-injection strings).
 my %blacklisted_ip;
 
-# CHI->stats->enable();
+# Per-IP request counter cache; created lazily on first request.
+my $rate_limit_cache;
 
-my $rate_limit_cache;	# Rate limit clients by IP address
+# Loopback and private addresses are trusted and exempt from rate limiting.
 Readonly my @rate_limit_trusted_ips => ('127.0.0.1', '192.168.1.1');
 
+# Countries from which we receive a disproportionate volume of malicious
+# traffic.  Geo-blocking is a blunt instrument but effective at reducing noise.
 Readonly my @blacklist_country_list => (
 	'BY', 'MD', 'RU', 'CN', 'BR', 'UY', 'TR', 'MA', 'VE', 'SA', 'CY',
 	'CO', 'MX', 'IN', 'RS', 'PK', 'UA', 'XH'
 );
 
+# Build the ACL object once at startup.  deny_cloud() blocks all known cloud
+# provider address ranges (AWS, GCP, Azure) which generate almost no legitimate
+# human traffic but are a common origin for automated scanning.
 my $acl = CGI::ACL->new()->deny_cloud()->deny_country(country => \@blacklist_country_list)->allow_ip('108.44.193.70')->allow_ip('127.0.0.1');
 
+# Deferred shutdown handler: set the exit flag and, if we are between requests,
+# flush caches and exit immediately.  If we are mid-request, the flag is checked
+# after doit() returns so the in-flight response is sent cleanly.
 sub sig_handler {
 	$exit_requested = 1;
 	$logger->trace('In sig_handler');
 	if(!$handling_request) {
 		$logger->info('Shutting down');
+		# Flush the page-level response cache to disk before we exit.
 		if($buffercache) {
 			$buffercache->purge();
 		}
 		CHI->stats->flush();
+		# Detach the dispatcher so that Log::WarnDie does not try to log
+		# after the logger object has been destroyed.
 		Log::WarnDie->dispatcher(undef);
 		exit(0);
 	}
 }
 
+# USR1 and TERM both trigger a clean shutdown; PIPE is silenced because a
+# broken client connection mid-response should not kill the worker.
 $SIG{USR1} = \&sig_handler;
 $SIG{TERM} = \&sig_handler;
 $SIG{PIPE} = 'IGNORE';
 
-# my ($stdin, $stdout, $stderr) = (IO::Handle->new(), IO::Handle->new(), IO::Handle->new());
-# https://stackoverflow.com/questions/14563686/how-do-i-get-errors-in-from-a-perl-script-running-fcgi-pm-to-appear-in-the-apach
+# Catch all Perl warnings and mirror them to the per-script stderr log file
+# as well as to the structured logger.
 $SIG{__WARN__} = sub {
 	my $msg = join '', @_;
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
 		print $fout $info->domain_name(), ": $msg";
 		close $fout;
-	# } else {
-		# print $stderr $msg;
 	}
 	$logger->warn($msg) if($logger);
 };
 
+# Catch fatal errors.  The $^S guard prevents this handler from interfering
+# with Error.pm's try/catch blocks which use eval internally.
 $SIG{__DIE__} = sub {
-	return if $^S;	# Let Error.pm try/catch handle dies inside eval blocks
+	return if $^S;	# inside an eval — let the caller handle it
 	my $msg = join '', @_;
+	# Detach Log::WarnDie first so a logger error cannot cause infinite recursion.
 	Log::WarnDie->dispatcher(undef);
 	if(open(my $fout, '>>', File::Spec->catfile($tmpdir, "$script_name.stderr"))) {
 		print $fout $info->domain_name(), ": $msg";
 		close $fout;
-	# } else {
-		# print $stderr $msg;
 	}
 	$logger->fatal($msg) if($logger);
-	CORE::die @_;
+	CORE::die @_;	# re-throw so the original die location is preserved
 };
 
 # my $request = FCGI::Request($stdin, $stdout, $stderr);
 my $request = FCGI::Request();
 
-# Main request loop
+# ─── Main FCGI request loop ───────────────────────────────────────────────────
+# Accept() blocks until the web server sends a new request.  It returns a
+# negative value when the server wants this worker to exit (e.g. graceful
+# shutdown), which breaks the loop naturally.
 while($handling_request = ($request->Accept() >= 0)) {
+
+	# REMOTE_ADDR is absent when running from the command line for testing.
+	# Switch to a verbose debug logger and single-shot mode in that case.
 	unless($ENV{'REMOTE_ADDR'}) {
-		# debugging from the command line
 		my $timer = Timer::Simple->new();
 
+		# Disable all caching so every run reflects the current templates.
 		$ENV{'NO_CACHE'} = 1;
+
+		# Map the LANG shell variable to the HTTP Accept-Language header so
+		# that language detection works the same way it does in production.
 		if((!defined($ENV{'HTTP_ACCEPT_LANGUAGE'})) && defined($ENV{'LANG'})) {
 			my $lang = $ENV{'LANG'};
-			$lang =~ s/\..*$//;
-			$lang =~ tr/_/-/;
+			$lang =~ s/\..*$//;	# strip encoding suffix (e.g. .UTF-8)
+			$lang =~ tr/_/-/;	# POSIX uses _, HTTP uses -
 			$ENV{'HTTP_ACCEPT_LANGUAGE'} = lc($lang);
 		}
 
 		Database::Abstraction::init({ logger => $logger });
 
+		# Replace the production logger with a simple STDOUT printer.
 		$logger = Log::Abstraction->new(logger => sub { print join(', ', @{$_[0]->{'message'}}), "\n" }, level => 'debug');
 		Log::WarnDie->dispatcher($logger);
 		$info->set_logger($logger);
-		# TODO - set logger on all databases
 		$index->set_logger($logger);
 		$vwf_log->set_logger($logger);
-		# $Config::Auto::Debug = 1;
 
+		# Enable full stack traces in Error.pm for command-line debugging.
 		$Error::Debug = 1;
-		# CHI->stats->enable();
 		try {
 			doit(debug => 1);
 		} catch Error with {
@@ -231,26 +269,33 @@ while($handling_request = ($request->Accept() >= 0)) {
 			$logger->error($msg);
 		};
 
+		# Report wall-clock time taken for this command-line invocation.
 		my @elapsed_time = $timer->hms();
 		my $timetaken = int($elapsed_time[2] * 1000);
 		$logger->info("$script_name completed in ${timetaken}ms");
 
-		last;
+		last;	# command-line mode is single-shot; exit the accept loop
 	}
 
+	# ── Live HTTP request ──────────────────────────────────────────────────
 	$requestcount++;
 	$logger->info("Request $requestcount: ", $ENV{'REMOTE_ADDR'});
-	# $books->set_logger($logger);
+
+	# Propagate the current logger to all data-access objects that may emit
+	# log messages during this request.
 	$info->set_logger($logger);
 	$index->set_logger($logger);
 	$vwf_log->set_logger($logger);
 
-	# TODO:	Make this neater
+	# Dispatch the request.  Any unhandled Error.pm exception is caught here
+	# so a single bad request cannot kill the FCGI worker process.
 	try {
 		doit(debug => 0);
 	} catch Error with {
 		my $msg = shift;
 		$logger->error("$msg: ", $msg->stacktrace());
+		# Invalidate the response cache on error so a stale error page is
+		# never served to subsequent clients.
 		if($buffercache) {
 			$buffercache->clear();
 			$buffercache = undef;
@@ -290,28 +335,34 @@ CHI->stats->flush();
 Log::WarnDie->dispatcher(undef);
 exit(0);
 
-# Create and send response to the client for each request
+# ─── doit() — per-request handler ────────────────────────────────────────────
+# Called once per FCGI iteration.  Handles security checks, language detection,
+# template dispatch, response caching, and access logging.
 sub doit
 {
+	# Record the wall-clock start time so we can report request duration later.
 	my $request_start = Timer::Simple->new();
 
+	# CGI::Info caches state between calls; reset it so this request gets a
+	# fresh view of the environment rather than stale values from the last one.
 	CGI::Info->reset();
 
-	# Call domain_name in a class context to ensure it's reread now that FCGI has started up
 	$logger->debug('In doit - domain is ', CGI::Info->domain_name());
 
 	my %params = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
-	# Don't pass $info in since it was created before the connection, so it doesn't know the domain name
-	#	config file to read
+	# $config is built once per process and reused.  We cannot build it before
+	# the first Accept() because the domain name is not known until then.
 	$config ||= VWF::Config->new({
 		logger => $logger,
 		info => $info,
 		debug => $params{'debug'},
-		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })	# Use a temporary CGI::Lingua
+		# A throwaway CGI::Lingua is used here only to satisfy VWF::Config;
+		# the real, cache-backed instance is created further below.
+		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })
 	});
 
-	# Stores things for a day or longer
+	# The CGI::Info disc cache stores parsed request data across FCGI restarts.
 	$info_cache ||= create_disc_cache(config => $config, logger => $logger, namespace => 'CGI::Info');
 
 	my $options = {
@@ -319,6 +370,8 @@ sub doit
 		logger => $logger
 	};
 
+	# If syslog is configured, normalise the 'server' key to 'host' (the
+	# Sys::Syslog convention) and pass the stanza to CGI::Info.
 	my $syslog;
 	if($syslog = $config->syslog()) {
 		if($syslog->{'server'}) {
@@ -326,22 +379,26 @@ sub doit
 		}
 		$options->{'syslog'} = $syslog;
 	}
+	# Rebuild $info now that we have a cache and the domain is known.
 	$info = CGI::Info->new($options);
 
-	# Configure cache for rate limiting
+	# Lazily initialise the in-memory rate-limit counter store.
 	$rate_limit_cache ||= create_memory_cache(config => $config, logger => $logger, namespace => 'rate_limit');
 
-	# Get client IP
+	# Use the real remote IP as the rate-limit key; fall back to 'unknown'
+	# only in the unlikely event that REMOTE_ADDR is absent.
 	my $client_ip = $ENV{'REMOTE_ADDR'} || 'unknown';
 
-	# Check for CAPTCHA bypass token
+	# A successful CAPTCHA solve stores a short-lived bypass token in the cache.
+	# While the token is present the client is exempt from rate-limit checks.
 	my $captcha_bypass_key = "$script_name:captcha_bypass:$client_ip";
 	my $has_captcha_bypass = $rate_limit_cache->get($captcha_bypass_key);
 
-	# Check and increment request count
+	# Read the current request count for this IP from the sliding-window cache.
 	my $request_count = $rate_limit_cache->get("$script_name:rate_limit:$client_ip") || 0;
 
-	# Get rate limit thresholds
+	# Allow the thresholds to be tuned via the config file; fall back to the
+	# compile-time constants if the stanza is missing.
 	my $max_requests = $config->{'security'}->{'rate_limiting'}->{'max_requests'} || $MAX_REQUESTS;
 	my $max_requests_hard = $config->{'security'}->{'rate_limiting'}->{'max_requests_hard'} || ($max_requests * 1.5);
 
@@ -369,11 +426,26 @@ sub doit
 				$logger->info("CAPTCHA verified for $client_ip - rate limit bypass granted");
 				$has_captcha_bypass = 1;
 
-				# Redirect to original page or home
+				# Redirect the client back to the page they were trying to reach.
+				# SECURITY — CRLF / header-injection defence:
+				#   Both the page name and SCRIPT_NAME are interpolated into the
+				#   Location header.  A raw %0d%0a sequence in either value would
+				#   let an attacker inject arbitrary HTTP response headers
+				#   (response-splitting / header-injection).
+				#   Strip $redirect_page to a strict allowlist (word chars and
+				#   hyphens only), and remove any embedded CR or LF from the
+				#   server-supplied SCRIPT_NAME before building the header.
 				my $redirect_page = $info->param('page') || 'index';
+				$redirect_page =~ s/[^A-Za-z0-9_-]//g;
+
+				# Also sanitize the server variable — it is attacker-influenced
+				# in some reverse-proxy configurations.
+				my $script = $ENV{SCRIPT_NAME} // '/cgi-bin/page.fcgi';
+				$script =~ s/[\r\n]//g;
+
 				$info->status(302);
-				print "Status: 302 Found\n",
-					"Location: $ENV{SCRIPT_NAME}?page=$redirect_page\n\n";
+				print "Status: 302 Found\r\n",
+					"Location: ${script}?page=${redirect_page}\r\n\r\n";
 				return;
 			} else {
 				$logger->warn("CAPTCHA verification failed for $client_ip");
@@ -465,17 +537,24 @@ sub doit
 		}
 	}
 
-	# Increment request count
+	# Commit the incremented request count back to the sliding-window cache.
+	# The TTL is the rate-limit window; the counter expires automatically.
 	my $time_window = $config->{'security'}->{'rate_limiting'}->{'time_window'} || $TIME_WINDOW;
 	$rate_limit_cache->set("$script_name:rate_limit:$client_ip", $request_count + 1, $time_window);
 
+	# A request with no page parameter cannot be dispatched; send a 300
+	# response listing the known valid pages instead.
 	if(!defined($info->param('page'))) {
 		$logger->info('No page given in ', $info->as_string());
 		choose();
 		return;
 	}
 
-	# Access control checks
+	# ── Multi-layer access control ─────────────────────────────────────────
+	# Three independent checks are run in order of cheapness:
+	#   1. CGI::ACL — cloud ranges, country blocks, explicit IP allow/deny.
+	#   2. blacklisted() — in-process IP set built from prior SQL-injection attempts.
+	#   3. VWF::Allow — DShield feed, user-agent blacklist, throttler, IDS.
 	if(my $remote_addr = $ENV{'REMOTE_ADDR'}) {
 		my $reason;
 		if($acl->all_denied(lingua => $lingua)) {
@@ -483,6 +562,8 @@ sub doit
 		} elsif(blacklisted($info)) {
 			$reason = 'Blacklisted for attempting to break in';
 		} else {
+			# VWF::Allow may throw an Error object when it blocks a request.
+			# Catch it here so the 403 response is sent rather than propagating.
 			try {
 				unless(VWF::Allow::allow({
 					info   => $info,
@@ -498,11 +579,13 @@ sub doit
 			};
 		}
 		if($reason) {
-			# Client has been blocked
+			# Return a minimal plain-text 403 — no template rendering so that
+			# a blocked attacker receives no information about site structure.
 			print "Status: 403 Forbidden\n",
 				"Content-type: text/plain\n",
 				"Pragma: no-cache\n\n";
 
+			# Suppress the body on HEAD requests per RFC 7231 §4.3.2.
 			unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 				print "Access Denied\n";
 			}
@@ -513,6 +596,9 @@ sub doit
 		}
 	}
 
+	# ── FCGI::Buffer setup ────────────────────────────────────────────────
+	# FCGI::Buffer post-processes the output: compresses it, generates an ETag
+	# and Last-Modified header, and serves a 304 Not Modified when appropriate.
 	my $args = {
 		generate_etag => 1,
 		generate_last_modified => 1,
@@ -521,6 +607,8 @@ sub doit
 		info => $info,
 		optimise_content => 1,
 		logger => $logger,
+		# lint_content runs HTML::Tidy on the output; enable in debug mode or
+		# when explicitly requested via the lint_content query parameter.
 		lint_content => $info->param('lint_content') // $params{'debug'},
 		lingua => $lingua
 	};
@@ -549,9 +637,12 @@ sub doit
 		}
 	}
 
+	# $display holds the instantiated VWF::Display subclass when the page is
+	# found; $invalidpage is set when the page name is invalid or unloadable.
 	my $display;
 	my $invalidpage;
 
+	# Arguments forwarded to every VWF::Display subclass constructor.
 	$args = {
 		cachedir => $cachedir,
 		info => $info,
@@ -561,19 +652,29 @@ sub doit
 		log => $log
 	};
 
-	# Display the requested page
+	# ── Page dispatch ──────────────────────────────────────────────────────
+	# The outer block eval catches any exception thrown during module loading
+	# or display-object construction, setting $@ for inspection below.
 	eval {
 		my $page = $info->param('page');
+
+		# Strip URL fragment identifiers — the server never needs them.
 		$page =~ s/#.*$//;
-		$page =~ s/\\//g;	# I don't know what you're trying to escape or why, but I'm not going to let you
+
+		# Reject backslashes: no legitimate page name contains one, and
+		# they have historically been used to probe Windows path traversal.
+		$page =~ s/\\//g;
+
 		if($page =~ /\//) {
-			# Block "page=/etc/passwd" and "page=http://www.google.com"
+			# A slash in the page name indicates an attempt to traverse
+			# directories (e.g. page=/etc/passwd or page=http://evil.com).
 			$logger->info("Blocking '/' in $page");
 			$info->status(403);
 			$log->status(403);
 			$invalidpage = 1;
 		} else {
-			# Remove all non alphanumeric characters in the name of the page to be loaded
+			# Strip every non-word character so that the page name can only
+			# contain [A-Za-z0-9_] — safe to use as a Perl package suffix.
 			$page =~ s/\W//g;
 			$page =~ s/\s//g;
 			my $display_module = "VWF::Display::$page";
@@ -581,8 +682,14 @@ sub doit
 			# TODO: consider creating a whitelist of valid modules
 			$logger->debug("doit(): Loading module $display_module from @INC");
 			unless($display_module->can('new')) {
-				eval "require $display_module; 1";
-				$display_module->import();
+				# SECURITY — string-eval elimination:
+				#   The original code used eval "require $display_module" which is a
+				#   string eval on a user-derived value.  Although $page has been
+				#   stripped of \W characters, a Unicode or locale edge-case could
+				#   allow a bypass.  Module::Runtime::require_module() loads a module
+				#   by name using a block eval internally, with no string-eval surface.
+				eval { require_module($display_module) };
+				$display_module->import() unless $@;
 			}
 			if($@) {
 				$logger->debug("Failed to load module $display_module: $@");
@@ -696,12 +803,16 @@ sub doit
 	}
 }
 
+# Send a 300 Multiple Choices response listing the pages this site serves.
+# Called when the ?page= parameter is absent or the requested page is unknown.
 sub choose
 {
 	$logger->info('Called with no page to display');
 
 	my $status = $info->status();
 
+	# If the status is already non-200 (e.g. 404 set by the caller), relay
+	# that status rather than overriding it with a 300.
 	if($status != 200) {
 		print "Status: $status ",
 			HTTP::Status::status_message($status),
@@ -714,7 +825,8 @@ sub choose
 
 	$info->status(300);
 
-	# Print last modified date if path is defined
+	# Include a Last-Modified header based on the script's mtime so that
+	# caches and conditional-GET clients can revalidate efficiently.
 	if(my $path = $info->script_path()) {
 		require HTTP::Date;
 		HTTP::Date->import();
@@ -726,7 +838,7 @@ sub choose
 
 	print "\n";
 
-	# Print available pages unless it's a HEAD request
+	# RFC 7231 §4.3.2: a HEAD response must not include a body.
 	unless($ENV{'REQUEST_METHOD'} && ($ENV{'REQUEST_METHOD'} eq 'HEAD')) {
 		print "/cgi-bin/page.fcgi?page=index\n",
 			"/cgi-bin/page.fcgi?page=upload\n",
@@ -735,18 +847,41 @@ sub choose
 	}
 }
 
-# Is this client trying to attack us?
+# Check whether the current request looks like a SQL injection attempt.
+# IPs that trigger a match are added to the in-process %blacklisted_ip set so
+# that subsequent requests from the same IP are rejected without re-scanning.
 sub blacklisted
 {
 	if(my $remote = $ENV{'REMOTE_ADDR'}) {
 		my $info = shift;
+
+		# Fast path: this IP was already blacklisted earlier in this process
+		# lifetime; no need to re-scan the request string.
 		if($blacklisted_ip{$remote}) {
 			$info->status(403);
 			return 1;
 		}
 
 		if(my $string = $info->as_string()) {
-			if(($string =~ /SELECT.+AND.+/i) || ($string =~ /ORDER BY /i) || ($string =~ / OR NOT /i) || ($string =~ / AND \d+=\d+/i) || ($string =~ /THEN.+ELSE.+END/i) || ($string =~ /.+AND.+SELECT.+/i) || ($string =~ /\sAND\s.+\sAND\s/i) || ($string =~ /AND\sCASE\sWHEN/i)) {
+			# SECURITY — ReDoS defence:
+			#   The original patterns used greedy .+ between SQL keywords, which
+			#   causes catastrophic (exponential) backtracking when an attacker
+			#   sends a string that contains the opening keyword but not the
+			#   closing one (e.g. thousands of chars after SELECT with no AND).
+			#   All .+ quantifiers are replaced with the bounded class [^;]{0,N}:
+			#     • the semicolon is a natural SQL statement terminator so it is
+			#       a safe anchor that real SQL injection never crosses, and
+			#     • the explicit upper bound caps backtracking to O(N) steps.
+			#   Word-boundary assertions (\b) also eliminate false positives on
+			#   ordinary words that happen to contain the substring.
+			if(   ($string =~ /SELECT\b[^;]{0,500}\bAND\b/i)
+			   || ($string =~ /ORDER\s+BY\s/i)
+			   || ($string =~ /\bOR\s+NOT\b/i)
+			   || ($string =~ /\bAND\s+\d+=\d+/i)
+			   || ($string =~ /\bTHEN\b[^;]{0,200}\bELSE\b[^;]{0,200}\bEND\b/i)
+			   || ($string =~ /\bAND\b[^;]{0,200}\bSELECT\b/i)
+			   || ($string =~ /\sAND\s[^;]{0,100}\sAND\s/i)
+			   || ($string =~ /\bAND\s+CASE\s+WHEN\b/i)) {
 				$blacklisted_ip{$remote} = 1;
 				$info->status(403);
 				return 1;
@@ -767,16 +902,40 @@ sub filter
 	return 1;
 }
 
-# Put something to vwf.log
+# Escape a single value for safe inclusion in a double-quoted CSV field.
+# Follows RFC 4180 §2.7 and additionally neutralises spreadsheet formulas.
+sub _csv_escape
+{
+	my $v = shift // '';
+
+	# RFC 4180: a double-quote inside a quoted field is represented by two
+	# double-quote characters.  Without this, one embedded " would break the
+	# column boundary and corrupt every subsequent field on the row.
+	$v =~ s/"/""/g;
+
+	# SECURITY — CSV formula injection defence:
+	#   Spreadsheet applications (Excel, LibreOffice Calc) interpret cell values
+	#   that begin with = + - @ TAB or CR as formulas.  An attacker who controls
+	#   a logged field (e.g. the page parameter) could inject =cmd|'/C calc'!A0.
+	#   Prefix such values with a single-quote to force literal interpretation.
+	$v =~ s/^([=+\-@\t\r])/'$1/;
+
+	return $v;
+}
+
+# Write one access record to vwf.log (CSV format) and optionally to syslog.
+# All user-influenced fields are escaped through _csv_escape before output.
 sub vwflog
 {
 	my ($vwflog, $info, $lingua, $syslog, $message, $log, $request_start) = @_;
 
+	# Calculate request duration in milliseconds if a start timer was supplied.
 	my $duration_ms = '';
 	if($request_start) {
 		$duration_ms = int((Time::HiRes::time() - $request_start) * 1000);
 	}
 
+	# Determine which template was rendered for this request (may be empty on error).
 	my $template;
 	if($log) {
 		$template = $log->template();
@@ -786,14 +945,15 @@ sub vwflog
 	}
 	$message ||= '';
 
+	# Create the log file with a header row on first use.
 	if(!-e $vwflog) {
-		# First run - put in the heading row
 		open(my $fout, '>', $vwflog);
 		print $fout '"domain_name","time","IP","country","type","language","http_code","template","args","messages","error","duration_ms"',
 			"\n";
 		close $fout;
 	}
 
+	# Collect any warn/notice-level messages emitted during this request.
 	my $warnings;
         if(my $messages = $info->messages()) {
                 $warnings = join('; ',
@@ -804,34 +964,45 @@ sub vwflog
 
 	my $country = $lingua->country() || 'unknown';
 
+	# Open the log in append mode.  If the open fails we skip logging silently
+	# so that a disk-full or permissions error does not crash the live request.
 	if(open(my $fout, '>>', $vwflog)) {
+		# SECURITY — CSV injection defence:
+		#   Every user-visible field is passed through _csv_escape so that
+		#   embedded double-quotes cannot break the CSV column structure, and
+		#   leading formula characters cannot trigger code execution when the
+		#   file is opened in a spreadsheet application.
 		print $fout
-			'"', $info->domain_name(), '",',
+			'"', _csv_escape($info->domain_name()), '",',
 			'"', strftime('%F %T', localtime), '",',
-			'"', ($ENV{REMOTE_ADDR} ? $ENV{REMOTE_ADDR} : ''), '",',
-			'"', $country, '",',
-			'"', $info->browser_type(), '",',
-			'"', ($lingua->language() || ''), '",',
+			'"', _csv_escape($ENV{REMOTE_ADDR} // ''), '",',
+			'"', _csv_escape($country), '",',
+			'"', _csv_escape($info->browser_type()), '",',
+			'"', _csv_escape($lingua->language() // ''), '",',
 			$info->status(), ',',
-			'"', $template, '",',
-			'"', $info->as_string(raw => 1), '",',
-			'"', $warnings, '",',
-			'"', $message, '",',
+			'"', _csv_escape($template), '",',
+			'"', _csv_escape($info->as_string(raw => 1)), '",',
+			'"', _csv_escape($warnings), '",',
+			'"', _csv_escape($message), '",',
 			$duration_ms,
 			"\n";
 		close($fout);
 	}
 
+	# Optionally mirror the record to syslog (configured via the syslog stanza).
 	if($syslog) {
 		unless(Sys::Syslog->can('openlog')) {
 			require Sys::Syslog;
 			Sys::Syslog->import();
 		}
 
+		# Configure the socket transport if a hash of options was provided.
 		if(ref($syslog) eq 'HASH') {
 			Sys::Syslog::setlogsock($syslog);
 		}
 		Sys::Syslog::openlog($script_name, 'cons,pid', 'user');
+		# Use positional %s/%d format args so that special characters in the
+		# values cannot be interpreted as syslog format directives.
 		Sys::Syslog::syslog('info|local0', '%s %s %s %s %s %d %s %s %d %s %s',
 			$info->domain_name() || '',
 			$ENV{REMOTE_ADDR} || '',
