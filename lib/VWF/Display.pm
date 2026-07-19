@@ -9,6 +9,90 @@ Version 0.01
 
 =cut
 
+# -----------------------------------------------------------------------
+
+=head1 CONFIGURATION
+
+=head2 CSRF Protection
+
+VWF automatically issues a CSRF token as a cookie on every page load so
+that forms can protect against cross-site request forgery.  The token is
+signed with an HMAC secret.  B<You must supply that secret in your site's
+XML configuration file.>
+
+=head3 Recommended setup — configure a persistent secret
+
+Add the following block to your domain's XML config (e.g.
+C<conf/example.com/config.xml>):
+
+    <security>
+      <csrf>
+        <secret>your-long-random-string-here</secret>
+      </csrf>
+    </security>
+
+The secret can be any string, but should be long and unpredictable.
+Generate a good one with:
+
+    perl -MCrypt::URandom=urandom -e 'print unpack("H*", urandom(32)), "\n"'
+
+or
+
+    openssl rand -hex 32
+
+Tokens signed with this secret survive across FastCGI process restarts,
+so users will not lose form state when the server is reloaded.
+
+=head3 What happens if you do not configure a secret
+
+If C<security.csrf.secret> is absent, VWF B<does not refuse to start>.
+Instead it:
+
+=over 4
+
+=item 1.
+
+Generates a cryptographically random 256-bit secret the first time a
+CSRF token is needed in the current process.
+
+=item 2.
+
+Emits a one-time warning to the error log:
+
+    VWF: security.csrf.secret is not configured; using a per-process
+    random secret. CSRF tokens will not survive process restarts.
+    Set security.csrf.secret in your site config to suppress this warning.
+
+=item 3.
+
+Uses that random secret for every token issued in this process lifetime.
+
+=back
+
+This means CSRF protection is still B<cryptographically strong> — there is
+no hardcoded or guessable key — but if the FastCGI process restarts (e.g.
+on deploy or crash) any tokens issued before the restart become invalid.
+Users who had a form open will see a CSRF validation failure on submit and
+will need to reload the page.
+
+To silence the warning and avoid that edge case, set the secret in config
+as shown above.
+
+=head3 Disabling CSRF entirely
+
+Set C<security.csrf.enable> to C<0> in your config if you do not use
+server-side form handling and do not need CSRF tokens at all:
+
+    <security>
+      <csrf>
+        <enable>0</enable>
+      </csrf>
+    </security>
+
+=cut
+
+# -----------------------------------------------------------------------
+
 our $VERSION = '0.01';
 
 use v5.20;
@@ -22,7 +106,11 @@ use CGI::Info;
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
 use Crypt::URandom qw(urandom);		# CSPRNG for CSRF tokens; rand() is not safe
-use Carp qw(croak);				# croak for programmer-facing fatal errors
+use Carp qw(croak carp);			# croak for fatal errors, carp for warnings
+
+# Per-process fallback CSRF secret, generated once if no secret is configured.
+# Tokens are valid within a process lifetime but not across restarts.
+my $_csrf_fallback_secret;
 use Digest::SHA qw(sha256_hex);
 use File::Spec;
 use Object::Configure;
@@ -857,13 +945,22 @@ sub _types
 }
 
 sub _generate_csrf_token($self) {
-	# SECURITY — require an explicitly configured HMAC secret.
-	#   Never fall back to a hardcoded literal: anyone who has read this source
-	#   code would know the key and could forge valid tokens for any timestamp.
-	#   Configuration must supply security.csrf.secret or the server will refuse
-	#   to start rather than silently run with a compromised key.
-	my $secret = $self->{config}->{security}->{csrf}->{secret}
-		or croak 'CSRF secret must be configured at security.csrf.secret';
+	# Prefer an explicitly configured HMAC secret from security.csrf.secret.
+	# If absent, fall back to a per-process random secret generated at first use
+	# and warn once so the operator knows to configure a persistent one.
+	# A per-process secret is still cryptographically strong (no hardcoded value),
+	# but tokens will be invalidated whenever the FastCGI process restarts.
+	my $secret = $self->{config}->{security}->{csrf}->{secret};
+	unless(defined $secret) {
+		unless(defined $_csrf_fallback_secret) {
+			$_csrf_fallback_secret = unpack('H*', urandom(32));
+			carp 'VWF: security.csrf.secret is not configured; '
+			   . 'using a per-process random secret. '
+			   . 'CSRF tokens will not survive process restarts. '
+			   . 'Set security.csrf.secret in your site config to suppress this warning.';
+		}
+		$secret = $_csrf_fallback_secret;
+	}
 
 	# SECURITY — use a cryptographically secure RNG, not rand().
 	#   Perl's built-in rand() is a predictable PRNG; if an attacker knows the
