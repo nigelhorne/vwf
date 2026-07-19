@@ -482,6 +482,167 @@ sub set_cookie
 	return $self;
 }
 
+=head2 add_preload
+
+  $self->add_preload($href, $as, %opts);
+
+Queue a resource to be advertised to the browser (and to the HTTP/2 server)
+as a preload hint, emitted as a C<Link: rel=preload> HTTP header.
+
+In HTTP/2, the web server can read these headers and I<push> the named assets
+to the client before the browser has finished parsing the HTML and discovered
+them itself.  This eliminates a full round-trip for render-critical resources
+such as stylesheets and fonts, measurably reducing time-to-first-paint.
+
+In HTTP/1.1 the header still provides a useful hint: browsers begin fetching
+the asset as soon as they see the response headers, in parallel with HTML
+parsing, which is faster than waiting for the parser to encounter the
+C<< <link> >> or C<< <script> >> tag.
+
+=head3 Parameters
+
+=over 4
+
+=item $href (required)
+
+Root-relative path to the resource, e.g. C</css/main.css>.  Must start with
+a C</>.  Absolute URLs and relative paths are rejected to prevent header
+injection.
+
+=item $as (required)
+
+The W3C resource type.  Must be one of:
+
+  audio  document  embed  fetch  font  image  object
+  script  style  track  video  worker
+
+Choosing the correct type matters: it determines the request's priority,
+the C<Accept> header the browser sends, and whether the resource is subject
+to Content Security Policy checks.  An incorrect type causes the browser to
+ignore the hint silently.
+
+=item crossorigin => 1 (optional)
+
+Include the C<crossorigin> attribute on the Link header.  This is required
+for any resource that will be fetched in CORS anonymous mode — most notably
+web fonts, even when they are served from the same origin.  Without it the
+browser issues a second, uncached fetch when it encounters the C<< <link> >>
+tag in the HTML.
+
+Defaults to C<1> automatically when C<$as> is C<font>; for all other types
+defaults to C<0>.
+
+=back
+
+Returns C<$self> so calls may be chained.
+
+=head3 When to call it
+
+Call C<add_preload> from a page subclass constructor, I<after>
+C<< $class->SUPER::new(@args) >> returns and I<before> C<as_string> is
+called.  C<http()> reads the preload queue when it runs, so any call made
+before that point will be included in the response.
+
+Do B<not> call it from C<html()>: by the time C<html()> executes, C<http()>
+has already emitted the headers and the Link headers will be lost.
+
+=head3 What to preload
+
+Preload only resources that are I<render-critical> for the current page —
+assets the browser will definitely need within the first few seconds of
+rendering.  Good candidates:
+
+=over 4
+
+=item * The primary stylesheet (C<as=style>)
+
+=item * Web fonts referenced by that stylesheet (C<as=font>)
+
+=item * A critical above-the-fold script (C<as=script>)
+
+=back
+
+Avoid preloading everything: unused preloads waste bandwidth and compete with
+resources the browser has already prioritised.  Per-page subclasses are the
+right place because each page knows exactly which assets its template needs.
+
+=head3 Examples
+
+Typical use inside a page subclass:
+
+  package VWF::Display::index;
+  use parent 'VWF::Display';
+
+  sub new {
+      my ($class, @args) = @_;
+      my $self = $class->SUPER::new(@args);
+      return unless defined $self;   # blocked by Display (e.g. bad Referer)
+
+      # Register render-critical assets for this page.
+      # add_preload() returns $self so calls chain naturally.
+      $self->add_preload('/css/main.css',         'style')
+           ->add_preload('/fonts/body.woff2',     'font')    # crossorigin added automatically
+           ->add_preload('/fonts/heading.woff2',  'font')
+           ->add_preload('/js/index.js',          'script');
+
+      return $self;
+  }
+
+These produce the following headers in the HTTP response:
+
+  Link: </css/main.css>; rel=preload; as=style
+  Link: </fonts/body.woff2>; rel=preload; as=font; crossorigin
+  Link: </fonts/heading.woff2>; rel=preload; as=font; crossorigin
+  Link: </js/index.js>; rel=preload; as=script
+
+A resource fetched via C<fetch()> or C<XMLHttpRequest> that requires CORS:
+
+  $self->add_preload('/api/config.json', 'fetch', crossorigin => 1);
+
+An above-the-fold hero image (no C<crossorigin> needed for images):
+
+  $self->add_preload('/img/hero.webp', 'image');
+
+=head3 Why the base class preloads nothing by default
+
+C<VWF::Display> ships no assets of its own, so there is nothing framework-level
+to preload.  Additionally, C<http()> runs I<before> C<html()>, which means the
+template has not yet been processed when the headers are emitted — the base
+class has no way to inspect template contents to discover asset references
+automatically.  Each subclass is therefore responsible for declaring its own
+dependencies explicitly.
+
+=cut
+
+sub add_preload
+{
+	my ($self, $href, $as, %opts) = @_;
+
+	# Allowlist of valid W3C Resource Hints 'as' types (https://www.w3.org/TR/preload/).
+	# Any other value would produce an invalid Link header that browsers ignore.
+	my %valid_types = map { $_ => 1 }
+		qw(audio document embed fetch font image object script style track video worker);
+	croak "Unknown preload type '$as'; must be one of: " . join(', ', sort keys %valid_types)
+		unless $valid_types{$as};
+
+	# SECURITY — header injection defence:
+	#   $href is interpolated into the Link header value.  Reject anything that
+	#   is not a root-relative path; in particular, CRLF characters in $href
+	#   would let a caller inject arbitrary HTTP headers.
+	croak "Preload href must be a root-relative path starting with '/'"
+		unless $href =~ m{^/[^\r\n]*$};
+
+	# Fonts loaded cross-origin (which is every font in practice, even same-origin,
+	# due to the CORS anonymous-mode requirement) must carry the crossorigin attribute
+	# or the browser will fetch them twice.  Default it on for font type.
+	my $crossorigin = $opts{crossorigin} // ($as eq 'font' ? 1 : 0);
+
+	$self->{_preloads} ||= [];
+	push @{$self->{_preloads}}, { href => $href, as => $as, crossorigin => $crossorigin };
+
+	return $self;	# allow chaining: $self->add_preload(...)->add_preload(...)
+}
+
 =head2 http
 
 Returns the HTTP header section, terminated by an empty line
@@ -490,11 +651,27 @@ Returns the HTTP header section, terminated by an empty line
 
 # Generate and return the HTTP response headers (without the blank-line
 # terminator — FCGI::Buffer appends that).  Also emits Set-Cookie lines
-# for session cookies and the CSRF token.
+# for session cookies and the CSRF token, plus Link: rel=preload headers
+# for any assets registered via add_preload().
 sub http
 {
 	my $self = shift;
 	my $params = Params::Get::get_params(undef, @_);
+
+	# Emit Link: rel=preload headers for all assets queued by add_preload().
+	# In HTTP/2 these headers instruct the server to push the assets before
+	# the browser has parsed the HTML and discovered them itself, eliminating
+	# a full round-trip for render-critical resources like stylesheets and fonts.
+	if(my $preloads = $self->{_preloads}) {
+		for my $p (@{$preloads}) {
+			my $link = "Link: <$p->{href}>; rel=preload; as=$p->{as}";
+			# The crossorigin attribute is required for fonts and for any
+			# resource fetched in CORS anonymous mode; without it the browser
+			# will ignore the push and fetch the resource again anyway.
+			$link .= '; crossorigin' if $p->{crossorigin};
+			print "$link\n";
+		}
+	}
 
 	# Emit Set-Cookie headers for any cookies queued by set_cookie().
 	# All cookies carry HttpOnly and SameSite=Strict; the Secure flag is
