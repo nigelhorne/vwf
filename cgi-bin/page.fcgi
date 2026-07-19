@@ -45,6 +45,7 @@ use File::Spec;
 use POSIX qw(strftime);
 use Readonly;
 use Timer::Simple;
+use Time::HiRes;
 
 # FIXME: Sometimes gives Insecure dependency in require while running with -T switch in Module/Runtime.pm
 # use Taint::Runtime qw($TAINT taint_env);
