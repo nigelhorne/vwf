@@ -20,7 +20,7 @@ that forms can protect against cross-site request forgery.  The token is
 signed with an HMAC secret.  B<You must supply that secret in your site's
 XML configuration file.>
 
-=head3 Recommended setup — configure a persistent secret
+=head3 Recommended setup - configure a persistent secret
 
 Add the following block to your domain's XML config (e.g.
 C<conf/example.com/config.xml>):
@@ -69,8 +69,8 @@ Uses that random secret for every token issued in this process lifetime.
 
 =back
 
-This means CSRF protection is still B<cryptographically strong> — there is
-no hardcoded or guessable key — but if the FastCGI process restarts (e.g.
+This means CSRF protection is still B<cryptographically strong> - there is
+no hardcoded or guessable key - but if the FastCGI process restarts (e.g.
 on deploy or crash) any tokens issued before the restart become invalid.
 Users who had a form open will see a CSRF validation failure on submit and
 will need to reload the page.
@@ -612,7 +612,7 @@ ignore the hint silently.
 =item crossorigin => 1 (optional)
 
 Include the C<crossorigin> attribute on the Link header.  This is required
-for any resource that will be fetched in CORS anonymous mode — most notably
+for any resource that will be fetched in CORS anonymous mode - most notably
 web fonts, even when they are served from the same origin.  Without it the
 browser issues a second, uncached fetch when it encounters the C<< <link> >>
 tag in the HTML.
@@ -636,7 +636,7 @@ has already emitted the headers and the Link headers will be lost.
 
 =head3 What to preload
 
-Preload only resources that are I<render-critical> for the current page —
+Preload only resources that are I<render-critical> for the current page -
 assets the browser will definitely need within the first few seconds of
 rendering.  Good candidates:
 
@@ -695,7 +695,7 @@ An above-the-fold hero image (no C<crossorigin> needed for images):
 
 C<VWF::Display> ships no assets of its own, so there is nothing framework-level
 to preload.  Additionally, C<http()> runs I<before> C<html()>, which means the
-template has not yet been processed when the headers are emitted — the base
+template has not yet been processed when the headers are emitted - the base
 class has no way to inspect template contents to discover asset references
 automatically.  Each subclass is therefore responsible for declaring its own
 dependencies explicitly.
@@ -954,10 +954,14 @@ sub _generate_csrf_token($self) {
 	unless(defined $secret) {
 		unless(defined $_csrf_fallback_secret) {
 			$_csrf_fallback_secret = unpack('H*', urandom(32));
-			carp 'VWF: security.csrf.secret is not configured; '
+			my $config_path = $self->{config}->{config_path}
+				? join(', ', @{$self->{config}->{config_path}})
+				: 'conf/' . ($self->{info} ? ($self->{info}->domain_name() // 'unknown') : 'unknown');
+			carp "VWF: security.csrf.secret is not configured; "
 			   . 'using a per-process random secret. '
 			   . 'CSRF tokens will not survive process restarts. '
-			   . 'Set security.csrf.secret in your site config to suppress this warning.';
+			   . "Add <security><csrf><secret>...</secret></csrf></security> "
+			   . "to $config_path to suppress this warning.";
 		}
 		$secret = $_csrf_fallback_secret;
 	}
