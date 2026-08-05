@@ -913,7 +913,7 @@ sub _csv_escape
 	# column boundary and corrupt every subsequent field on the row.
 	$v =~ s/"/""/g;
 
-	# SECURITY — CSV formula injection defence:
+	# SECURITY - CSV formula injection defence:
 	#   Spreadsheet applications (Excel, LibreOffice Calc) interpret cell values
 	#   that begin with = + - @ TAB or CR as formulas.  An attacker who controls
 	#   a logged field (e.g. the page parameter) could inject =cmd|'/C calc'!A0.
