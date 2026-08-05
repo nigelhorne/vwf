@@ -869,7 +869,7 @@ sub blacklisted
 			#   sends a string that contains the opening keyword but not the
 			#   closing one (e.g. thousands of chars after SELECT with no AND).
 			#   All .+ quantifiers are replaced with the bounded class [^;]{0,N}:
-			#     -  the semicolon is a natural SQL statement terminator so it is
+			#     - the semicolon is a natural SQL statement terminator so it is
 			#       a safe anchor that real SQL injection never crosses, and
 			#     - the explicit upper bound caps backtracking to O(N) steps.
 			#   Word-boundary assertions (\b) also eliminate false positives on
