@@ -16,7 +16,7 @@ It supports Template Toolkit (http://template-toolkit.org/),
 text and HTML files.
 The framework handles web requests using FastCGI and offers dynamic page rendering, access control (including rate limiting), and caching.
 
-The idea is to create index.fcgi which will then automatically display
+The idea is to create page.fcgi which will then automatically display
 the correct index.htm (or index.tmpl) file based on the browser language
 setting (e.g. en-GB) and type (e.g. mobile). By putting the pages in a
 directory hierarchy new versions can be quickly added for
