@@ -682,7 +682,7 @@ sub doit
 			# TODO: consider creating a whitelist of valid modules
 			$logger->debug("doit(): Loading module $display_module from @INC");
 			unless($display_module->can('new')) {
-				# SECURITY — string-eval elimination:
+				# String-eval elimination:
 				#   The original code used eval "require $display_module" which is a
 				#   string eval on a user-derived value.  Although $page has been
 				#   stripped of \W characters, a Unicode or locale edge-case could
@@ -863,6 +863,10 @@ sub blacklisted
 		}
 
 		if(my $string = $info->as_string()) {
+			# Hard length cap: skip pattern matching entirely on absurdly long
+			# inputs.  Even bounded quantifiers like {1,200} iterate many times
+			# across a 1 MB string, so cap before we run any regex.
+			return 0 if length($string) > 8192;
 			# SECURITY - ReDoS defence:
 			#   The original patterns used greedy .+ between SQL keywords, which
 			#   causes catastrophic (exponential) backtracking when an attacker
