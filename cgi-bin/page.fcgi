@@ -579,7 +579,7 @@ sub doit
 			};
 		}
 		if($reason) {
-			# Return a minimal plain-text 403 — no template rendering so that
+			# Return a minimal plain-text 403 - no template rendering so that
 			# a blocked attacker receives no information about site structure.
 			print "Status: 403 Forbidden\n",
 				"Content-type: text/plain\n",
@@ -658,7 +658,7 @@ sub doit
 	eval {
 		my $page = $info->param('page');
 
-		# Strip URL fragment identifiers — the server never needs them.
+		# Strip URL fragment identifiers - the server never needs them.
 		$page =~ s/#.*$//;
 
 		# Reject backslashes: no legitimate page name contains one, and
@@ -674,7 +674,7 @@ sub doit
 			$invalidpage = 1;
 		} else {
 			# Strip every non-word character so that the page name can only
-			# contain [A-Za-z0-9_] — safe to use as a Perl package suffix.
+			# contain [A-Za-z0-9_] - safe to use as a Perl package suffix.
 			$page =~ s/\W//g;
 			$page =~ s/\s//g;
 			my $display_module = "VWF::Display::$page";
