@@ -7,6 +7,7 @@ package VWF::Display::index;
 use strict;
 use warnings;
 
+use Carp;
 use VWF::Display;
 use String::Random;
 
@@ -17,7 +18,7 @@ sub html {
 	my %args = (ref($_[0]) eq 'HASH') ? %{$_[0]} : @_;
 
 	my $info = $self->{_info};
-	die 'Missing _info in object' unless $info;
+	croak('Missing _info in object') unless $info;
 
 	# Define allowed parameters (use state to avoid redeclaring in subsequent calls)
 	# state $allowed = {
@@ -51,7 +52,7 @@ sub html {
 
 	# Database handle
 	my $index = $args{'index'};
-	die "Missing 'index' handle" unless($index);
+	croak("Missing 'index' handle") unless($index);
 
 	if(scalar(keys %{$params}) == 0) {
 		# No parameters to process: display the main index page
@@ -102,7 +103,7 @@ sub html {
 
 	# Insert code here to error if $to isn't defined
 	if(!defined($to)) {
-		die 'No email entry assigned to ', $info->person();
+		croak('No email entry assigned to ', $info->person());
 	}
 
 	# Rate limit for sending e-mails

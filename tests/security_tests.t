@@ -9,6 +9,7 @@ use File::Temp qw(tempdir tempfile);
 use Time::HiRes qw(sleep);
 use File::Spec;
 use FindBin qw($Bin);
+use lib File::Spec->catfile($Bin, '..', 'lib');
 
 # Find the actual page.fcgi file
 my $page_fcgi = File::Spec->catfile($Bin, '..', 'cgi-bin', 'page.fcgi');
@@ -315,21 +316,20 @@ subtest 'Rate Limiting with page.fcgi constants' => sub {
 # BLACKLIST COUNTRY LIST TESTS
 # =============================================================================
 
-subtest 'Blacklisted countries from page.fcgi' => sub {
+subtest 'Blacklisted countries (VWF::Blacklist, used by page.fcgi)' => sub {
 	plan tests => 6;
-	
-	# Extract country blacklist from page.fcgi
-	my ($country_list) = $full_code =~ /Readonly\s+my\s+\@blacklist_country_list\s*=>\s*\((.*?)\);/s;
-	
-	ok(defined $country_list, 'Country blacklist found in code');
-	
+
+	# page.fcgi gets its CGI::ACL country list from VWF::Blacklist
+	like($full_code, qr/deny_country\(country\s*=>\s*VWF::Blacklist->new\(/, 'page.fcgi uses VWF::Blacklist');
+
+	require VWF::Blacklist;
+	my @countries = @{VWF::Blacklist->new()->countries()};
+
 	# Check for specific countries that should be blacklisted
-	like($country_list, qr/'RU'/, 'Russia should be blacklisted');
-	like($country_list, qr/'CN'/, 'China should be blacklisted');
-	like($country_list, qr/'BR'/, 'Brazil should be blacklisted');
-	
-	# Count number of blacklisted countries
-	my @countries = $country_list =~ /'([A-Z]{2})'/g;
+	ok((grep { $_ eq 'RU' } @countries), 'Russia should be blacklisted');
+	ok((grep { $_ eq 'CN' } @countries), 'China should be blacklisted');
+	ok((grep { $_ eq 'BR' } @countries), 'Brazil should be blacklisted');
+
 	ok(scalar(@countries) > 0, 'Should have at least one blacklisted country');
 	cmp_ok(scalar(@countries), '>=', 10, 'Should have at least 10 blacklisted countries');
 };

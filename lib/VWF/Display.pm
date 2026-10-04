@@ -102,7 +102,7 @@ use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
 use Config::Abstraction;
-use CGI::Info;
+use CGI::Info 1.14;	# For is_ai()
 use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
 use Crypt::URandom qw(urandom);		# CSPRNG for CSRF tokens; rand() is not safe
@@ -120,31 +120,12 @@ use Template::Plugin::EnvHash;
 use Template::Plugin::Math;
 use Template::Plugin::JSON;
 use HTML::SocialMedia;
+use VWF::Blacklist;
 use VWF::Utils qw(create_memory_cache);
 use Error;
-use Fatal qw(:void open);
 use File::pfopen;
 use Params::Get;
 use Scalar::Util;
-
-# TODO: read this from the config file
-my %blacklist = (
-	'MD' => 1,
-	'RU' => 1,
-	'CN' => 1,
-	'BR' => 1,
-	'UY' => 1,
-	'TR' => 1,
-	'MA' => 1,
-	'VE' => 1,
-	'SA' => 1,
-	'CY' => 1,
-	'CO' => 1,
-	'MX' => 1,
-	'IN' => 1,
-	'RS' => 1,
-	'PK' => 1,
-);
 
 our $sm;
 
@@ -204,7 +185,7 @@ sub new
 		}
 	};
 	if($@ || !defined($config)) {
-		die "Configuration error: $@: $config_dir/", $info->domain_name();
+		croak("Configuration error: $@: $config_dir/", $info->domain_name());
 	}
 
 	# Merge caller-supplied config on top of the file-based defaults so that
@@ -225,7 +206,7 @@ sub new
 			my $impact = $ids->detect_attacks(request => $params);
 			my $threshold = $config->{security}->{ids_threshold} // 50;
 			if($impact > $threshold) {
-				die $ENV{'REMOTE_ADDR'}, ": IDS impact is $impact";	# Block detected attacks
+				croak($ENV{'REMOTE_ADDR'}, ": IDS impact is $impact");	# Block detected attacks
 			}
 		}
 
@@ -234,7 +215,11 @@ sub new
 			require Data::Throttler;
 
 			my $db_file = $config->{'throttle'}->{'file'} // File::Spec->catdir($info->tmpdir(), 'throttle');
-			eval {	# Handle YAML Errors
+
+			# The eval only finds out whether the client is over the limit,
+			# so that it catches errors from a broken YAML file and nothing
+			# else.  A "return" in here would leave only the eval, not new().
+			my $throttled = eval {
 				my %options = (
 					max_items => $config->{'throttle'}->{'max_items'} // 30,	# Allow 30 requests
 					interval => $config->{'throttle'}->{'interval'} // 90,	# Per 90 second window
@@ -244,32 +229,31 @@ sub new
 					}
 				);
 
-				if(my $throttler = Data::Throttler->new(%options)) {
-					# Block if over the limit
-					if(!$throttler->try_push(key => $ENV{'REMOTE_ADDR'})) {
-						$info->status(429);	# Too many requests
-						sleep(1);	# Slow down attackers
-						if($params->{'logger'}) {
-							$params->{'logger'}->info("$ENV{REMOTE_ADDR} connexion throttled");
-						}
-						return;
-					}
-				}
+				my $throttler = Data::Throttler->new(%options);
+				$throttler && !$throttler->try_push(key => $ENV{'REMOTE_ADDR'});
 			};
 			if($@) {
 				if($params->{'logger'}) {
 					$params->{'logger'}->notice("Removing unparsable YAML file $db_file: $@");
 				}
 				unlink($db_file);
+			} elsif($throttled) {
+				$info->status(429);	# Too many requests
+				sleep(1);	# Slow down attackers
+				if($params->{'logger'}) {
+					$params->{'logger'}->info("$ENV{REMOTE_ADDR} connexion throttled");
+				}
+				return;
 			}
 
 			# Country based blocking
 			if(my $lingua = $params->{lingua}) {
-				if($blacklist{uc($lingua->country())}) {
+				my $country = $lingua->country();
+				if(VWF::Blacklist->new(countries => $config->{'blacklist_countries'})->is_blocked($country)) {
 					if($params->{'logger'}) {
-						$params->{'logger'}->warn("$ENV{REMOTE_ADDR} is from a blacklisted country " . $lingua->country());
+						$params->{'logger'}->warn("$ENV{REMOTE_ADDR} is from a blacklisted country $country");
 					}
-					die "$ENV{REMOTE_ADDR} is from a blacklisted country ", $lingua->country();
+					croak("$ENV{REMOTE_ADDR} is from a blacklisted country $country");
 				}
 			}
 		}
@@ -797,8 +781,11 @@ sub http
 		}
 	}
 
-	if($params->{'Retry-After'}) {
-		$rc = $params->{'Retry-After'} . "\n";
+	# Seconds only (RFC 9110 section 10.2.3); anything else could inject headers
+	if(defined(my $retry_after = $params->{'Retry-After'})) {
+		croak("Retry-After must be a number of seconds, not '$retry_after'")
+			unless($retry_after =~ /\A\d+\z/);
+		$rc .= "Retry-After: $retry_after\n";
 	}
 
 	# ── Defensive security headers ─────────────────────────────────────────
@@ -918,8 +905,11 @@ sub _debug
 	return $self;
 }
 
+# Encode a string as HTML numeric entities, e.g. 'a@b' => '&#97;&#64;&#98;'.
+# Always returns one string: it is used inside a concatenation, where a list
+# would be counted rather than joined.
 sub obfuscate {
-	return map { '&#' . ord($_) . ';' } split(//, shift);
+	return join('', map { '&#' . ord($_) . ';' } split(//, shift));
 }
 
 sub _types
@@ -932,6 +922,9 @@ sub _types
 		push @rc, 'search', 'robot';
 	} elsif($info->is_mobile()) {
 		push @rc, 'mobile';
+	} elsif($info->is_ai()) {
+		# AI crawlers are robots, so fall back to the robot templates
+		push @rc, 'ai', 'robot', 'search';
 	} elsif($info->is_robot()) {
 		push @rc, 'robot', 'search';
 	}

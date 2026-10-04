@@ -1,5 +1,6 @@
 package VWF::Allow;
 
+use VWF::Blacklist;
 use VWF::Utils;
 
 # Decide if we're going to allow this client to view the website
@@ -13,27 +14,6 @@ use Error;
 use File::Spec;
 
 use constant DSHIELD_BASE => 'https://secure.dshield.org/api/sources/attacks/100/';
-
-my %blacklist_countries = (
-	'BY' => 1,
-	'MD' => 1,
-	'RU' => 1,
-	'CN' => 1,
-	'BR' => 1,
-	'UY' => 1,
-	'TR' => 1,
-	'MA' => 1,
-	'VE' => 1,
-	'SA' => 1,
-	'CY' => 1,
-	'CO' => 1,
-	'MX' => 1,
-	'IN' => 1,
-	'RS' => 1,
-	'PK' => 1,
-	'UA' => 1,
-	'XH' => 1,
-);
 
 my %blacklist_agents = (
 	'Barkrowler' => 'Barkrowler',
@@ -154,7 +134,8 @@ sub allow {
 
 		unless(($addr =~ /^192\.168\./) || $info->baidu()) {
 			my $lingua = $args{'lingua'};
-			if(defined($lingua) && $lingua->country() && $blacklist_countries{uc($lingua->country())}) {
+			my $countries = $args{'config'} ? $args{'config'}->{'blacklist_countries'} : undef;
+			if(defined($lingua) && VWF::Blacklist->new(countries => $countries)->is_blocked($lingua->country())) {
 				if($logger) {
 					$logger->warn("$addr blocked connexion from ", $lingua->country());
 				}
