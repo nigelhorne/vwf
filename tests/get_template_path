@@ -44,6 +44,7 @@ use VWF::Display;
 	sub param { }
 	sub is_search_engine { 0 }
 	sub is_mobile { 0 }
+	sub is_ai { 0 }
 	sub is_robot { 0 }
 	sub script_dir { Cwd::getcwd() }
 	sub domain_name { 'example.com' }
