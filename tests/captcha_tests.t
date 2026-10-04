@@ -6,6 +6,7 @@ use Test::More;
 use Test::MockObject;
 use FindBin qw($Bin);
 use File::Spec;
+use File::Temp qw(tempdir);
 
 # Add lib paths
 use lib File::Spec->catfile($Bin, '..', 'lib');
@@ -33,8 +34,17 @@ subtest 'CAPTCHA module initialization' => sub {
 subtest 'Display module initialization' => sub {
 	plan tests => 2;
 	
+	# VWF::Display->new() reads a configuration file.  Give it its own,
+	# rather than whatever happens to be in ~/lib/conf on this machine.
+	my $config_dir = tempdir(CLEANUP => 1);
+	open(my $fout, '>', File::Spec->catfile($config_dir, 'default')) or die "$config_dir/default: $!";
+	print $fout "<?xml version=\"1.0\"?>\n<config><memory_cache><driver>Null</driver></memory_cache></config>\n";
+	close $fout;
+	local $ENV{'CONFIG_DIR'} = $config_dir;
+
 	# Create minimal mock objects
 	my $mock_info = Test::MockObject->new();
+	$mock_info->mock('domain_name', sub { 'example.com' });
 	my $mock_config = Test::MockObject->new();
 	my $mock_lingua = Test::MockObject->new();
 	
