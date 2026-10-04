@@ -46,7 +46,7 @@ jobs:
           cpanm --skip-satisfied -qn LWP::UserAgent::Cached Data::Serializer CGI::Carp B::Lint FCGI Template::Plugin::EnvHash HTML::SocialMedia Error IPC::System::Simple
           cpanm --skip-satisfied -qn Template::Plugin::JSON Log::Any::Adapter::Log4perl XML::Simple CHI DBD::CSV
           cpanm --skip-satisfied -qn warnings::unused File::HomeDir Config::Abstraction Template::Filters Carp::Always Test::MockObject JSON::MaybeXS
-          cpanm --skip-satisfied -qn Crypt::URandom File::pfopen
+          cpanm --skip-satisfied -qn Crypt::URandom File::pfopen Timer::Simple
           cpanm --skip-satisfied -qn Test::Most Params::Validate::Strict Readonly IP::Country::Fast CGI::Info~1.14
       - name: Run Tests
         run: |
