@@ -637,8 +637,24 @@ sub doit
 	my $fb = FCGI::Buffer->new()->init($args);
 
 	if($fb->can_cache()) {
+		my $cache_key = join('/',
+			'FCGI::Buffer',
+			$info->browser_type(),
+			$info->domain_name(),
+			$script_name,
+			$info->as_string(),
+			$lingua->language()
+		);
+		$cache_key =~ s/;string=%5Bobject%20HTMLInputElement%5D//;
+		$cache_key =~ s/;string=\[object HTMLInputElement\]//;
+		if($info->param('location')) {
+			$cache_key .= '/' . $info->param('location');
+		}
+		$logger->debug("enabling cache key $cache_key");
+
 		$buffercache ||= create_disc_cache(config => $config, logger => $logger, namespace => $script_name, root_dir => $cachedir);
 		$fb->init(
+			cache_key => $cache_key,
 			cache => $buffercache,
 			# generate_304 => 0,
 			cache_duration => '1 day',
