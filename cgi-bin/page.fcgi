@@ -141,7 +141,7 @@ my $vwf_log;
 my @valid_pages;
 
 # FastCGI signal handling: the FCGI process lives across many requests so we
-# cannot exit immediately on SIGTERM/SIGUSR1 — we set a flag and exit cleanly
+# cannot exit immediately on SIGTERM/SIGUSR1 - we set a flag and exit cleanly
 # after the current request finishes.  See http://fastcgi.com/docs/faq.html#PerlSignals
 my $requestcount = 0;
 my $handling_request = 0;	# 1 while inside doit(), 0 between requests
@@ -201,7 +201,7 @@ $SIG{__WARN__} = sub {
 # Catch fatal errors.  The $^S guard prevents this handler from interfering
 # with Error.pm's try/catch blocks which use eval internally.
 $SIG{__DIE__} = sub {
-	return if $^S;	# inside an eval — let the caller handle it
+	return if $^S;	# inside an eval - let the caller handle it
 	my $msg = join '', @_;
 	# Detach Log::WarnDie first so a logger error cannot cause infinite recursion.
 	Log::WarnDie->dispatcher(undef);
@@ -433,7 +433,7 @@ sub doit
 				$has_captcha_bypass = 1;
 
 				# Redirect the client back to the page they were trying to reach.
-				# SECURITY — CRLF / header-injection defence:
+				# SECURITY - CRLF / header-injection defence:
 				#   Both the page name and SCRIPT_NAME are interpolated into the
 				#   Location header.  A raw %0d%0a sequence in either value would
 				#   let an attacker inject arbitrary HTTP response headers
@@ -444,7 +444,7 @@ sub doit
 				my $redirect_page = $info->param('page') || 'index';
 				$redirect_page =~ s/[^A-Za-z0-9_-]//g;
 
-				# Also sanitize the server variable — it is attacker-influenced
+				# Also sanitize the server variable - it is attacker-influenced
 				# in some reverse-proxy configurations.
 				my $script = $ENV{SCRIPT_NAME} // '/cgi-bin/page.fcgi';
 				$script =~ s/[\r\n]//g;
