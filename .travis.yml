@@ -48,6 +48,6 @@ jobs:
         - cinst -y strawberryperl
         - export "PATH=/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
       # install:
-        # - cpanm --notest --installdeps .
+      # - cpanm --notest --installdeps .
       script:
-	- cd cgi-bin && CONFIG_DIRECTORY=..\\conf perl page.fcgi page=index && perl index.pl ''
+        - cd cgi-bin && CONFIG_DIRECTORY=..\\conf perl page.fcgi page=index && perl index.pl ''
