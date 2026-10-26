@@ -14,6 +14,8 @@ use strict;
 use warnings;
 # use diagnostics;
 
+# TODO: Try Log::Any::Adapter::Abstraction instead of Log::Any
+
 BEGIN {
 	# Sanitize environment variables
 	delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
