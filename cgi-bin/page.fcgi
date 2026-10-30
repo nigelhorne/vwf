@@ -344,9 +344,9 @@ sub doit
 
 	# $config is built once per process and reused.  We cannot build it before
 	# the first Accept() because the domain name is not known until then.
+	# So don't pass $info in since it was created before the connection
 	$config ||= VWF::Config->new({
 		logger => $logger,
-		info => $info,
 		debug => $params{'debug'},
 		# A throwaway CGI::Lingua is used here only to satisfy VWF::Config;
 		# the real, cache-backed instance is created further below.
