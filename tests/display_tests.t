@@ -35,4 +35,25 @@ subtest 'http() Retry-After' => sub {
 		qr/Retry-After must be a number of seconds/, 'header injection is refused';
 };
 
+subtest 'a CSRF token is only sent to a page with a form' => sub {
+	my $send = sub {
+		my ($csrf, $page) = @_;
+
+		my $display = bless { config => { security => { csrf => $csrf } } }, 'VWF::Display';
+		my $out = '';
+		open(my $fh, '>', \$out) or die "Can't open a string: $!";
+		my $old = select($fh);
+		$display->_send_csrf_token($page);
+		select($old);
+		close($fh);
+		return $out;
+	};
+	my $secret = { secret => 'test' };
+
+	like($send->($secret, '<form method="post">'), qr/^Set-Cookie: csrf_token=\d+:[0-9a-f]{64}:[0-9a-f]{64}; path=\/; HttpOnly; SameSite=Strict$/m, 'sent to a form');
+	like($send->($secret, '<FORM>'), qr/csrf_token=/, 'whatever its case');
+	is($send->($secret, '<p>No form here</p><formula>'), '', 'not sent to a page without one');
+	is($send->({ enable => 0, secret => 'test' }, '<form>'), '', 'not sent when turned off');
+};
+
 done_testing();
