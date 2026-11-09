@@ -170,6 +170,7 @@ sub sig_handler {
 	$exit_requested = 1;
 	$logger->trace('In sig_handler');
 	if(!$handling_request) {
+		local $SIG{TERM} = local $SIG{USR1} = 'IGNORE';
 		$logger->info('Shutting down');
 		# Flush the page-level response cache to disk before we exit.
 		if($buffercache) {
