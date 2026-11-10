@@ -158,6 +158,7 @@ sub allow {
 				if($impact > 0) {
 					if($logger) {
 						$logger->warn("$addr: IDS blocked connexion for ", $info->as_string(), " impact = $impact");
+						require Data::Dumper;
 						$logger->warn(Data::Dumper->new([$ids->get_attacks()])->Dump());
 					}
 					if($impact > 30) {
