@@ -63,9 +63,10 @@ use lib CGI::Info::script_dir() . '/../lib';
 use lib File::HomeDir->my_home() . '/lib/perl5';
 
 use VWF::Allow;
-use VWF::Blacklist;
-use VWF::Config;
-use VWF::Utils;
+use Web::VWF::Blacklist;
+use Web::VWF::Config;
+use Web::VWF::Utils;
+use Web::VWF::Data::vwf_log;
 
 # $TAINT = 1;
 # taint_env();
@@ -119,7 +120,6 @@ Log::WarnDie->dispatcher($logger);
 # use VWF::Display::meta_data;
 
 use VWF::Data::index;
-use VWF::Data::vwf_log;
 
 my $database_dir = "$script_dir/../data";
 Database::Abstraction::init({
@@ -160,7 +160,7 @@ my $rate_limit_cache;
 Readonly my @rate_limit_trusted_ips => ('127.0.0.1', '192.168.1.1');
 
 # The CGI::ACL object is built on the first request, once $config is loaded,
-# because the country blacklist (VWF::Blacklist) can come from the config file.
+# because the country blacklist (Web::VWF::Blacklist) can come from the config file.
 my $acl;
 
 # Deferred shutdown handler: set the exit flag and, if we are between requests,
@@ -346,10 +346,10 @@ sub doit
 	# $config is built once per process and reused.  We cannot build it before
 	# the first Accept() because the domain name is not known until then.
 	# So don't pass $info in since it was created before the connection
-	$config ||= VWF::Config->new({
+	$config ||= Web::VWF::Config->new({
 		logger => $logger,
 		debug => $params{'debug'},
-		# A throwaway CGI::Lingua is used here only to satisfy VWF::Config;
+		# A throwaway CGI::Lingua is used here only to satisfy Web::VWF::Config;
 		# the real, cache-backed instance is created further below.
 		lingua => CGI::Lingua->new({ supported => [ 'en-gb' ], info => $info, logger => $logger })
 	});
@@ -360,7 +360,7 @@ sub doit
 	# instrument but effective at reducing noise.
 	$acl ||= CGI::ACL->new()
 		->deny_cloud()
-		->deny_country(country => VWF::Blacklist->new(countries => $config->{'blacklist_countries'})->countries())
+		->deny_country(country => Web::VWF::Blacklist->new(countries => $config->{'blacklist_countries'})->countries())
 		->allow_ip('108.44.193.70')
 		->allow_ip('127.0.0.1');
 
@@ -464,7 +464,7 @@ sub doit
 	}
 
 	$vwflog ||= $config->vwflog() || File::Spec->catfile($info->logdir(), 'vwf.log');
-	$vwf_log ||= VWF::Data::vwf_log->new({
+	$vwf_log ||= Web::VWF::Data::vwf_log->new({
 		directory => dirname($vwflog),
 		filename => basename($vwflog),
 		no_entry => 1,
